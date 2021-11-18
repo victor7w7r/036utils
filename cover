@@ -1,15 +1,14 @@
 #!/bin/bash
 
-main() {
+function main {
 
-clear
-cover
-logo
+	clear
+	cover
+	logo
 
 }
 
-cover() 
-{
+function cover {
 	echo '          					    ``...`                                                    '
 	echo '                                      `..:/+++/--/shdmmmmmhy+:.`                                              '
 	echo '                                  `-+ydmMMMMMMMMMMMMMMMMMMMMMMNds:`                                           '
@@ -53,8 +52,7 @@ cover()
 	echo '                  -/+-`                     '
 }
 
-logo() 
-{
+function logo {
 	echo '                                                                                                                     '
 	echo '.oPYo. .oPYo. .pPYo.   .oPYo.                       o   o                 .oPYo.   o              8  o                '
 	echo '8  .o8     `8 8        8    8                       8                     8        8              8                   '
