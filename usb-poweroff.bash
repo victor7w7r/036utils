@@ -9,7 +9,11 @@ if [ "$EUID" != "0" ]; then
 	fi
 fi
 
-function main { clear; cover; logo; sleep 2s; verify; dialogmenu; }
+INPUT=/tmp/menu.sh.$$
+OUTPUT=/tmp/output.sh.$$
+trap "rm $OUTPUT; rm $INPUT; exit" SIGHUP SIGINT SIGTERM
+
+function main { clear; cover; logo; sleep 1s; verify; menu; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -66,10 +70,11 @@ function logo {
 	echo ':.....::.....::.....::::.....:..:::::.....::.....:::..::..::...:::.....::::.....:::..::.....::.....::..:.....::.....:'
 	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
 	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+
 }
 
 function verify {
-    clear
+
     OPERATING=$(uname -o)
 	SERVICE=$(systemctl is-active udisks2)
 	VERIFYUSB=$(find /dev/disk/by-id | cut -c 17-19)
@@ -105,36 +110,56 @@ function verify {
 	done
 
 	echo "All dependencies is ok!"
-	sleep 1s
+
+	START=$(date +%s)
+	CHARS="/-\|"
+
+	while [[ $(($(date +%s) - $START)) -lt 2 ]]; do
+		for (( i=0; i<${#CHARS}; i++ )); do
+			sleep 0.08
+			echo -en "${CHARS:$i:1}" "\r"
+		done
+	done
+
+	clear
 
 }
 
-function dialogmenu {
-	
-	DIALOG=${DIALOG=dialog}
-	tempfile=$(mktemp 2>/dev/null) || tempfile=/tmp/test$$
-	trap "rm -f $tempfile" 0 1 2 5 15
-
-	$DIALOG --clear --title "036 USB Poweroff" \
-			--menu "Please select an action:" 20 51 4 \
-			"Rafi"  "Mohammed Rafi" \
-			"Mukesh" "Mukesh" \
-			"Lata"  "Lata Mangeshkar" \
-			"Yesudas"  "K J Yesudas" 
-							2> $tempfile
-
-	retval=$?
-	choice=$(cat $tempfile)
-	case $retval in
-	0)
-		echo "'$choice' is your favorite hindi singer";;
-	1)
-		echo "Cancel pressed.";;
-	255)
-		clear;;
-	esac
-
+function poweroff {
+	clear
+	read -p "Press enter to return";
+	menu
 
 }
+
+function mount {
+	clear
+	read -p "Press enter to return";
+	menu
+}
+
+function menu {
+	while true; do
+		dialog --clear --backtitle "036 Creative Studios" \
+			--title "036 USB Poweroff" \
+			--menu "Choose a Option\n" 15 50 4 \
+			Mount "Mount a device" \
+			Power-off "Unmount and secure turn-off a USB" \
+			Exit "Exit to the shell" 2>"${INPUT}"
+
+		menuitem=$(<"${INPUT}")
+
+		case $menuitem in
+			1) break;;
+			Mount) mount;;
+			Power-off) poweroff;;
+			Exit) clear; exit 0;;
+		esac
+	done
+}
+
 
 main
+
+[ -f $OUTPUT ] && rm $OUTPUT 2> /dev/null
+[ -f $INPUT ] && rm $INPUT 2> /dev/null
