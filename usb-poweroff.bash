@@ -9,11 +9,17 @@ if [ "$EUID" != "0" ]; then
 	fi
 fi
 
-INPUT=/tmp/menu.sh.$$
-OUTPUT=/tmp/output.sh.$$
-trap "rm $OUTPUT; rm $INPUT; exit" SIGHUP SIGINT SIGTERM
+rm /tmp/menu.sh.* 2< /dev/null
+rm /tmp/output.sh.* 2< /dev/null
+rm /tmp/mounttemp.sh.* 2< /dev/null
 
-function main { clear; cover; logo; sleep 1s; verify; menu; }
+INPUT=/tmp/menu.sh.$$	
+OUTPUT=/tmp/output.sh.$$
+MOUNTTEMP=/tmp/mounttemp.sh.$$
+
+trap "rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; exit" SIGHUP SIGINT SIGTERM
+
+function core { clear; cover; logo; sleep 1s; verify; usbstat; menu; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -73,11 +79,20 @@ function logo {
 
 }
 
+function usbstat { 
+
+	VERIFYUSB=$(ls /dev/disk/by-id | grep -c usb)
+	if [ "$VERIFYUSB" -eq 0 ]; then
+		clear
+		echo "ERROR: There's no USB drives connected in this PC"
+		exit 0
+	fi
+}
+
 function verify {
 
     OPERATING=$(uname -o)
 	SERVICE=$(systemctl is-active udisks2)
-	VERIFYUSB=$(find /dev/disk/by-id | cut -c 17-19)
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
@@ -100,14 +115,7 @@ function verify {
 		exit 0
 	fi
 
-	for USB in $VERIFYUSB; do
-		if [ "$USB" == "usb"  ]; then
-			break
-		else
-			echo "ERROR: There's no USB drives connected in this PC"
-			exit 0
-		fi
-	done
+	usbstat
 
 	echo "All dependencies is ok!"
 
@@ -120,7 +128,6 @@ function verify {
 			echo -en "${CHARS:$i:1}" "\r"
 		done
 	done
-
 	clear
 
 }
@@ -128,13 +135,59 @@ function verify {
 function poweroff {
 	clear
 	read -p "Press enter to return";
-	menu
+		MODEL=$(cat /sys/class/block/sda/device/model)
 }
 
-function mount {
+
+function mountaction() {
 	clear
+	echo "$1"
 	read -p "Press enter to return";
-	menu
+		MODEL=$(cat /sys/class/block/sda/device/model)
+
+}
+
+function mountmenu {
+	clear
+	usbstat
+	USBS=$(ls /dev/disk/by-id | grep usb)
+	PREARRAY=0
+	ARRAYUSB=0
+	BLOCK=0
+	COUNT=0
+	MODELARRAY=0
+	for DEV in $USBS; do
+		PREARRAY[$COUNT]=$(readlink "/dev/disk/by-id/$DEV") 
+		COUNT=$(( COUNT + 1 ))
+	done
+	COUNT=0
+	BLOCKCOUNT=0
+	for ARRAY in "${PREARRAY[@]}"; do
+		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" != "" ]; then
+			ARRAYUSB[$COUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') 
+			COUNT=$(( COUNT + 1 ))
+		else
+			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//') 
+			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
+		fi
+	done
+
+
+	TYPE=$(lsblk -f /dev/sda | sed -ne '3p' | cut -d " " -f2)
+	MODEL=$(cat /sys/class/block/sda/device/model)
+
+	dialog --clear --backtitle "036 Creative Studios" --title "Mount" \
+		--menu "Please Mount a device, use space to choose \n" 15 50 4 \
+		Apple "It's an apple." \
+		Dog "No, that's not my dog." 2>"${MOUNTTEMP}"
+
+	CHOICE=$(<"${MOUNTTEMP}")
+
+	case $CHOICE in
+		Apple) mountaction "$CHOICE";;
+		Dog) clear; exit 0;;
+	esac
+	
 }
 
 function menu {
@@ -149,16 +202,16 @@ function menu {
 		menuitem=$(<"${INPUT}")
 
 		case $menuitem in
-			1) break;;
-			Mount) mount;;
+			Mount) mountmenu;;
 			Power-off) poweroff;;
 			Exit) clear; exit 0;;
+			*) clear; exit 0;;
 		esac
 	done
 }
 
+core
 
-main
-
-[ -f $OUTPUT ] && rm $OUTPUT 2> /dev/null
-[ -f $INPUT ] && rm $INPUT 2> /dev/null
+[ -f $OUTPUT ] && rm $OUTPUT
+[ -f $INPUT ] && rm $INPUT 
+[ -f $MOUNTTEMP ] && rm $MOUNTTEMP
