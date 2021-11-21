@@ -193,7 +193,7 @@ function mountmenu {
 function menu {
 	while true; do
 		dialog --clear --backtitle "036 Creative Studios" \
-			--title "036 USB Poweroff" \
+			--title "036 USB Manager" \
 			--menu "Choose a Option\n" 15 50 4 \
 			Mount "Mount a device" \
 			Power-off "Unmount and secure turn-off a USB" \
