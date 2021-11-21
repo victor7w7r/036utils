@@ -10,15 +10,17 @@ if [ "$EUID" != "0" ]; then
 	fi
 fi
 
-rm /tmp/menu.sh.* 2< /dev/null
-rm /tmp/output.sh.* 2< /dev/null
-rm /tmp/mounttemp.sh.* 2< /dev/null
+rm /tmp/menu.sh* 2< /dev/null
+rm /tmp/output.sh* 2< /dev/null
+rm /tmp/mounttemp.sh* 2< /dev/null
+rm /tmp/powerofftemp.sh* 2< /dev/null
 
 INPUT=/tmp/menu.sh.$$	
 OUTPUT=/tmp/output.sh.$$
 MOUNTTEMP=/tmp/mounttemp.sh.$$
+POWEROFFTEMP=/tmp/powerofftemp.sh$$
 
-trap "rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; exit" SIGHUP SIGINT SIGTERM
+trap "rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; exit" SIGHUP SIGINT SIGTERM
 
 function core { clear; cover; logo; sleep 1s; verify; usbstat; menu; }
 
@@ -133,71 +135,146 @@ function verify {
 
 }
 
-function poweroff {
-	clear
-	read -p "Press enter to return";
-		MODEL=$(cat /sys/class/block/sda/device/model)
-}
-
 function mountaction() {
 	clear
-	echo "$1"
-	read -p "Press enter to return";
-	MODEL=$(cat /sys/class/block/sda/device/model)
 
+	if [ "$1" == "" ]; then
+		return 0;
+	fi
+
+	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
+	if [[ $DATAMOUNT =~ Error.* ]]; then
+		echo "ERROR: Your USB drive is already mounted"
+		read -p "Press Enter to continue..."
+	else
+		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
+	fi
 }
 
-function mountmenu {
+function poweroffaction() {
+	clear
+	
+	if [ "$1" == "" ]; then
+		return 0;
+	fi
+
+	BLOCKTEMP=$(echo "$1" | cut -d "/" -f3)
+	PARTITIONSQUERY=$(ls /dev | grep -i "^""$BLOCKTEMP""[[:digit:]]$" )
+	echo "$1"
+	echo "$PARTITIONSQUERY"
+	read -p "hola"
+	for PARTITION in $PARTITIONSQUERY; do
+		$SUDO udisksctl unmount -b "$PARTITION" 2> /dev/null
+		for (( i=0; i<${#CHARS}; i++ )); do
+			sleep 0.08
+			echo -en "${CHARS:$i:1}" "\r"
+		done
+	done
+	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
+	$SUDO udisksctl power-off -b "$1"
+	dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
+	
+}
+
+function poweroffmenu {
 	clear
 	usbstat
+
 	USBS=$(ls -r /dev/disk/by-id | grep usb)
 	PREARRAY=()
 	ARRAYUSB=()
-	BLOCK=0
-	COUNT=0
+	BLOCK=()
 
 	for DEV in $USBS; do
 		PREARRAY[$COUNT]=$(readlink "/dev/disk/by-id/$DEV") 
-		COUNT=$(( COUNT + 1 ))
 	done
-	COUNT=0
-	QUANTITY=0
-	BLOCKCOUNT=0
+
 	for ARRAY in "${PREARRAY[@]}"; do
-		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" != "" ]; then
-			ARRAYUSB[$COUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') 
-			COUNT=$(( COUNT + 1 ))
-			QUANTITY=$(( QUANTITY + 1 ))
-		else
+		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" == "" ]; then
 			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///') 
 			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
 		fi
 	done
 
 	COUNT=0
+	MODEL=0
+	DEVICE=0
+	ARGSPOWEROFF=()
+
+	for LIST in "${BLOCK[@]}"; do
+		DEVICE="/dev/$LIST"
+		MODEL="$(cat /sys/class/block/"${BLOCK[COUNT]}"/device/model)"
+		ARGSPOWEROFF+=("$DEVICE" "$MODEL")
+		COUNT=$(( COUNT + 1 ))
+	done
+
+	dialog --clear --backtitle "036 Creative Studios" --title "Poweroff a Device" \
+		--menu "CHoose for poweroff a device \n" 15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
+
+	CHOICEOFF=$(<"${POWEROFFTEMP}")
+
+	case $CHOICEOFF in
+		"$CHOICEOFF") poweroffaction "$CHOICEOFF";;
+		*) clear;;
+	esac
+}
+
+function mountmenu {
+	clear
+	usbstat
+	USBS=$(ls /dev/disk/by-id | grep usb)
+	PREARRAY=()
+	ARRAYUSB=()
+	FLAGS=()
+	BLOCK=()
+	CHOICE=0
+	COUNT=0
+	for DEV in $USBS; do
+		PREARRAY[$COUNT]=$(readlink "/dev/disk/by-id/$DEV") 
+		COUNT=$(( COUNT + 1 ))
+	done
+	COUNT=0
+	BLOCKCOUNT=0
+	for ARRAY in "${PREARRAY[@]}"; do
+		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" != "" ]; then
+			ARRAYUSB[$COUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') 
+			COUNT=$(( COUNT + 1 ))
+		else
+			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///') 
+			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
+			FLAGS+=( "$COUNT" )
+		fi
+		
+	done
+
 	TYPE=0
 	MODEL=0
 	DEVICE=0
+	COUNT=0
+	FLAGSCOUNT=0
 	ARGS=()
 
 	for LIST in "${ARRAYUSB[@]}"; do
 		DEVICE="/dev/$LIST"
 		TYPE="$(lsblk -f /dev/"$LIST" | sed -ne '2p' | cut -d " " -f2)"
-		MODEL="$(cat /sys/class/block/"${BLOCK[COUNT]}"/device/model)"
+		TEMP="${FLAGS[$FLAGSCOUNT]}"
+		
+		if [ "$COUNT" == "$TEMP" ]; then
+			BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
+			FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
+		fi
+		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
 		ARGS+=("$DEVICE" "$MODEL $TYPE")
 		COUNT=$(( COUNT + 1 ))
-
 	done
 
 	dialog --clear --backtitle "036 Creative Studios" --title "Mount a Device" \
 		--menu "Please Mount a device \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
 
 	CHOICE=$(<"${MOUNTTEMP}")
-	REGEX=$(echo "$CHOICE" | sed 's/^\/dev\/.*/\/dev\//')
-
-	case $REGEX in
-		"$REGEX") mountaction "$CHOICE";;
-		*) clear;;
+	case $CHOICE in
+		"$CHOICE") mountaction "$CHOICE";;
+		null) clear; exit 0; ;;
 	esac
 
 }
@@ -210,12 +287,10 @@ function menu {
 			Mount "Mount a device" \
 			Power-off "Unmount and secure turn-off a USB" \
 			Exit "Exit to the shell" 2>"${INPUT}"
-
 		menuitem=$(<"${INPUT}")
-
 		case $menuitem in
 			Mount) mountmenu;;
-			Power-off) poweroff;;
+			Power-off) poweroffmenu;;
 			Exit) clear; exit 0;;
 			*) clear; exit 0;;
 		esac
@@ -227,3 +302,4 @@ core
 [ -f $OUTPUT ] && rm $OUTPUT
 [ -f $INPUT ] && rm $INPUT 
 [ -f $MOUNTTEMP ] && rm $MOUNTTEMP
+[ -f $POWEROFFTEMP ] && rm $POWEROFFTEMP
