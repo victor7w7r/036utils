@@ -1,5 +1,5 @@
 for DEV in $(ls -l /dev/disk/by-id); do
-	if readlink $DEV/ | grep -q usb; then
+	if readlink $DEV | grep -q usb; then
 		DEV=$(basename $DEV)
 		echo "$DEV is a USB device, info:"
 		udevinfo --query=all --name $DEV
