@@ -129,9 +129,6 @@ function poweroff {
 	clear
 	read -p "Press enter to return";
 	menu
-
-	#test comment
-
 }
 
 function mount {
