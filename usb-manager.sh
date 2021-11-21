@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash 
+####!/usr/bin/env bash
 SUDO=
 if [ "$EUID" != "0" ]; then
 	if  [ -e /usr/bin/sudo -o -e /bin/sudo ]; then
@@ -138,56 +139,67 @@ function poweroff {
 		MODEL=$(cat /sys/class/block/sda/device/model)
 }
 
-
 function mountaction() {
 	clear
 	echo "$1"
 	read -p "Press enter to return";
-		MODEL=$(cat /sys/class/block/sda/device/model)
+	MODEL=$(cat /sys/class/block/sda/device/model)
 
 }
 
 function mountmenu {
 	clear
 	usbstat
-	USBS=$(ls /dev/disk/by-id | grep usb)
-	PREARRAY=0
-	ARRAYUSB=0
+	USBS=$(ls -r /dev/disk/by-id | grep usb)
+	PREARRAY=()
+	ARRAYUSB=()
 	BLOCK=0
 	COUNT=0
-	MODELARRAY=0
+
 	for DEV in $USBS; do
 		PREARRAY[$COUNT]=$(readlink "/dev/disk/by-id/$DEV") 
 		COUNT=$(( COUNT + 1 ))
 	done
 	COUNT=0
+	QUANTITY=0
 	BLOCKCOUNT=0
 	for ARRAY in "${PREARRAY[@]}"; do
 		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" != "" ]; then
-			ARRAYUSB[$COUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') 
+			ARRAYUSB[$COUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') 
 			COUNT=$(( COUNT + 1 ))
+			QUANTITY=$(( QUANTITY + 1 ))
 		else
-			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//') 
+			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///') 
 			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
 		fi
 	done
 
+	COUNT=0
+	TYPE=0
+	MODEL=0
+	DEVICE=0
+	ARGS=()
 
-	TYPE=$(lsblk -f /dev/sda | sed -ne '3p' | cut -d " " -f2)
-	MODEL=$(cat /sys/class/block/sda/device/model)
+	for LIST in "${ARRAYUSB[@]}"; do
+		DEVICE="/dev/$LIST"
+		TYPE="$(lsblk -f /dev/"$LIST" | sed -ne '2p' | cut -d " " -f2)"
+		MODEL="$(cat /sys/class/block/"${BLOCK[COUNT]}"/device/model)"
+		ARGS+=("$DEVICE" "$MODEL $TYPE")
+		COUNT=$(( COUNT + 1 ))
 
-	dialog --clear --backtitle "036 Creative Studios" --title "Mount" \
-		--menu "Please Mount a device, use space to choose \n" 15 50 4 \
-		Apple "It's an apple." \
-		Dog "No, that's not my dog." 2>"${MOUNTTEMP}"
+	done
+
+	dialog --clear --backtitle "036 Creative Studios" --title "Mount a Device" \
+		--menu "Please Mount a device \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
 
 	CHOICE=$(<"${MOUNTTEMP}")
+	REGEX=$(echo "$CHOICE" | sed 's/^\/dev\/.*/\/dev\//')
 
-	case $CHOICE in
-		Apple) mountaction "$CHOICE";;
-		Dog) clear; exit 0;;
+	case $REGEX in
+		"$REGEX") mountaction "$CHOICE";;
+		*) clear;;
 	esac
-	
+
 }
 
 function menu {
