@@ -1,0 +1,257 @@
+#!/usr/bin/env bash
+LC_ALL=C
+
+# Display help usage
+function usage () {
+  echo
+  echo "Usage"
+  echo "  $0 --de <desktop environment>"
+  echo
+  echo "Available desktop environments are"
+  echo "  lubuntu"
+  echo "  kubuntu"
+  echo "  ubuntu"
+  echo "  ubuntu-budgie"
+  echo "  ubuntu-kylin"
+  echo "  ubuntu-mate"
+  echo "  ubuntu-studio"
+  echo "  xubuntu"
+  echo
+  echo "You can also pass the optional --oem option which will run a setup"
+  echo "wizard on the next boot."
+}
+
+function apply_tweaks() {
+  if [ "${DESKTOP_ENVIRONMENT}" == "ubuntu-mate" ]; then
+    cat <<EOM > /usr/share/glib-2.0/schemas/50_ubuntu-mate-raspi-tweaks.gschema.override
+[org.mate.interface]
+enable-animations=false
+
+[org.mate.Marco.general]
+compositing-manager=false
+
+[org.mate.session.required-components]
+windowmanager='marco-no-composite'
+EOM
+    glib-compile-schemas /usr/share/glib-2.0/schemas/
+  fi
+
+  cat <<EOM > "/boot/firmware/usercfg.txt"
+# Place "config.txt" changes (dtparam, dtoverlay, disable_overscan, etc.) in
+# this file. Please refer to the README file for a description of the various
+# configuration files on the boot partition.
+#
+disable_overscan=1
+dtoverlay=vc4-fkms-v3d
+hdmi_drive=2
+EOM
+
+  echo "net.ifnames=0 dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=LABEL=writable rootfstype=ext4 elevator=deadline rootwait fixrtc quiet splash plymouth.ignore-serial-consoles" > "/boot/firmware/cmdline.txt"
+
+}
+
+function configure_network() {
+  echo "[+] Will now configure network"
+  # Disable cloud-init from managing the network
+  echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+
+  # Instruct netplan to hand all network management to NetworkManager
+  cat <<EOM > /etc/netplan/01-network-manager-all.yaml
+# Let NetworkManager manage all devices on this system
+network:
+  version: 2
+  renderer: NetworkManager
+EOM
+
+  # Disable Wifi Powersaving to improve Pi WiFi performance
+  if [ -e /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf ]; then
+    sed -i 's/wifi.powersave = 3/wifi.powersave = 2/' /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf
+  fi
+}
+
+function enable_oem() {
+  if [ "${ENABLE_OEM}" -eq 1 ] && [ "${DESKTOP_ENVIRONMENT}" != "lubuntu" ]; then
+    apt -y install whois
+    local DATE=""
+    DATE=$(date +%m%H%M%S)
+    local PASSWD=""
+    PASSWD=$(mkpasswd -m sha-512 oem "${DATE}")
+    addgroup --gid 29999 oem
+    adduser --gecos "OEM Configuration (temporary user)" --add_extra_groups --disabled-password --gid 29999 --uid 29999 oem
+    usermod -a -G adm,sudo -p "${PASSWD}" oem
+
+    if [ "${DESKTOP_ENVIRONMENT}" == "kubuntu" ]; then
+      apt-get -y install --no-install-recommends oem-config-kde ubiquity-frontend-kde ubiquity-ubuntu-artwork
+    else
+      apt-get -y install --no-install-recommends oem-config-gtk ubiquity-frontend-gtk ubiquity-ubuntu-artwork
+    fi
+
+    if [ "${DESKTOP_ENVIRONMENT}" == "ubuntu" ]; then
+      apt-get -y install --no-install-recommends oem-config-slideshow-ubuntu
+    elif [ "${DESKTOP_ENVIRONMENT}" == "ubuntu-budgie" ]; then
+      apt-get -y install --no-install-recommends oem-config-slideshow-ubuntu-budgie
+      # Force the slideshow to use Ubuntu Budgie artwork.
+      sed -i 's/oem-config-slideshow-ubuntu/oem-config-slideshow-ubuntu-budgie/' /usr/lib/ubiquity/plugins/ubi-usersetup.py
+      sed -i 's/oem-config-slideshow-ubuntu/oem-config-slideshow-ubuntu-budgie/' /usr/sbin/oem-config-remove-gtk
+      sed -i 's/ubiquity-slideshow-ubuntu/ubiquity-slideshow-ubuntu-budgie/' /usr/sbin/oem-config-remove-gtk
+    elif [ "${DESKTOP_ENVIRONMENT}" == "ubuntu-mate" ]; then
+      apt-get -y install --no-install-recommends oem-config-slideshow-ubuntu-mate
+      # Force the slideshow to use Ubuntu MATE artwork.
+      sed -i 's/oem-config-slideshow-ubuntu/oem-config-slideshow-ubuntu-mate/' /usr/lib/ubiquity/plugins/ubi-usersetup.py
+      sed -i 's/oem-config-slideshow-ubuntu/oem-config-slideshow-ubuntu-mate/' /usr/sbin/oem-config-remove-gtk
+      sed -i 's/ubiquity-slideshow-ubuntu/ubiquity-slideshow-ubuntu-mate/' /usr/sbin/oem-config-remove-gtk
+    fi
+
+    mkdir -p /var/log/installer
+    touch /var/log/installer/debug
+    cp -a /usr/lib/oem-config/oem-config.service /lib/systemd/system
+    cp -a /usr/lib/oem-config/oem-config.target /lib/systemd/system
+    systemctl enable oem-config.service
+    systemctl enable oem-config.target
+    systemctl set-default oem-config.target
+  fi
+}
+
+CLASSIC_SNAPS=()
+CONFINED_SNAPS=()
+DESKTOP_ENVIRONMENT=""
+ENABLE_OEM=0
+FORCE=0
+
+# Take command line arguments
+if [ $# -lt 1 ]; then
+    usage
+    exit 0
+else
+    while [ $# -gt 0 ]; do
+        case "${1}" in
+          -de|--de)
+            DESKTOP_ENVIRONMENT="${2}"
+            shift
+            shift;;
+          -force|--force)
+            FORCE=1
+            shift
+            shift;;
+          -h|--h|-help|--help)
+            usage
+            exit 0;;
+          -oem|--oem)
+            ENABLE_OEM=1
+            shift;;
+          *)
+            echo "[!] ERROR: \"${1}\" is not a supported parameter."
+            echo "${DESKTOP_ENVIRONMENT}"
+            usage
+            exit 1;;
+        esac
+    done
+fi
+
+# Set variables based on chosen desktop environment
+case "${DESKTOP_ENVIRONMENT}" in
+  ubuntu)
+    echo "[+] Specified Ubuntu desktop"
+    DESKTOP_PACKAGES="ubuntu-desktop"
+    CONFINED_SNAPS=(gnome-3-34-1804 gtk-common-themes snap-store)
+    shift;;
+  ubuntu-mate)
+    echo "[+] Specified Ubuntu MATE desktop"
+    DESKTOP_PACKAGES="ubuntu-mate-desktop"
+    CLASSIC_SNAPS=(ubuntu-mate-welcome software-boutique)
+    shift;;
+  ubuntu-budgie)
+    echo "[+] Specified Ubuntu Budgie desktop"
+    DESKTOP_PACKAGES="ubuntu-budgie-desktop"
+    CLASSIC_SNAPS=(ubuntu-budgie-welcome)
+    shift;;
+  ubuntu-kylin)
+    echo "[+] Specified Ubunty Kylin desktop"
+    DESKTOP_PACKAGES="ubuntukylin-desktop"
+    shift;;
+  ubuntu-studio)
+    echo "[+] Specified Ubuntu Studio desktop"
+    DESKTOP_PACKAGES="ubuntustudio-desktop"
+    shift;;
+  kubuntu)
+    echo "[+] Specified Kubuntu desktop"
+    DESKTOP_PACKAGES="kubuntu-desktop"
+    shift;;
+  lubuntu)
+    echo "[+] Specified Lubuntu desktop"
+    DESKTOP_PACKAGES="lubuntu-desktop"
+    shift;;
+  xubuntu)
+    echo "[+] Specified Xubuntu desktop"
+    DESKTOP_PACKAGES="xubuntu-desktop"
+    shift;;
+  *)
+    if [ -z "${DESKTOP_ENVIRONMENT}" ]; then
+      echo "[!] ERROR: Please specifiy a desktop environment"
+    else
+      echo "[!] ERROR: ${DESKTOP_ENVIRONMENT} is not a valid desktop environment"
+    fi
+    usage
+    exit 1;;
+esac
+
+# Check if the user running the script is root
+if [ "$(id -u)" -ne 0 ]; then
+  echo "[!] ERROR: You need to be root."
+  exit 1
+fi
+
+HOST_ARCH=$(uname -m)
+if [ "${HOST_ARCH}" != "armv7l" ] && [ "${HOST_ARCH}" != "aarch64" ]; then
+  echo "[!] This script is only intended to run on ARM devices."
+  exit 1
+fi
+
+# Check if we're running on a Raspberry Pi
+PI_MODEL=$(grep ^Model /proc/cpuinfo  | cut -d':' -f2- | sed 's/ R/R/')
+if [[ "${PI_MODEL}" == *"Raspberry Pi"* ]]; then
+  echo "[+] Configuring your ${PI_MODEL}"
+else
+  echo "[!] This is not a Raspberry Pi. Quitting!"
+  exit 1
+fi
+
+# Check if we're running Ubuntu
+IS_UBUNTU=$(lsb_release -is)
+if [ "${IS_UBUNTU}" != "Ubuntu" ]; then
+  echo "[!] This script is only intended to run on Ubuntu."
+  exit 1
+fi
+
+# Check if we're running 20.04
+CODENAME=$(lsb_release -cs)
+if [ "${CODENAME}" != "focal" ]; then
+  echo "[!] This script is only intended to run on Ubuntu 20.04."
+  exit 1
+fi
+
+# Do the installation
+HARDWARE_PACKAGES=(libgles1 libopengl0 libxvmc1 pi-bluetooth libgpiod-dev python3-libgpiod python3-gpiozero)
+
+#Check if system already has a desktop installed
+if [ "$(apt list --installed ${DESKTOP_PACKAGES} 2>/dev/null | grep installed)" ] && [ "${FORCE}" -eq 0 ]; then
+  echo "[*] WARNING: ${DESKTOP_PACKAGES} already installed. To force install use the --force option."
+else
+  echo "[+] Will now install ${DESKTOP_PACKAGES}"
+  apt install -y ${DESKTOP_PACKAGES}^
+fi
+
+for CLASSIC_SNAP in "${CLASSIC_SNAPS[@]}"; do
+  snap install "${CLASSIC_SNAP}" --classic
+done
+
+for CONFINED_SNAP in "${CONFINED_SNAPS[@]}"; do
+  snap install "${CONFINED_SNAP}"
+done
+
+echo "[+] Will now install ${HARDWARE_PACKAGES[*]}"
+apt install -y "${HARDWARE_PACKAGES[@]}"
+
+configure_network
+apply_tweaks
+enable_oem
