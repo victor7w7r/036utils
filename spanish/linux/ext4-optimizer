@@ -123,7 +123,7 @@ function ext4stat {
 
 	if [ $EXTCOUNT -eq 0 ]; then
 		clear
-		echo "ERROR: There's not ext4 partitions available"
+		echo "ERROR: No hay particiones ext4 disponibles en el sistema"
 		exit 0
 	fi
 
@@ -132,11 +132,10 @@ function ext4stat {
 function verify {
 
     OPERATING=$(uname -o)
-	SERVICE=$(systemctl is-active udisks2)
 	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
-		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
+		echo "ERROR: Este sistema no es GNU/Linux, saliendo"
 		exit 0
 	fi
 
@@ -145,7 +144,7 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: e4defrag binary is not present in this system, please install"
+		echo "ERROR: EL ejecutable e4defrag no está presente en tu sistema, por favor instalalo"
 		exit 0
 	fi
 
@@ -154,7 +153,7 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: fsck.ext4 is not present in this system, please install"
+		echo "ERROR: fsck.ext4 no está presente en tu sistema, por favor instalalo"
 		exit 0
 	fi
 
@@ -163,18 +162,13 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: The dialog binary is not available in this system, please install"
-		exit 0
-	fi
-	
-	if [ "$SERVICE" == "inactive"  ]; then
-		echo "ERROR: The udisks2 service is not running, please enable the service"
+		echo "ERROR: The dialog binary no está presente en tu sistema, por favor instalalo"
 		exit 0
 	fi
 
 	ext4stat
 
-	echo "All dependencies is ok!"
+	echo "Todo ok!"
 
 	START=$(date +%s)
 	CHARS="/-\|"
@@ -196,63 +190,63 @@ function defragaction {
 	if [ "$1" == "" ]; then
 		return 0;
 	fi
-	echo -e "=============== VERIFY FILESYSTEM ERRORS =============== \n" 
+	echo -e "=============== VERIFICAR ERRORES EN EL SISTEMA DE ARCHIVOS =============== \n" 
 	
 	$SUDO fsck.ext4 -y -f -v "$1"
 	CODE=$?
 
 	if [ $CODE -ne 0 ]; then
-		echo -e "=============== FAILURE =============== \n" 
-		read -r -p "Press Enter to continue..."
+		echo -e "=============== FALLA =============== \n" 
+		read -r -p "Presione Enter para continuar..."
 		return 0;
 	fi
 	echo " "
 	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
+	read -r -p "Presione Enter para continuar..."
 	clear
 
-	echo -e "=============== OPTIMIZE FILESYSTEM =============== \n" 
+	echo -e "=============== OPTIMIZAR EL SISTEMA DE ARCHIVOS =============== \n" 
 
 	$SUDO fsck.ext4 -y -f -v -D "$1"
 	CODE=$?
 
 	if [ $CODE -ne 0 ]; then
-		echo -e "=============== FAILURE =============== \n" 
-		read -r -p "Press Enter to continue..."
+		echo -e "=============== FALLA =============== \n" 
+		read -r -p "Presione Enter para continuar..."
 		return 0;
 	fi
 	echo " "
 	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
+	read -r -p "Presione Enter para continuar..."
 	clear
 
 	$SUDO mkdir /tmp/optimize 2> /dev/null
 	$SUDO mount "$1" /tmp/optimize
 
-	echo -e "=============== DEFRAG FILESYSTEM =============== \n" 
+	echo -e "=============== DESFRAGMENTAR EL SISTEMA DE ARCHIVOS =============== \n" 
 	
 	$SUDO e4defrag -v "$1"
 	CODE=$?
 
 	echo " "
 	$SUDO umount "$1"
-	echo -e "=============== READY =============== \n" 
-	read -r -p "Press Enter to continue..."
+	echo -e "=============== LISTO =============== \n" 
+	read -r -p "Presione Enter para continuar..."
 	clear
 
-	echo -e "=============== LAST VERIFY FILESYSTEM =============== \n" 
+	echo -e "=============== VERIFICAR POR ULTIMA VEZ EL SISTEMA DE ARCHIVOS =============== \n" 
 	
 	$SUDO fsck.ext4 -y -f -v "$1"
 	CODE=$?
 
 	if [ $CODE -ne 0 ]; then
 		echo -e "=============== FAILURE =============== \n" 
-		read -r -p "Press Enter to continue..."
+		read -r -p "Presione Enter para continuar..."
 		return 0;
 	fi
 	echo " "
 	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
+	rread -r -p "Presione Enter para continuar..."
 	clear
 	
 }
@@ -299,7 +293,7 @@ function defragmenu {
 
 	if [ $EXTCOUNT -eq 0 ]; then
 		clear
-		echo "ERROR: There's not ext4 partitions available"
+		echo "ERROR: No hay particiones ext4 disponibles en el sistema"
 		exit 0
 	fi
 
@@ -314,13 +308,13 @@ function defragmenu {
 
 	if [ $MOUNTCOUNT -eq $EXTCOUNT ]; then
 		clear
-		echo "ERROR: All the ext4 partitions are mounted in your system, please unmount the desired partition to optimize"
+		echo "ERROR: Todas las particiones ext4 estan montadas en el sistema, por favor desmontar la particion deseada para optimizar"
 		read -r -p "Press Enter to continue..."
 		return 0
 	fi
 
-	dialog --clear --backtitle "036 Creative Studios" --title "Optimize a Partition" \
-		--menu "Please select a partition \n" 15 50 4 "${UMOUNTS[@]}" 2>"${DEFRAG}"
+	dialog --clear --backtitle "036 Creative Studios" --title "Optimizar una Partition" \
+		--menu "Por favor selecciona una partition \n" 15 50 4 "${UMOUNTS[@]}" 2>"${DEFRAG}"
 
 	CHOICE=$(<"${DEFRAG}")
 	case $CHOICE in
@@ -335,8 +329,8 @@ function menu {
 
 		dialog --clear --backtitle "036 Creative Studios" \
 			--title "036 ext4 Optimizer" \
-			--menu "Choose a Option\n" 15 50 4 \
-			Optimize "Optimize a partition of a device" \
+			--menu "Seleccione una opcion\n" 15 50 4 \
+			Optimize "Optimizar una particion de tipo ext4" \
 			Exit "Exit to the shell" 2>"${INPUT}"
 
 		menuitem=$(<"${INPUT}")
