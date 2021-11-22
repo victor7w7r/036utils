@@ -11,13 +11,11 @@ if [ "$EUID" != "0" ]; then
 fi
 
 rm /tmp/menu.sh* 2> /dev/null
-rm /tmp/output.sh* 2> /dev/null
 rm /tmp/mounttemp.sh* 2> /dev/null
 rm /tmp/powerofftemp.sh* 2> /dev/null
 rm /tmp/unmounttemp.sh* 2> /dev/null
 
 INPUT=/tmp/menu.sh.$$	
-OUTPUT=/tmp/output.sh.$$
 MOUNTTEMP=/tmp/mounttemp.sh.$$
 POWEROFFTEMP=/tmp/powerofftemp.sh$$
 UNMOUNTTEMP=/tmp/unmounttemp.sh$$
@@ -464,7 +462,6 @@ function menu {
 
 core
 
-[ -f $OUTPUT ] && rm $OUTPUT
 [ -f $INPUT ] && rm $INPUT 
 [ -f $MOUNTTEMP ] && rm $MOUNTTEMP
 [ -f $POWEROFFTEMP ] && rm $POWEROFFTEMP

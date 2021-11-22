@@ -11,20 +11,15 @@ if [ "$EUID" != "0" ]; then
 fi
 
 rm /tmp/menu.sh* 2> /dev/null
-rm /tmp/mounttemp.sh* 2> /dev/null
-rm /tmp/powerofftemp.sh* 2> /dev/null
-rm /tmp/unmounttemp.sh* 2> /dev/null
+rm /tmp/defrag.sh* 2> /dev/null
+INPUT=/tmp/menu.sh.$$
+DEFRAG=/tmp/defrag.sh.$$
 
-INPUT=/tmp/menu.sh.$$	
-MOUNTTEMP=/tmp/mounttemp.sh.$$
-POWEROFFTEMP=/tmp/powerofftemp.sh$$
-UNMOUNTTEMP=/tmp/unmounttemp.sh$$
-
-function cleanup { rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit; }
+function cleanup { rm $INPUT; rm $DEFRAG; exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
-function core { clear; cover; sleep 1s; verify; usbstat; menu; }
+function core { clear; cover; sleep 1s; verify; menu; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -89,14 +84,49 @@ function whichverify() {
 	fi
 }
 
-function usbstat {
+function ext4stat {
 
-	VERIFYUSB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///')
-	if [ "$VERIFYUSB" == "" ]; then
+	COUNT=0
+	EXTCOUNT=0
+	ABSOLUTEPARTS=""
+	DIRTYDEVS=()
+
+	ROOT=$(df -h | sed -ne '/\/$/p' | cut -d" " -f1)
+
+	VERIFY=$(find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///')
+
+	for DEVICE in $VERIFY; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
+		COUNT=$(( COUNT + 1 ))
+	done
+	
+	COUNT=0
+
+	for DEV in "${DIRTYDEVS[@]}"; do
+
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
+		if [ "$ABSOLUTEPARTS" != "" ]; then
+			if [ "$ABSOLUTEPARTS" != "$ROOT" ]; then
+				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d'| sed '/blk[[:digit:]]$/d') #sda1 sda2 ...
+				COUNT=$(( COUNT + 1 ))
+			fi
+		fi
+
+	done
+
+	for PART in "${PARTS[@]}"; do
+		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
+		if [ "$TYPE" == "ext4" ]; then
+			EXTCOUNT=$((EXTCOUNT + 1))
+		fi
+	done
+
+	if [ $EXTCOUNT -eq 0 ]; then
 		clear
-		echo "ERROR: There's no USB drives connected in this PC, or the devices are shutdown"
+		echo "ERROR: There's not ext4 partitions available"
 		exit 0
 	fi
+
 }
 
 function verify {
@@ -110,12 +140,21 @@ function verify {
 		exit 0
 	fi
 
-	SELECTOR="udisksctl"
+	SELECTOR="e4defrag"
 	whichverify "$SELECTOR"
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: The udisks command line tool (udisksctl) doesn't exist, please install udisks"
+		echo "ERROR: e4defrag binary is not present in this system, please install"
+		exit 0
+	fi
+
+	SELECTOR="fsck.ext4"
+	whichverify "$SELECTOR"
+	local res=$?
+
+	if [ $res -eq 1 ]; then
+		echo "ERROR: fsck.ext4 is not present in this system, please install"
 		exit 0
 	fi
 
@@ -133,7 +172,7 @@ function verify {
 		exit 0
 	fi
 
-	usbstat
+	ext4stat
 
 	echo "All dependencies is ok!"
 
@@ -150,221 +189,88 @@ function verify {
 
 }
 
-function poweroffaction() {
+function defragaction {
 	clear
-	
-	if [ "$1" == "" ]; then
-		return 0;
-	fi
-
-	BLOCKTEMP=$(echo "$1" | cut -d "/" -f3)
-	PARTITIONSQUERY=$(find /dev -name "${BLOCKTEMP}[[:digit:]]" | sort -n | sed 's/^\/dev\///')
-	
-	for PARTITION in $PARTITIONSQUERY; do
-		$SUDO udisksctl unmount -b "/dev/$PARTITION" &> /dev/null
-		for (( i=0; i<${#CHARS}; i++ )); do
-			sleep 0.08
-			echo -en "${CHARS:$i:1}" "\r"
-		done
-	done
-
-	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
-	$SUDO udisksctl power-off -b "$1"
-	dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
-	
-}
-
-function mountaction() {
-	clear
+	CODE=0
 
 	if [ "$1" == "" ]; then
 		return 0;
 	fi
+	echo -e "=============== VERIFY FILESYSTEM ERRORS =============== \n" 
+	
+	$SUDO fsck.ext4 -y -f -v "$1"
+	CODE=$?
 
-	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
-	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
-		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
-		read -r -p "Presione Enter to continue..."
-	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then
-		echo "ERROR: This partition is already mounted"
+	if [ $CODE -ne 0 ]; then
+		echo -e "=============== FAILURE =============== \n" 
 		read -r -p "Press Enter to continue..."
-	else
-		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
-	fi
-}
-
-function unmountaction() {
-	clear
-
-	if [ "$1" == "" ]; then
 		return 0;
 	fi
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+	clear
 
-	DATAMOUNT=$(udisksctl unmount -b "$1" 2>&1)
-	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
-		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
+	echo -e "=============== OPTIMIZE FILESYSTEM =============== \n" 
+
+	$SUDO fsck.ext4 -y -f -v -D "$1"
+	CODE=$?
+
+	if [ $CODE -ne 0 ]; then
+		echo -e "=============== FAILURE =============== \n" 
 		read -r -p "Press Enter to continue..."
-	elif [[ $DATAMOUNT =~ NotMounted* ]]; then
-		echo "ERROR: Your partition is unmounted"
-		read -r -p "Press Enter to continue..."
-	else
-		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
+		return 0;
 	fi
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+	clear
+
+	$SUDO mkdir /tmp/optimize 2> /dev/null
+	$SUDO mount "$1" /tmp/optimize
+
+	echo -e "=============== DEFRAG FILESYSTEM =============== \n" 
+	
+	$SUDO e4defrag -v "$1"
+	CODE=$?
+
+	echo " "
+	$SUDO umount "$1"
+	echo -e "=============== READY =============== \n" 
+	read -r -p "Press Enter to continue..."
+	clear
+
+	echo -e "=============== LAST VERIFY FILESYSTEM =============== \n" 
+	
+	$SUDO fsck.ext4 -y -f -v "$1"
+	CODE=$?
+
+	if [ $CODE -ne 0 ]; then
+		echo -e "=============== FAILURE =============== \n" 
+		read -r -p "Press Enter to continue..."
+		return 0;
+	fi
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+	clear
+	
 }
 
-function unmountmenu {
-	clear
-	usbstat
-	MOUNTED=0
+function defragmenu {
 	COUNT=0
+	EXTCOUNT=0
 	MOUNTCOUNT=0
-	PARTS=()
-	MOUNTS=()
+	ABSOLUTEPARTS=""
 	DIRTYDEVS=()
-	BLOCK=()
-
-	USBS=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
-
-	for DEVICE in $USBS; do
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
-		COUNT=$(( COUNT + 1 ))
-	done
-	COUNT=0
-
-	for DEV in "${DIRTYDEVS[@]}"; do
-
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
-
-		if [ "$ABSOLUTEPARTS" != "" ]; then
-			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') #sda1 sda2 ...
-			COUNT=$(( COUNT + 1 ))
-		else
-			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
-			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
-		fi
-		
-	done
-
-	for PARTITIONS in "${PARTS[@]}"; do
-		MOUNTED=$(lsblk "/dev/$PARTITIONS" | sed -ne '/\//p')
-		if [ "$MOUNTED" == "" ]; then
-			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
-		else
-			MOUNTS+=("$PARTITIONS")
-		fi
-	done
-
-	if [ $MOUNTCOUNT -eq $COUNT ]; then
-		echo "ERROR: There's not partitions mounted in your system"
-		read -r -p "Press Enter to continue..."
-		return 0
-	fi
-
-	echo "${MOUNTS[@]}"
-
-	COUNT=0
-
-	TYPE=0
-	MODEL=0
-	DEVICE=0
-	FLAGSCOUNT=0
-	ARGS=()
-
-	for PART in "${MOUNTS[@]}"; do
-		DEVICE="/dev/$PART"
-		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)" #vfat, ext4
-		TEMP="${FLAGS[$FLAGSCOUNT]}"
-		
-		if [ "$COUNT" == "$TEMP" ]; then
-			BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
-			FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
-		fi
-
-		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
-		ARGS+=("$DEVICE" "$MODEL $TYPE")
-		COUNT=$(( COUNT + 1 ))
-	done
-
-	COUNT=0
-
-	dialog --clear --backtitle "036 Creative Studios" --title "Umount a Partition" \
-		--menu "Please umount a partition \n" 15 50 4 "${ARGS[@]}" 2>"${UNMOUNTTEMP}"
-
-	CHOICE=$(<"${UNMOUNTTEMP}")
-	case $CHOICE in
-		"$CHOICE") unmountaction "$CHOICE";;
-		null) clear; exit 0; ;;
-	esac
-
-}
-
-function poweroffmenu {
-	
-	clear
-	usbstat
-
-	DIRTYDEVS=()
-	BLOCK=()
-
-	USBS=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
-
-	for DEVICE in $USBS; do
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
-		COUNT=$(( COUNT + 1 ))
-	done
-
-	for DEV in "${DIRTYDEVS[@]}"; do
-
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
-
-		if [ "$ABSOLUTEPARTS" == "" ]; then
-			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb 
-			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
-		fi
-	done
-
-	COUNT=0
-	MODEL=0
-	DEVICE=0
-	ARGSPOWEROFF=()
-
-	for PART in "${BLOCK[@]}"; do
-		DEVICE="/dev/$PART"
-		BLOCKSTAT="${BLOCK[$COUNT]}"
-		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
-		ARGSPOWEROFF+=("$DEVICE" "$MODEL")
-		COUNT=$(( COUNT + 1 ))
-	done
-
-	dialog --clear --backtitle "036 Creative Studios" --title "Poweroff a Device" \
-		--menu "Choose for poweroff a device \nCAUTION: All the partitions will be force unmounted "\
-		15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
-
-	CHOICEOFF=$(<"${POWEROFFTEMP}")
-
-	case $CHOICEOFF in
-		"$CHOICEOFF") poweroffaction "$CHOICEOFF";;
-		*) clear;;
-	esac
-}
-
-function mountmenu {
-
-	clear
-	usbstat
-
-	PARTS=()
-	FLAGS=()
-	BLOCK=()
+	EXTPARTS=()
 	UMOUNTS=()
-	CHOICE=0
-	COUNT=0
-	BLOCKCOUNT=0
-	MOUNTCOUNT=0
 
-	USB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
-	
-	for DEVICE in $USB; do
+	ROOT=$(df -h | sed -ne '/\/$/p' | cut -d" " -f1)
+
+	VERIFY=$(find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///')
+
+	for DEVICE in $VERIFY; do
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
 		COUNT=$(( COUNT + 1 ))
 	done
@@ -373,67 +279,54 @@ function mountmenu {
 
 	for DEV in "${DIRTYDEVS[@]}"; do
 
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
-
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
 		if [ "$ABSOLUTEPARTS" != "" ]; then
-			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') #sda1 sda2 ...
-			COUNT=$(( COUNT + 1 ))
-		else
-			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
-			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
-			FLAGS+=( "$COUNT" ) #FLAGS FOR EVERY BLOCK CHANGE
+			if [ "$ABSOLUTEPARTS" != "$ROOT" ]; then
+				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d'| sed '/blk[[:digit:]]$/d') #sda1 sda2 ...
+				COUNT=$(( COUNT + 1 ))
+			fi
 		fi
-		
+
 	done
 
-	for PARTITIONS in "${PARTS[@]}"; do
-		MOUNTED=$(lsblk "/dev/$PARTITIONS" | sed -ne '/\//p')
+	for PART in "${PARTS[@]}"; do
+		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
+		if [ "$TYPE" == "ext4" ]; then
+			EXTCOUNT=$((EXTCOUNT + 1))
+			EXTPARTS+=("$PART")
+		fi
+	done
+
+	if [ $EXTCOUNT -eq 0 ]; then
+		clear
+		echo "ERROR: There's not ext4 partitions available"
+		exit 0
+	fi
+
+	for PARTITIONSDEF in "${EXTPARTS[@]}"; do
+		MOUNTED=$(lsblk "/dev/$PARTITIONSDEF" | sed -ne '/\//p')
 		if [ "$MOUNTED" != "" ]; then
 			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
 		else
-			UMOUNTS+=("$PARTITIONS")
+			UMOUNTS+=("/dev/$PARTITIONSDEF" "ext4")
 		fi
 	done
 
-	if [ $MOUNTCOUNT -eq $COUNT ]; then
-		echo "ERROR: All the partitions are mounted in your system"
+	if [ $MOUNTCOUNT -eq $EXTCOUNT ]; then
+		clear
+		echo "ERROR: All the ext4 partitions are mounted in your system, please unmount the desired partition to optimize"
 		read -r -p "Press Enter to continue..."
 		return 0
 	fi
 
-	COUNT=0
-	TYPE=0
-	MODEL=0
-	DEVICE=0
-	FLAGSCOUNT=0
-	ARGS=()
+	dialog --clear --backtitle "036 Creative Studios" --title "Optimize a Partition" \
+		--menu "Please select a partition \n" 15 50 4 "${UMOUNTS[@]}" 2>"${DEFRAG}"
 
-	for PART in "${UMOUNTS[@]}"; do
-		DEVICE="/dev/$PART"
-		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)" #vfat, ext4
-		TEMP="${FLAGS[$FLAGSCOUNT]}"
-		
-		if [ "$COUNT" == "$TEMP" ]; then
-			BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
-			FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
-		fi
-
-		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
-		ARGS+=("$DEVICE" "$MODEL $TYPE")
-		COUNT=$(( COUNT + 1 ))
-	done
-
-	COUNT=0
-
-	dialog --clear --backtitle "036 Creative Studios" --title "Mount a Partition" \
-		--menu "Please Mount a partition \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
-
-	CHOICE=$(<"${MOUNTTEMP}")
+	CHOICE=$(<"${DEFRAG}")
 	case $CHOICE in
-		"$CHOICE") mountaction "$CHOICE";;
+		"$CHOICE") defragaction "$CHOICE";;
 		null) clear; exit 0; ;;
 	esac
-
 }
 
 function menu {
@@ -441,19 +334,15 @@ function menu {
 	while true; do
 
 		dialog --clear --backtitle "036 Creative Studios" \
-			--title "036 USB Manager" \
+			--title "036 ext4 Optimizer" \
 			--menu "Choose a Option\n" 15 50 4 \
-			Mount "Mount a partition of a device" \
-			Unmount "Unmount a partition of a device" \
-			Power-off "Unmount and secure turn-off a USB" \
+			Optimize "Optimize a partition of a device" \
 			Exit "Exit to the shell" 2>"${INPUT}"
 
 		menuitem=$(<"${INPUT}")
 
 		case $menuitem in
-			Mount) mountmenu;;
-			Unmount) unmountmenu;;
-			Power-off) poweroffmenu;;
+			Optimize) defragmenu;;
 			Exit) clear; exit 0;;
 			*) clear; exit 0;;
 		esac
@@ -462,7 +351,5 @@ function menu {
 
 core
 
-[ -f $INPUT ] && rm $INPUT 
-[ -f $MOUNTTEMP ] && rm $MOUNTTEMP
-[ -f $POWEROFFTEMP ] && rm $POWEROFFTEMP
-[ -f $UNMOUNTTEMP ] && rm $UNMOUNTTEMP
+[ -f $INPUT ] && rm $INPUT
+[ -f $DEFRAG ] && rm $DEFRAG
