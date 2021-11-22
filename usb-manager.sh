@@ -143,7 +143,10 @@ function mountaction() {
 	fi
 
 	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
-	if [[ $DATAMOUNT =~ Error.* ]]; then
+	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
+		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
+		read -p "Press Enter to continue..."
+	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then
 		echo "ERROR: Your USB drive is already mounted"
 		read -p "Press Enter to continue..."
 	else
@@ -159,12 +162,10 @@ function poweroffaction() {
 	fi
 
 	BLOCKTEMP=$(echo "$1" | cut -d "/" -f3)
-	PARTITIONSQUERY=$(ls /dev | grep -i "^""$BLOCKTEMP""[[:digit:]]$" )
-	echo "$1"
-	echo "$PARTITIONSQUERY"
-	read -p "hola"
+	PARTITIONSQUERY=$(ls /dev | grep -i "^""$BLOCKTEMP""[[:digit:]]$")
+	
 	for PARTITION in $PARTITIONSQUERY; do
-		$SUDO udisksctl unmount -b "$PARTITION" 2> /dev/null
+		$SUDO udisksctl unmount -b "/dev/$PARTITION" 2> /dev/null
 		for (( i=0; i<${#CHARS}; i++ )); do
 			sleep 0.08
 			echo -en "${CHARS:$i:1}" "\r"
@@ -180,18 +181,22 @@ function poweroffmenu {
 	clear
 	usbstat
 
-	USBS=$(ls -r /dev/disk/by-id | grep usb)
-	PREARRAY=()
-	ARRAYUSB=()
+	DIRTYDEVS=()
 	BLOCK=()
 
-	for DEV in $USBS; do
-		PREARRAY[$COUNT]=$(readlink "/dev/disk/by-id/$DEV") 
+	USBS=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+
+	for DEVICE in $USBS; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
+		COUNT=$(( COUNT + 1 ))
 	done
 
-	for ARRAY in "${PREARRAY[@]}"; do
-		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" == "" ]; then
-			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///') 
+	for DEV in "${DIRTYDEVS[@]}"; do
+
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
+
+		if [ "$ABSOLUTEPARTS" == "" ]; then
+			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb 
 			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
 		fi
 	done
@@ -201,9 +206,10 @@ function poweroffmenu {
 	DEVICE=0
 	ARGSPOWEROFF=()
 
-	for LIST in "${BLOCK[@]}"; do
-		DEVICE="/dev/$LIST"
-		MODEL="$(cat /sys/class/block/"${BLOCK[COUNT]}"/device/model)"
+	for PART in "${BLOCK[@]}"; do
+		DEVICE="/dev/$PART"
+		BLOCKSTAT="${BLOCK[$COUNT]}"
+		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
 		ARGSPOWEROFF+=("$DEVICE" "$MODEL")
 		COUNT=$(( COUNT + 1 ))
 	done
@@ -220,56 +226,68 @@ function poweroffmenu {
 }
 
 function mountmenu {
+
 	clear
 	usbstat
-	USBS=$(ls /dev/disk/by-id | grep usb)
-	PREARRAY=()
-	ARRAYUSB=()
+
+	PARTS=()
 	FLAGS=()
 	BLOCK=()
 	CHOICE=0
 	COUNT=0
-	for DEV in $USBS; do
-		PREARRAY[$COUNT]=$(readlink "/dev/disk/by-id/$DEV") 
+	BLOCKCOUNT=0
+
+	USB=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+	
+	for DEVICE in $USB; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
 		COUNT=$(( COUNT + 1 ))
 	done
+	
 	COUNT=0
-	BLOCKCOUNT=0
-	for ARRAY in "${PREARRAY[@]}"; do
-		if [ "$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')" != "" ]; then
-			ARRAYUSB[$COUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') 
+
+	for DEV in "${DIRTYDEVS[@]}"; do
+
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
+
+		if [ "$ABSOLUTEPARTS" != "" ]; then
+			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') #sda1 sda2 ...
 			COUNT=$(( COUNT + 1 ))
 		else
-			BLOCK[$BLOCKCOUNT]=$(echo "$ARRAY" | sed 's/^\.\.\/\.\.\///') 
+			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
 			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
-			FLAGS+=( "$COUNT" )
+			FLAGS+=( "$COUNT" ) #FLAGS FOR EVERY BLOCK CHANGE
 		fi
 		
 	done
 
+	COUNT=0
+
 	TYPE=0
 	MODEL=0
 	DEVICE=0
-	COUNT=0
 	FLAGSCOUNT=0
 	ARGS=()
 
-	for LIST in "${ARRAYUSB[@]}"; do
-		DEVICE="/dev/$LIST"
-		TYPE="$(lsblk -f /dev/"$LIST" | sed -ne '2p' | cut -d " " -f2)"
+	for PART in "${PARTS[@]}"; do
+		DEVICE="/dev/$PART"
+		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)" #vfat, ext4
 		TEMP="${FLAGS[$FLAGSCOUNT]}"
 		
 		if [ "$COUNT" == "$TEMP" ]; then
 			BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
 			FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
 		fi
-		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
+
+		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
 		ARGS+=("$DEVICE" "$MODEL $TYPE")
 		COUNT=$(( COUNT + 1 ))
 	done
 
+	COUNT=0
+
 	dialog --clear --backtitle "036 Creative Studios" --title "Mount a Device" \
-		--menu "Please Mount a device \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
+		--menu "Please Mount a partition \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
 
 	CHOICE=$(<"${MOUNTTEMP}")
 	case $CHOICE in
@@ -284,12 +302,13 @@ function menu {
 		dialog --clear --backtitle "036 Creative Studios" \
 			--title "036 USB Manager" \
 			--menu "Choose a Option\n" 15 50 4 \
-			Mount "Mount a device" \
+			Mount "Mount a partition of a device" \
 			Power-off "Unmount and secure turn-off a USB" \
 			Exit "Exit to the shell" 2>"${INPUT}"
 		menuitem=$(<"${INPUT}")
 		case $menuitem in
 			Mount) mountmenu;;
+			
 			Power-off) poweroffmenu;;
 			Exit) clear; exit 0;;
 			*) clear; exit 0;;
