@@ -1,8 +1,8 @@
-#!/bin/bash 
-####!/usr/bin/env bash
+#!/usr/bin/env bash
+
 SUDO=
 if [ "$EUID" != "0" ]; then
-	if  [ -e /usr/bin/sudo -o -e /bin/sudo ]; then
+	if  [ -e /usr/bin/sudo ] || [ -e /bin/sudo ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: In this system the binary sudo doesn't exist."
@@ -20,11 +20,13 @@ INPUT=/tmp/menu.sh.$$
 OUTPUT=/tmp/output.sh.$$
 MOUNTTEMP=/tmp/mounttemp.sh.$$
 POWEROFFTEMP=/tmp/powerofftemp.sh$$
-UNMOUNTTEMP=/tmp/unmounttemp.sh$$ 2> /dev/null
+UNMOUNTTEMP=/tmp/unmounttemp.sh$$
 
-trap "rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit" SIGHUP SIGINT SIGTERM
+function cleanup { rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit; }
 
-function core { clear; cover; logo; sleep 1s; verify; usbstat; menu; }
+trap cleanup; SIGHUP SIGINT SIGTERM
+
+function core { clear; cover; sleep 1s; verify; usbstat; menu; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -68,9 +70,6 @@ function cover {
 	echo '    .--`         mN. -yMy.                                                                                     '
 	echo '                  /Nhsmd/                                                                                       '
 	echo '                  -/+-`                     '
-}
-
-function logo {
 	echo '                                                                                                                     '
 	echo '.oPYo. .oPYo. .pPYo.   .oPYo.                       o   o                 .oPYo.   o              8  o                '
 	echo '8  .o8     `8 8        8    8                       8                     8        8              8                   '
@@ -81,13 +80,21 @@ function logo {
 	echo ':.....::.....::.....::::.....:..:::::.....::.....:::..::..::...:::.....::::.....:::..::.....::.....::..:.....::.....:'
 	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
 	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+}
 
+function whichverify() {
+	stat=$(which "$1" 2>&1)
+	if [[ "$stat" =~ ^which:* ]]; then 
+		return 1
+	else
+		return 0
+	fi
 }
 
 function usbstat {
 
-	VERIFYUSB=$(ls /dev/disk/by-id | grep -c usb)
-	if [ "$VERIFYUSB" -eq 0 ]; then
+	VERIFYUSB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///')
+	if [ "$VERIFYUSB" == "" ]; then
 		clear
 		echo "ERROR: There's no USB drives connected in this PC, or the devices are shutdown"
 		exit 0
@@ -98,23 +105,31 @@ function verify {
 
     OPERATING=$(uname -o)
 	SERVICE=$(systemctl is-active udisks2)
+	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
 		exit 0
 	fi
-	if [ -f /usr/bin/udisksctl ]; then
-		echo 'ready' > /dev/null
-	else
+
+	SELECTOR="udisksctl"
+	whichverify "$SELECTOR"
+	local res=$?
+
+	if [ $res -eq 1 ]; then
 		echo "ERROR: The udisks command line tool (udisksctl) doesn't exist, please install udisks"
 		exit 0
 	fi
-		if [ -f /usr/bin/dialog ]; then
-		echo 'ready' > /dev/null
-	else
+
+	SELECTOR="dialog"
+	whichverify "$SELECTOR"
+	local res=$?
+
+	if [ $res -eq 1 ]; then
 		echo "ERROR: The dialog binary is not available in this system, please install"
 		exit 0
 	fi
+	
 	if [ "$SERVICE" == "inactive"  ]; then
 		echo "ERROR: The udisks2 service is not running, please enable the service"
 		exit 0
@@ -127,7 +142,7 @@ function verify {
 	START=$(date +%s)
 	CHARS="/-\|"
 
-	while [[ $(($(date +%s) - $START)) -lt 2 ]]; do
+	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
 		for (( i=0; i<${#CHARS}; i++ )); do
 			sleep 0.08
 			echo -en "${CHARS:$i:1}" "\r"
@@ -145,15 +160,16 @@ function poweroffaction() {
 	fi
 
 	BLOCKTEMP=$(echo "$1" | cut -d "/" -f3)
-	PARTITIONSQUERY=$(ls /dev | grep -i "^""$BLOCKTEMP""[[:digit:]]$")
+	PARTITIONSQUERY=$(find /dev -name "${BLOCKTEMP}[[:digit:]]" | sort -n | sed 's/^\/dev\///')
 	
 	for PARTITION in $PARTITIONSQUERY; do
-		$SUDO udisksctl unmount -b "/dev/$PARTITION" 2> /dev/null
+		$SUDO udisksctl unmount -b "/dev/$PARTITION" &> /dev/null
 		for (( i=0; i<${#CHARS}; i++ )); do
 			sleep 0.08
 			echo -en "${CHARS:$i:1}" "\r"
 		done
 	done
+
 	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
 	$SUDO udisksctl power-off -b "$1"
 	dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
@@ -170,10 +186,10 @@ function mountaction() {
 	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
 	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
 		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
-		read -p "Press Enter to continue..."
+		read -r -p "Press Enter to continue..."
 	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then
 		echo "ERROR: Your USB drive is already mounted"
-		read -p "Press Enter to continue..."
+		read -r -p "Press Enter to continue..."
 	else
 		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
 	fi
@@ -189,10 +205,10 @@ function unmountaction() {
 	DATAMOUNT=$(udisksctl unmount -b "$1" 2>&1)
 	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
 		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
-		read -p "Press Enter to continue..."
+		read -r -p "Press Enter to continue..."
 	elif [[ $DATAMOUNT =~ NotMounted* ]]; then
 		echo "ERROR: Your partition is already unmounted"
-		read -p "Press Enter to continue..."
+		read - -p "Press Enter to continue..."
 	else
 		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
 	fi
@@ -209,7 +225,7 @@ function unmountmenu {
 	DIRTYDEVS=()
 	BLOCK=()
 
-	USBS=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+	USBS=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
 
 	for DEVICE in $USBS; do
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
@@ -283,14 +299,16 @@ function unmountmenu {
 	esac
 
 }
+
 function poweroffmenu {
+	
 	clear
 	usbstat
 
 	DIRTYDEVS=()
 	BLOCK=()
 
-	USBS=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+	USBS=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
 
 	for DEVICE in $USBS; do
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
@@ -321,7 +339,8 @@ function poweroffmenu {
 	done
 
 	dialog --clear --backtitle "036 Creative Studios" --title "Poweroff a Device" \
-		--menu "Choose for poweroff a device \n" 15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
+		--menu "Choose for poweroff a device \nCAUTION: All the partitions will be force unmounted "\
+		15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
 
 	CHOICEOFF=$(<"${POWEROFFTEMP}")
 
@@ -339,11 +358,13 @@ function mountmenu {
 	PARTS=()
 	FLAGS=()
 	BLOCK=()
+	UMOUNTS=()
 	CHOICE=0
 	COUNT=0
 	BLOCKCOUNT=0
+	MOUNTCOUNT=0
 
-	USB=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+	USB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
 	
 	for DEVICE in $USB; do
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
@@ -367,15 +388,29 @@ function mountmenu {
 		
 	done
 
-	COUNT=0
+	for PARTITIONS in "${PARTS[@]}"; do
+		MOUNTED=$(lsblk "/dev/$PARTITIONS" | sed -ne '/\//p')
+		if [ "$MOUNTED" != "" ]; then
+			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
+		else
+			UMOUNTS+=("$PARTITIONS")
+		fi
+	done
 
+	if [ $MOUNTCOUNT -eq $COUNT ]; then
+		echo "ERROR: All the partitions are mounted in your system"
+		read -r -p "Press Enter to continue..."
+		return 0
+	fi
+
+	COUNT=0
 	TYPE=0
 	MODEL=0
 	DEVICE=0
 	FLAGSCOUNT=0
 	ARGS=()
 
-	for PART in "${PARTS[@]}"; do
+	for PART in "${UMOUNTS[@]}"; do
 		DEVICE="/dev/$PART"
 		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)" #vfat, ext4
 		TEMP="${FLAGS[$FLAGSCOUNT]}"
@@ -404,7 +439,9 @@ function mountmenu {
 }
 
 function menu {
+
 	while true; do
+
 		dialog --clear --backtitle "036 Creative Studios" \
 			--title "036 USB Manager" \
 			--menu "Choose a Option\n" 15 50 4 \
@@ -412,7 +449,9 @@ function menu {
 			Unmount "Unmount a partition of a device" \
 			Power-off "Unmount and secure turn-off a USB" \
 			Exit "Exit to the shell" 2>"${INPUT}"
+
 		menuitem=$(<"${INPUT}")
+
 		case $menuitem in
 			Mount) mountmenu;;
 			Unmount) unmountmenu;;
