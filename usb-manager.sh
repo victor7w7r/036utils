@@ -87,7 +87,7 @@ function usbstat {
 	VERIFYUSB=$(ls /dev/disk/by-id | grep -c usb)
 	if [ "$VERIFYUSB" -eq 0 ]; then
 		clear
-		echo "ERROR: There's no USB drives connected in this PC"
+		echo "ERROR: There's no USB drives connected in this PC, or the devices are shutdown"
 		exit 0
 	fi
 }
@@ -135,25 +135,6 @@ function verify {
 
 }
 
-function mountaction() {
-	clear
-
-	if [ "$1" == "" ]; then
-		return 0;
-	fi
-
-	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
-	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
-		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
-		read -p "Press Enter to continue..."
-	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then
-		echo "ERROR: Your USB drive is already mounted"
-		read -p "Press Enter to continue..."
-	else
-		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
-	fi
-}
-
 function poweroffaction() {
 	clear
 	
@@ -175,6 +156,64 @@ function poweroffaction() {
 	$SUDO udisksctl power-off -b "$1"
 	dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
 	
+}
+
+function mountaction() {
+	clear
+
+	if [ "$1" == "" ]; then
+		return 0;
+	fi
+
+	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
+	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
+		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
+		read -p "Press Enter to continue..."
+	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then
+		echo "ERROR: Your USB drive is already mounted"
+		read -p "Press Enter to continue..."
+	else
+		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
+	fi
+}
+
+function unmountmenu {
+	clear
+	usbstat
+	MOUNTED=0
+	MOUNTS=()
+	DIRTYDEVS=()
+	BLOCK=()
+
+
+	USBS=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+
+	for DEVICE in $USBS; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
+		COUNT=$(( COUNT + 1 ))
+	done
+
+	for DEV in "${DIRTYDEVS[@]}"; do
+
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
+
+		if [ "$ABSOLUTEPARTS" == "" ]; then
+			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb 
+			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
+		fi
+	done
+
+	MOUNTED=$(lsblk /dev/sda | sed -ne '/\//p')
+
+	if [ "$MOUNTED" == "" ]; then
+		
+	fi
+
+	for MOUNTS in $MOUNTED; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
+		COUNT=$(( COUNT + 1 ))
+	done
+
 }
 
 function poweroffmenu {
@@ -215,7 +254,7 @@ function poweroffmenu {
 	done
 
 	dialog --clear --backtitle "036 Creative Studios" --title "Poweroff a Device" \
-		--menu "CHoose for poweroff a device \n" 15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
+		--menu "Choose for poweroff a device \n" 15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
 
 	CHOICEOFF=$(<"${POWEROFFTEMP}")
 
