@@ -5,7 +5,7 @@ if [ "$EUID" != "0" ]; then
 	if  [ -e /usr/bin/sudo ] || [ -e /bin/sudo ]; then
 		SUDO=sudo
 	else
-		echo "ERROR: In this system the binary sudo doesn't exist."
+		echo "ERROR: En este sistema no existe el binario de superusuario."
 		exit 0
 	fi
 fi
@@ -96,7 +96,7 @@ function usbstat {
 	VERIFYUSB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///')
 	if [ "$VERIFYUSB" == "" ]; then
 		clear
-		echo "ERROR: There's no USB drives connected in this PC, or the devices are shutdown"
+        echo "ERROR: No hay dispositivos USB conectados en esta PC, o los mismos estan apagados"
 		exit 0
 	fi
 }
@@ -108,7 +108,7 @@ function verify {
 	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
-		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
+		echo "ERROR: Este sistema no es GNU/Linux, saliendo"
 		exit 0
 	fi
 
@@ -117,7 +117,7 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: The udisks command line tool (udisksctl) doesn't exist, please install udisks"
+		echo "ERROR: El \"udisks command line tool (udisksctl)\" no existe, por favor installe udisks"
 		exit 0
 	fi
 
@@ -126,18 +126,18 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: The dialog binary is not available in this system, please install"
+		echo "ERROR: El ejecutable de dialog, no se encuentra en el sistema, por favor instalalo"
 		exit 0
 	fi
 	
 	if [ "$SERVICE" == "inactive"  ]; then
-		echo "ERROR: The udisks2 service is not running, please enable the service"
+		echo "ERROR: EL servicio udisks2 no esta ejecutandose, por favor ejecutalo"
 		exit 0
 	fi
 
 	usbstat
 
-	echo "All dependencies is ok!"
+	echo "Todo ok!"
 
 	START=$(date +%s)
 	CHARS="/-\|"
@@ -172,7 +172,7 @@ function poweroffaction() {
 
 	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
 	$SUDO udisksctl power-off -b "$1"
-	dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
+	dialog --msgbox "LISTO: Tu dispositivo $MODEL ha sido apagado" 7 35
 	
 }
 
@@ -185,13 +185,13 @@ function mountaction() {
 
 	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
 	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
-		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
-		read -r -p "Presione Enter to continue..."
+		echo "ERROR: Tu intento de autorizacion como superusuario no fue exitoso (Contrasena Incorrecta)"
+		read -r -p "Presione Enter para continuar..."
 	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then
-		echo "ERROR: This partition is already mounted"
-		read -r -p "Press Enter to continue..."
+		echo "ERROR: Esta particion esta montada actualmente"
+		read -r -p "Presione Enter para continuar..."
 	else
-		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
+		dialog --msgbox "LISTO: $DATAMOUNT" 7 35
 	fi
 }
 
@@ -204,13 +204,13 @@ function unmountaction() {
 
 	DATAMOUNT=$(udisksctl unmount -b "$1" 2>&1)
 	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
-		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
-		read -r -p "Press Enter to continue..."
+		echo "ERROR: Tu intento de autorizacion como superusuario no fue exitoso (Contrasena Incorrecta)"
+		read -r -p "Presione Enter para continuar..."
 	elif [[ $DATAMOUNT =~ NotMounted* ]]; then
-		echo "ERROR: Your partition is unmounted"
-		read -r -p "Press Enter to continue..."
+		echo "ERROR: Esta particion no esta montada"
+		read -r -p "Presione Enter para continuar..."
 	else
-		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
+		dialog --msgbox "LISTO: $DATAMOUNT" 7 35
 	fi
 }
 
@@ -257,8 +257,8 @@ function unmountmenu {
 	done
 
 	if [ $MOUNTCOUNT -eq $COUNT ]; then
-		echo "ERROR: There's not partitions mounted in your system"
-		read -r -p "Press Enter to continue..."
+		echo "ERROR: NO hay particiones montadas en el sistema"
+		read -r -p "Presione Enter para continuar..."
 		return 0
 	fi
 
@@ -289,8 +289,8 @@ function unmountmenu {
 
 	COUNT=0
 
-	dialog --clear --backtitle "036 Creative Studios" --title "Umount a Partition" \
-		--menu "Please umount a partition \n" 15 50 4 "${ARGS[@]}" 2>"${UNMOUNTTEMP}"
+	dialog --clear --backtitle "036 Creative Studios" --title "Desmontar una particion" \
+		--menu "Por favor, desmonta una particion \n" 15 50 4 "${ARGS[@]}" 2>"${UNMOUNTTEMP}"
 
 	CHOICE=$(<"${UNMOUNTTEMP}")
 	case $CHOICE in
@@ -338,8 +338,8 @@ function poweroffmenu {
 		COUNT=$(( COUNT + 1 ))
 	done
 
-	dialog --clear --backtitle "036 Creative Studios" --title "Poweroff a Device" \
-		--menu "Choose for poweroff a device \nCAUTION: All the partitions will be force unmounted "\
+	dialog --clear --backtitle "036 Creative Studios" --title "Apagar un dispositivo" \
+		--menu "Elija uno para apagar \nCUIDADO: Todas las particiones del dispositivo se desmontaran"\
 		15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
 
 	CHOICEOFF=$(<"${POWEROFFTEMP}")
@@ -398,8 +398,8 @@ function mountmenu {
 	done
 
 	if [ $MOUNTCOUNT -eq $COUNT ]; then
-		echo "ERROR: All the partitions are mounted in your system"
-		read -r -p "Press Enter to continue..."
+		echo "ERROR: Todas las particiones estan montadas en el sistema"
+		read -r -p "Presione Enter para continuar..."
 		return 0
 	fi
 
@@ -427,8 +427,8 @@ function mountmenu {
 
 	COUNT=0
 
-	dialog --clear --backtitle "036 Creative Studios" --title "Mount a Partition" \
-		--menu "Please Mount a partition \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
+	dialog --clear --backtitle "036 Creative Studios" --title "Montar una particion" \
+		--menu "Por favor, monta una particion \n" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
 
 	CHOICE=$(<"${MOUNTTEMP}")
 	case $CHOICE in
@@ -444,19 +444,19 @@ function menu {
 
 		dialog --clear --backtitle "036 Creative Studios" \
 			--title "036 USB Manager" \
-			--menu "Choose a Option\n" 15 50 4 \
-			Mount "Mount a partition of a device" \
-			Unmount "Unmount a partition of a device" \
-			Power-off "Unmount and secure turn-off a USB" \
-			Exit "Exit to the shell" 2>"${INPUT}"
+			--menu "Elija una opcion\n" 15 80 4 \
+			Montar "Montar una particion de un dispositivo" \
+			Desmontar "Desmontar una particion de un dispositivo" \
+			Apagar "Desmontar todo y expulsar de manera segura un dispositivo" \
+			Salir "Salir al shell" 2>"${INPUT}"
 
 		menuitem=$(<"${INPUT}")
 
 		case $menuitem in
-			Mount) mountmenu;;
-			Unmount) unmountmenu;;
-			Power-off) poweroffmenu;;
-			Exit) clear; exit 0;;
+			Montar) mountmenu;;
+			Desmontar) unmountmenu;;
+			Apagar) poweroffmenu;;
+			Salir) clear; exit 0;;
 			*) clear; exit 0;;
 		esac
 	done
