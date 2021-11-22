@@ -10,17 +10,19 @@ if [ "$EUID" != "0" ]; then
 	fi
 fi
 
-rm /tmp/menu.sh* 2< /dev/null
-rm /tmp/output.sh* 2< /dev/null
-rm /tmp/mounttemp.sh* 2< /dev/null
-rm /tmp/powerofftemp.sh* 2< /dev/null
+rm /tmp/menu.sh* 2> /dev/null
+rm /tmp/output.sh* 2> /dev/null
+rm /tmp/mounttemp.sh* 2> /dev/null
+rm /tmp/powerofftemp.sh* 2> /dev/null
+rm /tmp/unmounttemp.sh* 2> /dev/null
 
 INPUT=/tmp/menu.sh.$$	
 OUTPUT=/tmp/output.sh.$$
 MOUNTTEMP=/tmp/mounttemp.sh.$$
 POWEROFFTEMP=/tmp/powerofftemp.sh$$
+UNMOUNTTEMP=/tmp/unmounttemp.sh$$ 2> /dev/null
 
-trap "rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; exit" SIGHUP SIGINT SIGTERM
+trap "rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit" SIGHUP SIGINT SIGTERM
 
 function core { clear; cover; logo; sleep 1s; verify; usbstat; menu; }
 
@@ -82,7 +84,7 @@ function logo {
 
 }
 
-function usbstat { 
+function usbstat {
 
 	VERIFYUSB=$(ls /dev/disk/by-id | grep -c usb)
 	if [ "$VERIFYUSB" -eq 0 ]; then
@@ -177,14 +179,35 @@ function mountaction() {
 	fi
 }
 
+function unmountaction() {
+	clear
+
+	if [ "$1" == "" ]; then
+		return 0;
+	fi
+
+	DATAMOUNT=$(udisksctl unmount -b "$1" 2>&1)
+	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then
+		echo "ERROR: Your attempt to get authorization is not valid (Invalid Password)"
+		read -p "Press Enter to continue..."
+	elif [[ $DATAMOUNT =~ NotMounted* ]]; then
+		echo "ERROR: Your partition is already unmounted"
+		read -p "Press Enter to continue..."
+	else
+		dialog --msgbox "SUCCESS: $DATAMOUNT" 7 35
+	fi
+}
+
 function unmountmenu {
 	clear
 	usbstat
 	MOUNTED=0
+	COUNT=0
+	MOUNTCOUNT=0
+	PARTS=()
 	MOUNTS=()
 	DIRTYDEVS=()
 	BLOCK=()
-
 
 	USBS=$(ls /dev/disk/by-id | grep usb) # usb-USB3.0_high_speed_000000123AFF-0:0 ...
 
@@ -192,30 +215,74 @@ function unmountmenu {
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
 		COUNT=$(( COUNT + 1 ))
 	done
+	COUNT=0
 
 	for DEV in "${DIRTYDEVS[@]}"; do
 
 		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
 
-		if [ "$ABSOLUTEPARTS" == "" ]; then
-			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb 
+		if [ "$ABSOLUTEPARTS" != "" ]; then
+			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') #sda1 sda2 ...
+			COUNT=$(( COUNT + 1 ))
+		else
+			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
 			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
+		fi
+		
+	done
+
+	for PARTITIONS in "${PARTS[@]}"; do
+		MOUNTED=$(lsblk "/dev/$PARTITIONS" | sed -ne '/\//p')
+		if [ "$MOUNTED" == "" ]; then
+			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
+		else
+			MOUNTS+=("$PARTITIONS")
 		fi
 	done
 
-	MOUNTED=$(lsblk /dev/sda | sed -ne '/\//p')
-
-	if [ "$MOUNTED" == "" ]; then
-		
+	if [ $MOUNTCOUNT -eq $COUNT ]; then
+		echo "ERROR: There's not partitions mounted in your system"
+		read -p "Press Enter to continue..."
+		return 0
 	fi
 
-	for MOUNTS in $MOUNTED; do
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
+	echo "${MOUNTS[@]}"
+
+	COUNT=0
+
+	TYPE=0
+	MODEL=0
+	DEVICE=0
+	FLAGSCOUNT=0
+	ARGS=()
+
+	for PART in "${MOUNTS[@]}"; do
+		DEVICE="/dev/$PART"
+		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)" #vfat, ext4
+		TEMP="${FLAGS[$FLAGSCOUNT]}"
+		
+		if [ "$COUNT" == "$TEMP" ]; then
+			BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
+			FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
+		fi
+
+		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
+		ARGS+=("$DEVICE" "$MODEL $TYPE")
 		COUNT=$(( COUNT + 1 ))
 	done
 
-}
+	COUNT=0
 
+	dialog --clear --backtitle "036 Creative Studios" --title "Umount a Device" \
+		--menu "Please umount a partition \n" 15 50 4 "${ARGS[@]}" 2>"${UNMOUNTTEMP}"
+
+	CHOICE=$(<"${UNMOUNTTEMP}")
+	case $CHOICE in
+		"$CHOICE") unmountaction "$CHOICE";;
+		null) clear; exit 0; ;;
+	esac
+
+}
 function poweroffmenu {
 	clear
 	usbstat
@@ -342,12 +409,13 @@ function menu {
 			--title "036 USB Manager" \
 			--menu "Choose a Option\n" 15 50 4 \
 			Mount "Mount a partition of a device" \
+			Unmount "Unmount a partition of a device" \
 			Power-off "Unmount and secure turn-off a USB" \
 			Exit "Exit to the shell" 2>"${INPUT}"
 		menuitem=$(<"${INPUT}")
 		case $menuitem in
 			Mount) mountmenu;;
-			
+			Unmount) unmountmenu;;
 			Power-off) poweroffmenu;;
 			Exit) clear; exit 0;;
 			*) clear; exit 0;;
@@ -361,3 +429,4 @@ core
 [ -f $INPUT ] && rm $INPUT 
 [ -f $MOUNTTEMP ] && rm $MOUNTTEMP
 [ -f $POWEROFFTEMP ] && rm $POWEROFFTEMP
+[ -f $UNMOUNTTEMP ] && rm $UNMOUNTTEMP
