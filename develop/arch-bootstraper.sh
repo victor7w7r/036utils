@@ -106,6 +106,13 @@ function verify {
         echo "ERROR: You need to be root."
         exit 1
     fi
+	
+	if [ -d /sys/firmware/efi ]; then
+		echo "ready" &> /dev/null
+	else
+		echo "ERROR: This scripts only works in UEFI/EFI systems, consider change your PC or check your BIOS"
+		exit 1
+	fi
 
     if [ "$ARCH" != "x86_64" ]; then
         echo "ERROR: This script is only intended to run on x86_64 PCs."
@@ -195,7 +202,11 @@ function verify {
 
 function disclaimer {
     clear
-    dialog --msgbox "" 7 35
+	if ["$DISKENVIRONMENT" == "HDD"]; then
+	    dialog --msgbox "Before installing, we recomend that your disk if has the next partition scheme \n " 7 35
+	elif ["$DISKENVIRONMENT" == "SSD"]; then
+		dialog --msgbox "Before installing, we recomend that your disk if has the next partition scheme \n " 7 35
+	fi
 
 }
 
