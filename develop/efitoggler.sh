@@ -98,7 +98,7 @@ function toggle {
 
         echo "EFI Folder is mounted, unmounting"
 
-        $SUDO umount /Volumes/EFI
+        $SUDO diskutil unmount "$EFIPART"
         $SUDO rm -rf /Volumes/EFI
 
         echo "Done!"
