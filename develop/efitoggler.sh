@@ -101,7 +101,7 @@ function toggle {
         $SUDO umount /Volumes/EFI
         $SUDO rm -rf /Volumes/EFI
 
-        read -r -p "Done!"
+        echo "Done!"
 
     else
         echo "EFI Folder is not mounted, mounting"
@@ -110,7 +110,7 @@ function toggle {
         $SUDO mount -t msdos /dev/disk0s1 /Volumes/EFI
         open /Volumes/EFI
 
-        read -r -p "Done!"
+        echo "Done!"
 
     fi
 }
