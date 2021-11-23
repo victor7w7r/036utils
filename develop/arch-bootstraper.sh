@@ -202,9 +202,9 @@ function verify {
 
 function disclaimer {
     clear
-	if ["$DISKENVIRONMENT" == "HDD"]; then
+	if [ "$DISKENVIRONMENT" == "HDD" ] ; then
 	    dialog --msgbox "Before installing, we recomend that your disk if has the next partition scheme \n " 7 35
-	elif ["$DISKENVIRONMENT" == "SSD"]; then
+	elif [ "$DISKENVIRONMENT" == "SSD" ]; then
 		dialog --msgbox "Before installing, we recomend that your disk if has the next partition scheme \n " 7 35
 	fi
 
