@@ -186,7 +186,10 @@ function verify {
 function disclaimer {
 
     clear
-    echo $DISKENVIRONMENT
+    while true; do
+        echo $DISKENVIRONMENT
+    done
+    
     read -r -p "sadsda"
 }
 
