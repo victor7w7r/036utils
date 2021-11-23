@@ -179,7 +179,6 @@ function verify {
 		pacman -S arch-install-scripts --noconfirm
 	fi
 
-
 	echo "All dependencies is ok!"
 
 	START=$(date +%s)
@@ -195,13 +194,9 @@ function verify {
 }
 
 function disclaimer {
-
     clear
-    while true; do
-        echo $DISKENVIRONMENT
-    done
-    
-    read -r -p "sadsda"
+    dialog --msgbox "" 7 35
+
 }
 
 core
