@@ -75,7 +75,7 @@ function diskenv {
 	CHOICE=$(<"${DISKENVTEMP}")
 	case $CHOICE in
 		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
-        SSD) DISKENVIRONMENT="SSD"; disclaimer ;;
+        SSD/NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
 		*) clear; exit 0; ;;
 	esac
 
