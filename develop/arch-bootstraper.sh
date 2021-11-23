@@ -9,7 +9,7 @@ trap cleanup; SIGHUP SIGINT SIGTERM
 
 DISKENVIRONMENT=""
 
-function core { clear; cover; sleep 1s; verify; diskenv; disclaimer; }
+function core { clear; cover; sleep 1s; verify; diskenv; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -74,8 +74,8 @@ function diskenv {
 
 	CHOICE=$(<"${DISKENVTEMP}")
 	case $CHOICE in
-		HDD) DISKENVIRONMENT="HDD";;
-        SSD) DISKENVIRONMENT="SSD";;
+		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
+        SSD) DISKENVIRONMENT="SSD"; disclaimer ;;
 		*) clear; exit 0; ;;
 	esac
 
