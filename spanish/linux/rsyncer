@@ -5,22 +5,24 @@ if [ "$EUID" != "0" ]; then
 	if  [ -e /usr/bin/sudo ] || [ -e /bin/sudo ]; then
 		SUDO=sudo
 	else
-		echo "ERROR: In this system the binary sudo doesn't exist."
+		echo "ERROR: En este sistema no existe el binario de superusuario."
 		exit 0
 	fi
 fi
 
-
 rm /tmp/source.sh* 2> /dev/null
 rm /tmp/dest.sh* 2> /dev/null
-SOURCE=/tmp/source.sh.$$
-DEST=/tmp/dest.sh.$$
+SOURCETEMP=/tmp/source.sh.$$
+DESTTEMP=/tmp/dest.sh.$$
 
-function cleanup { rm $SOURCE; rm $DEST; exit; }
+SOURCE=""
+DEST=""
+
+function cleanup { rm "$SOURCE"; rm "$DEST"; exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
-function core { clear; cover; sleep 1s; verify; sourceaction; destiaction; }
+function core { clear; cover; sleep 1s; verify; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -85,59 +87,86 @@ function whichverify() {
 	fi
 }
 
-function syncer() {
+function syncer {
 
-    SOURCEREADY=""
-    DESTREADY=""
+	SOURCEREADY=""
+	DESTREADY=""
 
-    if [ "$2" == "" ]; then
-        exit 0
-    fi
-
-    if [[ "$1" =~ .*\/$  ]]; then
-        SOURCEREADY="$1"
+    if [[ "$SOURCE" =~ .*\/$ ]]; then
+        SOURCEREADY="$SOURCE"
     else
-        SOURCEREADY="$1/"
+        SOURCEREADY="$SOURCE/"
     fi
 
-
-    if [[ "$2" =~ .*\/$  ]]; then
-        DESTREADY="$2"
+    if [[ "$DEST" =~ .*\/$ ]]; then
+        DESTREADY="$DEST"
     else
-        DESTREADY="$2/"
+        DESTREADY="$DEST/"
     fi
 
+	clear
+	echo -e "=============== EMPEZAR RSYNC =============== \n" 
+	echo "SOURCE: $SOURCEREADY"
+	echo -e "DESTINATION: $DESTREADY \n"
+	$SUDO rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"
 
-    if [ -d "$2" ]; then
-        clear
-        echo -e "=============== START RSYNC =============== \n" 
-        echo "SOURCE: $1"
-        echo "DESTINATION: $2"
-        $SUDO rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"
+	echo -e "\n =============== OK =============== \n" 
+	echo -e "Listo!\n"
+	exit 0
+}
 
-        echo -e "\n =============== OK =============== \n" 
-        echo -e "Done\n!"
-        exit 0
-    else
-        clear
-        echo "ERROR: The directory \"$2\" doesn't exist"
-        read -r -p "Press Enter to continue..."
-        destiaction
-    fi
+function validator() {
+
+	if [ "$1" == "source" ]; then
+		if [ "$2" != "" ]; then
+			if [ -d "$2" ]; then
+				SOURCE="$2"
+				destiaction
+				return 0
+			else
+				clear
+    			echo "ERROR: El directorio \"$2\" no existe"
+        	    read -r -p "Presione Enter para continuar..."
+        		sourceaction
+				return 0
+			fi
+		else
+			exit 0;
+		fi
+	elif [ "$1" == "dest" ]; then
+		if [ "$2" != "" ]; then
+			if [ -d "$2" ]; then
+				DEST="$2"
+				syncer
+				return 0
+			else
+				clear
+    			echo "ERROR: El directorio \"$2\" no existe"
+        		read -r -p "Presione Enter para continuar..."
+        		destiaction
+				return 0
+			fi
+		else
+			sourceaction
+		fi
+	else
+		exit 0;
+	fi
+	
 }
 
 function sourceaction {
 
     dialog --title "036 rsyncer" \
     --backtitle "036 Creative Studios" \
-    --inputbox "Please write your source directory (Always put a / at the end)" 8 80 2>"$SOURCE"
+    --inputbox "Por favor escriba su directorio de origen" 8 80 2>"$SOURCETEMP"
 
     RESPONSE=$?
-    DATA=$(<$SOURCE)
+    DATA=$(<$SOURCETEMP)
 
     case $RESPONSE in
     0) 
-        destiaction "${DATA}" ;;
+        validator "source" "${DATA}" ;;
     1) 
         clear; exit 0  
         return;;
@@ -148,35 +177,27 @@ function sourceaction {
 
 }
 
-function destiaction() {
+function destiaction {
 
-    clear
+	RESPONSE=0
+	DATA=0
 
-    if [ "$1" == "" ]; then
-        exit 0
+	dialog --title "036 rsyncer" \
+	--backtitle "036 Creative Studios" \
+	--inputbox "Por favor escriba su directorio de destino" 8 80 2>"$DESTTEMP"
 
-    elif [ -d "$1" ]; then
-        dialog --title "036 rsyncer" \
-        --backtitle "036 Creative Studios" \
-        --inputbox "Please write your destination directory to copy (Always put a / at the end)" 8 80 2>"$DEST"
+	RESPONSE=$?
+	DATA=$(<$DESTTEMP)
 
-        RESPONSE=$?
-        DATA=$(<$DEST)
+	case $RESPONSE in
+	0) 
+		validator "dest" "${DATA}" ;;
+	1) 
+		clear; sourceaction break;;
+	255) 
+		clear; sourceaction break;;
+	esac
 
-        case $RESPONSE in
-        0) 
-            syncer "$1" "${DATA}" ;;
-        1) 
-            clear break;;
-        255) 
-            clear break;;
-        esac
-    else
-        clear
-        echo "ERROR: The directory \"$1\" doesn't exist"
-        read -r -p "Press Enter to continue..."
-        sourceaction
-    fi
 }
 
 function verify {
@@ -185,7 +206,7 @@ function verify {
 	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
-		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
+		echo "ERROR: Este sistema no es GNU/Linux, saliendo"
 		exit 0
 	fi
 
@@ -194,11 +215,11 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: The rsync binary is not available in this system, please install"
+		echo "ERROR: El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo"
 		exit 0
 	fi
 
-	echo "All dependencies is ok!"
+	echo "Todo ok!"
 
 	START=$(date +%s)
 	CHARS="/-\|"
@@ -216,6 +237,5 @@ function verify {
 
 core
 
-[ -f $SOURCE ] && rm $SOURCE
-[ -f $DEST ] && rm $DEST
-
+[ -f $SOURCETEMP ] && rm $SOURCETEMP
+[ -f $DESTTEMP ] && rm $DESTTEMP
