@@ -75,7 +75,7 @@ function verify {
 		exit 0
 	fi
 
-	echo "All dependencies is ok!"
+	echo "Todo ok!"
 
 	START=$(date +%s)
 	CHARS="/-\|"
