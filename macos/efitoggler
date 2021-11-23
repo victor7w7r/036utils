@@ -107,7 +107,7 @@ function toggle {
         echo "EFI Folder is not mounted, mounting"
 
         $SUDO mkdir /Volumes/EFI
-        $SUDO mount -t msdos /dev/disk0s1 /Volumes/EFI
+        $SUDO mount -t msdos /dev/"$EFIPART" /Volumes/EFI
         open /Volumes/EFI
 
         echo "Done!"
