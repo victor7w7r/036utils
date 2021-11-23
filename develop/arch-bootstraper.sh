@@ -70,12 +70,12 @@ function diskenv {
     dialog --clear --backtitle "036 Creative Studios" --title "Disk Environment" \
 		--menu "Please choose your disk type \n" 15 50 4 \
         HDD "Hard Drive Disk" \
-		SSD/NVMe "Solid State Disk or NVMe" 2>"${DISKENVTEMP}"
+		SSD-NVMe "Solid State Disk or NVMe" 2>"${DISKENVTEMP}"
 
 	CHOICE=$(<"${DISKENVTEMP}")
 	case $CHOICE in
 		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
-        SSD/NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
+        SSD-NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
 		*) clear; exit 0; ;;
 	esac
 
