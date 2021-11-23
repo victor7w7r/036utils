@@ -73,6 +73,7 @@ function diskenv {
 		SSD-NVMe "Solid State Disk or NVMe" 2>"${DISKENVTEMP}"
 
 	CHOICE=$(<"${DISKENVTEMP}")
+    $CHOICE echo
 	case $CHOICE in
 		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
         SSD-NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
@@ -168,6 +169,16 @@ function verify {
 		echo "dialog is not available in this system, installing"
 		pacman -S dialog --noconfirm
 	fi
+
+    SELECTOR="pacstrap"
+	whichverify "$SELECTOR"
+	local res=$?
+
+	if [ $res -eq 1 ]; then
+		echo "pacstrap is not available in this system, installing"
+		pacman -S arch-install-scripts --noconfirm
+	fi
+
 
 	echo "All dependencies is ok!"
 
