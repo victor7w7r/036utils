@@ -168,9 +168,8 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		clear
 		echo "lsb_release is not available in this system, installing"
-		pacman -S lsb-release --noconfirm
+		pacman -S lsb-release --noconfirm &> /dev/null
 	fi
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
@@ -228,8 +227,8 @@ function verify {
 }
 
 function disclaimer {
-    clear
-
+	clear
+	read -r -p "asdsads"
 	dialog --msgbox "DANGER!!!: Your destination device would be formatted and empty, formatting always cause data loss, PLEASE backup all your data before start" 8 70
 
 	if [ "$DISKENVIRONMENT" == "HDD" ] ; then
