@@ -374,10 +374,10 @@ function diskmenu {
 	BLOCK=()
 	DIRTYDEVS=()
 
-	DEVICES=$(find /dev/disk/by-id/ | sed 's/^\/dev\/disk\/by-id\///') # 3.0_high_speed_000000123AFF-0:0 ...
+	DEVICES=$(find /dev/disk/by-path/ | sed 's/^\/dev\/disk\/by-path\///') # 3.0_high_speed_000000123AFF-0:0 ...
 
 	for DEVICE in $DEVICES; do
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-path/$DEVICE") # ../../sda ../../sda1 ... 
 		COUNT=$(( COUNT + 1 ))
 	done
 
@@ -399,7 +399,6 @@ function diskmenu {
 		fi
 		
 	done
-
 
 	COUNT=0
 	MODEL=0
