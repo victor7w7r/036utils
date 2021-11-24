@@ -100,7 +100,7 @@ function diskenv {
 
 	CHOICE=$(<"${DISKENVTEMP}")
 	case $CHOICE in
-		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
+		HDD) DISKENVIRONMENT="HDD"; read -r -p "asddsa"; disclaimer ;;
         SSD-NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
 		*) clear; exit 0; ;;
 	esac
