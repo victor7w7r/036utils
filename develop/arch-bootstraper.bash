@@ -8,20 +8,25 @@ fi
 rm /tmp/diskenvtemp.sh* 2> /dev/null
 rm /tmp/diskmenutemp.sh* 2> /dev/null
 rm /tmp/rootpartmenutemp.sh* 2> /dev/null
+rm /tmp/swapppartmenutemp.sh* 2> /dev/null
 
 DISKMENUTEMP=/tmp/diskmenutemp.sh.$$	
 DISKENVTEMP=/tmp/diskenvtemp.sh.$$	
 ROOTPARTMENUTEMP=/tmp/rootpartmenutemp.sh.$$	
+SWAPPARTMENUTEMP=/tmp/swapppartmenutemp.sh.$$	
 
-function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP  exit; }
+function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; rm $SWAPPARTMENUTEMP  exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
 DISKENVIRONMENT=""
 DISK=""
+ROOTPART=""
+EFIPART=""
+SWAPPART=""
 
 function corelive { clear; cover; sleep 1s; verify; diskenv; }
-function corechroot { configurator; }
+function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; aur; optimizations; icons; finisher; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -402,19 +407,20 @@ function diskmenu {
 
 	case $CHOICE in
 		"$CHOICE") diskverify "$CHOICE";;
-		*) clear;;
+		*) clear; exit 0;;
 	esac
 }
 
 function rootpartmenu {
 	#Menu para seleccionar la particion de raiz de arch
-
 	VERIFY=""
 	TYPE=""
 	COUNT=0
 	COUNTMOUNT=0
 	ISMOUNTED=0
 	ROOTPARTS=()
+
+	EFIPART=$(fdisk -l "$DISK" | sed -ne /EFI/p | cut -d " " -f1)
 
 	if [[ $DISK =~ sd[[:alpha:]] ]]; then
 		VERIFY=$(find "$DISK"* | sed '/[[:alpha:]]$/d')
@@ -425,27 +431,24 @@ function rootpartmenu {
 	fi
 
 	for PART in $VERIFY; do
-		TYPE="$(lsblk -f "$PART" | sed -ne '2p' | cut -d " " -f2)"
-		if [ "$TYPE" == "ext4" ] || [ "$TYPE" == "f2fs" ]; then
-			ISMOUNTED=$(lsblk "$PART" | sed -ne '/\//p')
-			if [ "$ISMOUNTED" != "" ]; then
-				COUNTMOUNT=$(( COUNTMOUNT + 1 ))
-			else
-				ROOTPARTS+=("$PART" "$TYPE")
-			fi
-			COUNT=$((COUNT + 1))
-		fi
-	done
 
-	if [ $COUNT -eq 0 ]; then
-		clear
-		echo "ERROR: There's not ext4 or f2fs partitions available"
-		exit 1
+	if [ "$PART" != "$EFIPART" ]; then
+
+		ISMOUNTED=$(lsblk "$PART" | sed -ne '/\//p')
+		if [ "$ISMOUNTED" != "" ]; then
+			COUNTMOUNT=$(( COUNTMOUNT + 1 ))
+		else
+			ROOTPARTS+=("$PART" "$TYPE")
+		fi
+		COUNT=$((COUNT + 1))
+
 	fi
 
-		if [ "$COUNTMOUNT" -eq $COUNT ]; then
+	done
+
+	if [ "$COUNTMOUNT" -eq $COUNT ]; then
 		clear
-		echo "ERROR: All the ext4/f2fs partitions are mounted in your system, please unmount the desired partition"
+		echo "ERROR: All the partitions of the device are mounted in your system, please unmount the desired partition"
 		exit 1
 	fi
 
@@ -454,50 +457,183 @@ function rootpartmenu {
 
 	CHOICE=$(<"${ROOTPARTMENUTEMP}")
 	case $CHOICE in
-		"$CHOICE") diskformat "$CHOICE";;
-		null) clear; exit 0; ;;
+		"$CHOICE") ROOTPART="$CHOICE"; swapmenu "$CHOICE" ;;
+		*) clear; exit 0; ;;
 	esac
+}
 
-	diskformat
+function swapmenu() {
+
+	if [ "$1" == "" ]; then
+		clear
+		exit 0
+	fi
+
+	if [ $DISKENVIRONMENT == "HDD" ]; then
+
+		VERIFY=""
+		TYPE=""
+		COUNT=0
+		COUNTMOUNT=0
+		ISMOUNTED=0
+		SWAPPARTS=()
+
+		if [[ $DISK =~ sd[[:alpha:]] ]]; then
+			VERIFY=$(find "$DISK"* | sed '/[[:alpha:]]$/d')
+		elif [[ $DISK =~ mmcblk[[:digit:]] ]]; then
+			VERIFY=$(find "$DISK"* | sed '/k[[:digit:]]$/d')
+		elif [[ $DISK =~ nvme[[:alpha:]] ]]; then
+			VERIFY=$(find "$DISK"* | sed '/e[[:digit:]]$/d')
+		fi
+
+		for PART in $VERIFY; do
+
+		if [ "$PART" != "$EFIPART" ]; then
+
+			if [ "$PART" != "$ROOTPART" ]; then
+
+				ISMOUNTED=$(lsblk "$PART" | sed -ne '/\//p')
+				if [ "$ISMOUNTED" != "" ]; then
+					COUNTMOUNT=$(( COUNTMOUNT + 1 ))
+				else
+					SWAPPARTS+=("$PART" "$TYPE")
+				fi
+					COUNT=$((COUNT + 1))
+			fi
+
+		fi
+
+		done
+
+		if [ "$COUNTMOUNT" -eq $COUNT ]; then
+			clear
+			echo "ERROR: All the partitions of the device are mounted in your system, please unmount the desired partition"
+			exit 1
+		fi
+
+		dialog --clear --backtitle "036 Creative Studios" --title "Select a swap partition" \
+			--menu "Please select a swap partition \n" 15 50 4 "${SWAPPARTS[@]}" 2>"${SWAPPARTMENUTEMP}"
+
+		CHOICE=$(<"${SWAPPARTMENUTEMP}")
+		case $CHOICE in
+			"$CHOICE") SWAPPART="$CHOICE"; diskformat "$CHOICE" ;;
+			*) clear; exit 0; ;;
+		esac
+
+	elif [ $DISKENVIRONMENT == "SSD" ]; then
+		diskformat
+	fi
+
 }
 
 function diskformat {
 
-	echo "$1"
-	read "adsdsa"
+	if [ "$1" == "" ]; then
+		clear
+		exit 0
+	fi
 
-	#Empezar a formatear el disco, poner un messagebox de si o no advirtiendo el formateo
-	#poner los mensajes como rsyncer, montar los sistemas tambien
+	if [ $DISKENVIRONMENT == "HDD" ]; then
+		dialog --title "DANGER ZONE!!!" --backtitle "036 Creative Studios" \
+			--yesno "This partitions will be format Continue? \n$EFIPART (EFI) \n$ROOTPART (ROOT) \n$SWAPPART (SWAP)" 8 60
+	elif [ $DISKENVIRONMENT == "SSD" ]; then
+		dialog --title "DANGER ZONE!!!" --backtitle "036 Creative Studios" \
+			--yesno "This partitions will be format Continue? \n$EFIPART (EFI) \n$ROOTPART (ROOT)" 7 60
+	fi
 
-	dialog --title "Delete file" \
-	--backtitle "Linux Shell Script Tutorial Example" \
-	--yesno "Are you sure you want to permanently delete \"/tmp/foo.txt\"?" 7 60
+	clear
+	response=$?
 
-		response=$?
-	case $response in
-		0) echo "File deleted.";;
-		1) echo "File not deleted.";;
-		255) echo "[ESC] key pressed.";;
-	esac
+	if [ $response = 0 ]; then
 
-	exit 0
-	pacstraper
+		if [ $DISKENVIRONMENT == "HDD" ]; then
+
+			echo -e "=============== FORMAT ROOT FILESYSTEM AND SWAP =============== \n" 
+
+			mkfs.ext4 "$ROOTPART"
+			mkswap "$SWAPPART"
+			swapon "$SWAPPART"
+
+			echo " "
+			echo -e "=============== OK =============== \n" 
+			read -r -p "Press Enter to continue..."
+			clear
+	
+		elif [ $DISKENVIRONMENT == "SSD" ]; then
+
+			echo -e "=============== FORMAT ROOT FILESYSTEM =============== \n" 
+
+			mkfs.f2fs "$ROOTPART"
+
+			echo " "
+			echo -e "=============== OK =============== \n" 
+			read -r -p "Press Enter to continue..."
+			clear
+	
+		fi
+
+		echo -e "=============== FORMAT EFI AND MOUNT =============== \n" 
+
+		mkfs.fat -F32 "$EFIPART"
+		mount "$ROOTPART" /mnt
+		mkdir /mnt/efi
+		mount "$EFIPART" /mnt/efi
+
+		echo " "
+		echo -e "=============== OK =============== \n" 
+		read -r -p "Press Enter to continue..."
+		clear
+
+		pacstraper
+
+
+	elif [ $response -eq 1 ] || [ $response -eq 255 ]; then
+		clear
+		exit 0
+	else
+		clear
+		exit 0
+	fi
+	
 }
 
 function unmounter {
+	clear
+
+	if [ $DISKENVIRONMENT == "HDD" ]; then
+		umount "$EFIPART"
+		umount "$ROOTPART"
+		swapoff "$SWAPPART"
+	elif [ $DISKENVIRONMENT == "SSD" ]; then
+		umount "$EFIPART"
+		umount "$ROOTPART"
+	fi
+	echo "unmounted filesystems succesfully"
 	exit 0
 }
 
 function pacstraper {
-	#Poner en mensajes como el rsyncer, el pacstrapeo
-	#POner el genfstab tambien
+
+	echo -e "=============== PACSTRAP: INSTALL LINUX BASE AND CORE PACKAGES =============== \n" 
+	
+	pacstrap /mnt base linux linux-firmware nano sudo vi vim git wget \
+	grub efibootmgr reflector os-prober rsync networkmanager neofetch \
+	openssh arch-install-scripts screen unrar p7zip zsh
+
+	genfstab -U /mnt >> /mnt/etc/fstab
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
 	toggler
 }
 
 function toggler {
-	#realizar las primeras acciones de instalacion
+
 	cp "$0" /mnt/arch-setupper.sh
-	arch-chroot /mnt ./arch-setupper.sh chroot
+	arch-chroot /mnt ./arch-setupper.sh chroot $DISKENVIRONMENT
+
 	if [ -f /mnt/arch-setupper.sh ]; then
         echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
         echo 'Please umount, and restart this script'
@@ -507,10 +643,50 @@ function toggler {
 }
 
 function configurator {
-	echo "aa"
+	clear
+	echo "$DISKENVIRONMENT"
+	read -r -p "dsadsa"
+
+	echo -e "=============== ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
+
+	passwd
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
+	clear
+
+	echo -e "=============== CONFIGURE GRUB =============== \n" 
+
+	grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
+	grub-mkconfig -o /boot/grub/grub.cfg
+	umount /mnt/efi
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
+	clear
+
+	echo -e "=============== START NETWORKMANAGER AND SSH SERVICES =============== \n" 
+
+	systemctl enable NetworkManage
+	systemctl enable sshd
+	systemctl start NetworkManager
+	systemctl start sshd
+	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
+	/etc/ssh/sshd_config &> /dev/null
+
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
 }
 
+
+
 if [ "$1" == "chroot" ]; then
+	DISKENVIRONMENT=$2
 	corechroot
 else
 	corelive
@@ -518,4 +694,5 @@ fi
 
 [ -f $DISKENVTEMP ] && rm $DISKENVTEMP 
 [ -f $DISKMENUTEMP ] && rm $DISKMENUTEMP 
-[ -f $ROOTPARTMENUTEMP ] && rm $ROOTPARTMENUTEMP 
+[ -f $ROOTPARTMENUTEMP ] && rm $ROOTPARTMENUTEMP
+[ -f $SWAPPARTMENUTEMP ] && rm  $SWAPPARTMENUTEMP

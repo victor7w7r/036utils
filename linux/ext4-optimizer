@@ -200,6 +200,7 @@ function defragaction {
 		read -r -p "Press Enter to continue..."
 		return 0;
 	fi
+	
 	echo " "
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
@@ -276,7 +277,7 @@ function defragmenu {
 		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
 		if [ "$ABSOLUTEPARTS" != "" ]; then
 			if [ "$ABSOLUTEPARTS" != "$ROOT" ]; then
-				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d'| sed '/blk[[:digit:]]$/d') #sda1 sda2 ...
+				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d') #sda1 sda2 ...
 				COUNT=$(( COUNT + 1 ))
 			fi
 		fi
