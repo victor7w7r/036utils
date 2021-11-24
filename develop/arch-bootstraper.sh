@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 
+if [ "$(id -u)" -ne 0 ]; then
+	echo "ERROR: You need to be root."
+	exit 1
+fi
+
 rm /tmp/diskenvtemp.sh* 2> /dev/null
 rm /tmp/diskmenutemp.sh* 2> /dev/null
+rm /tmp/rootpartmenutemp.sh* 2> /dev/null
+
 DISKMENUTEMP=/tmp/diskmenutemp.sh.$$	
 DISKENVTEMP=/tmp/diskenvtemp.sh.$$	
+ROOTPARTMENUTEMP=/tmp/rootpartmenutemp.sh.$$	
 
-function cleanup { rm $DISKENVTEMP; rm=$DISKMENUTEMP  exit; }
+function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP  exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
@@ -105,12 +113,6 @@ function verify {
 		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
 		exit 1
 	fi
-
-    if [ "$(id -u)" -ne 0 ]; then
-		clear
-        echo "ERROR: You need to be root."
-        exit 1
-    fi
 	
 	#if [ -d /sys/firmware/efi ]; then
 	#	echo "ready" &> /dev/null
@@ -249,26 +251,48 @@ function disclaimer {
 
 function diskverify() {
 
+	clear
 	LABEL=$(blkid -o value -s PTTYPE "$1")
 	EFI=""
 	EFIORDER=""
+	BLOCK=""
 
 	if [ "$LABEL" == "dos" ]; then
-		ERROR: "The device has a DOS Label Type (MBR), this script only works with gpt"
+		echo "ERROR: The device has a DOS Label Type (MBR), this script only works with gpt"
 		exit 1
 	fi
 
 	if [[ $1 =~ sd[[:alpha:]] ]]; then
 
 		EFI=$(fdisk -l "$1" | sed -ne '/EFI/p')
-		EFIORDER=$($EFI | sed -ne '/[[:alpha:]]1/p' )
+		EFIORDER=$(echo "$EFI" | sed -ne '/[[:alpha:]]1/p' )
+
+		if [ "$DISKENVIRONMENT" == "SSD" ]; then
+			BLOCK=$(echo "$1" | cut -d "/" -f3)
+			ROTATIONAL="$(cat /sys/block/"$BLOCK"/queue/rotational)"
+
+			if  [ "$ROTATIONAL" == "1" ]; then
+				echo "ERROR: You choose a SSD device, but this device is rotational, if is that not the case, that device is USB"
+				exit 1
+			fi
+
+		elif [ "$DISKENVIRONMENT" == "HDD" ]; then
+		
+			BLOCK=$(echo "$1" | cut -d "/" -f3)
+			ROTATIONAL="$(cat /sys/block/"$BLOCK"/queue/rotational)"
+
+			if  [ "$ROTATIONAL" == "0" ]; then
+				echo "ERROR: ou choose a HDD device, but this device is not rotational, please check and run this script again"
+				exit 1
+			fi
+		fi
 
 		if [ "$EFI" == "" ]; then
-			ERROR: "The device doesn't have a EFI partition"
+			echo "ERROR: The device doesn't have a EFI partition"
 			exit 1
 		fi
 		if [ "$EFIORDER" == "" ]; then
-			ERROR: "The device has the EFI partition in other side than $1 1"
+			echo "ERROR: The device has the EFI partition in other side than $1 1"
 			exit 1
 		fi
 
@@ -278,14 +302,19 @@ function diskverify() {
 	elif [[ $1 =~ mmcblk[[:digit:]] ]]; then
 
 		EFI=$(fdisk -l "$1" | sed -ne '/EFI/p')
-		EFIORDER=$($EFI | sed -ne '/p1/p' )
+		EFIORDER=$(echo "$EFI" | sed -ne '/p1/p' )
+
+		if [ "$DISKENVIRONMENT" == "HDD" ]; then
+			echo "ERROR: You choose a HDD device, but this device is not rotational, please check and run this script again"
+			exit 1
+		fi
 
 		if [ "$EFI" == "" ]; then
-			ERROR: "The device doesn't have a EFI partition"
+			echo "ERROR: The device doesn't have a EFI partition"
 			exit 1
 		fi
 		if [ "$EFIORDER" == "" ]; then
-			ERROR: "The device has the EFI partition in other side than $1 1"
+			echo "ERROR: The device has the EFI partition in other side than $1 1"
 			exit 1
 		fi
 
@@ -295,14 +324,19 @@ function diskverify() {
 	elif [[ $1 =~ nvme[[:digit:]] ]]; then
 
 		EFI=$(fdisk -l "$1" | sed -ne '/EFI/p')
-		EFIORDER=$($EFI | sed -ne '/p1/p' )
+		EFIORDER=$(echo "$EFI" | sed -ne '/p1/p' )
+
+		if [ "$DISKENVIRONMENT" == "HDD" ]; then
+			echo "ERROR: You choose a HDD device, but this device is not rotational, please check and run this script again"
+			exit 1
+		fi
 
 		if [ "$EFI" == "" ]; then
-			ERROR: "The device doesn't have a EFI partition"
+			echo "ERROR: The device doesn't have a EFI partition"
 			exit 1
 		fi
 		if [ "$EFIORDER" == "" ]; then
-			ERROR: "The device has the EFI partition in other side than $1 1"
+			echo "ERROR: The device has the EFI partition in other side than $1 1"
 			exit 1
 		fi
 
@@ -320,7 +354,7 @@ function diskmenu {
 	BLOCK=()
 	DIRTYDEVS=()
 
-	DEVICES=$(find /dev/disk/by-id/| sort -n | sed 's/^\/dev\/disk\/by-id\///') # 3.0_high_speed_000000123AFF-0:0 ...
+	DEVICES=$(find /dev/disk/by-id/ | sed 's/^\/dev\/disk\/by-id\///') # 3.0_high_speed_000000123AFF-0:0 ...
 
 	for DEVICE in $DEVICES; do
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ... 
@@ -334,9 +368,6 @@ function diskmenu {
 	fi
 
 	COUNT=0
-
-	echo "${DIRTYDEVS[@]}"
-	read -r -p "dasdsa"
 
 	for DEV in "${DIRTYDEVS[@]}"; do	
 
@@ -377,12 +408,79 @@ function diskmenu {
 
 function rootpartmenu {
 	#Menu para seleccionar la particion de raiz de arch
+
+	VERIFY=""
+	TYPE=""
+	COUNT=0
+	COUNTMOUNT=0
+	ISMOUNTED=0
+	ROOTPARTS=()
+
+	if [[ $DISK =~ sd[[:alpha:]] ]]; then
+		VERIFY=$(find "$DISK"* | sed '/[[:alpha:]]$/d')
+	elif [[ $DISK =~ mmcblk[[:digit:]] ]]; then
+		VERIFY=$(find "$DISK"* | sed '/k[[:digit:]]$/d')
+	elif [[ $DISK =~ nvme[[:alpha:]] ]]; then
+		VERIFY=$(find "$DISK"* | sed '/e[[:digit:]]$/d')
+	fi
+
+	for PART in $VERIFY; do
+		TYPE="$(lsblk -f "$PART" | sed -ne '2p' | cut -d " " -f2)"
+		if [ "$TYPE" == "ext4" ] || [ "$TYPE" == "f2fs" ]; then
+			ISMOUNTED=$(lsblk "$PART" | sed -ne '/\//p')
+			if [ "$ISMOUNTED" != "" ]; then
+				COUNTMOUNT=$(( COUNTMOUNT + 1 ))
+			else
+				ROOTPARTS+=("$PART" "$TYPE")
+			fi
+			COUNT=$((COUNT + 1))
+		fi
+	done
+
+	if [ $COUNT -eq 0 ]; then
+		clear
+		echo "ERROR: There's not ext4 or f2fs partitions available"
+		exit 1
+	fi
+
+		if [ "$COUNTMOUNT" -eq $COUNT ]; then
+		clear
+		echo "ERROR: All the ext4/f2fs partitions are mounted in your system, please unmount the desired partition"
+		exit 1
+	fi
+
+	dialog --clear --backtitle "036 Creative Studios" --title "Select a root partition" \
+		--menu "Please select a partition \n" 15 50 4 "${ROOTPARTS[@]}" 2>"${ROOTPARTMENUTEMP}"
+
+	CHOICE=$(<"${ROOTPARTMENUTEMP}")
+	case $CHOICE in
+		"$CHOICE") diskformat "$CHOICE";;
+		null) clear; exit 0; ;;
+	esac
+
 	diskformat
 }
 
 function diskformat {
+
+	echo "$1"
+	read "adsdsa"
+
 	#Empezar a formatear el disco, poner un messagebox de si o no advirtiendo el formateo
 	#poner los mensajes como rsyncer, montar los sistemas tambien
+
+	dialog --title "Delete file" \
+	--backtitle "Linux Shell Script Tutorial Example" \
+	--yesno "Are you sure you want to permanently delete \"/tmp/foo.txt\"?" 7 60
+
+		response=$?
+	case $response in
+		0) echo "File deleted.";;
+		1) echo "File not deleted.";;
+		255) echo "[ESC] key pressed.";;
+	esac
+
+	exit 0
 	pacstraper
 }
 
@@ -418,7 +516,6 @@ else
 	corelive
 fi
 
-
-
 [ -f $DISKENVTEMP ] && rm $DISKENVTEMP 
 [ -f $DISKMENUTEMP ] && rm $DISKMENUTEMP 
+[ -f $ROOTPARTMENUTEMP ] && rm $ROOTPARTMENUTEMP 
