@@ -106,6 +106,7 @@ function verify {
 	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
+		clear
 		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
 		exit 0
 	fi
@@ -115,7 +116,8 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "ERROR: The udisks command line tool (udisksctl) doesn't exist, please install udisks"
+		clear
+		echo "ERROR: The udisks command line tool (udisksctl) doesn't exist, please install udisks2"
 		exit 0
 	fi
 

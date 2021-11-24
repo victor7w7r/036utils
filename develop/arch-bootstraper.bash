@@ -100,7 +100,7 @@ function diskenv {
 
 	CHOICE=$(<"${DISKENVTEMP}")
 	case $CHOICE in
-		HDD) DISKENVIRONMENT="HDD"; read -r -p "asddsa"; disclaimer ;;
+		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
         SSD-NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
 		*) clear; exit 0; ;;
 	esac
@@ -210,6 +210,14 @@ function verify {
 		echo "pacstrap is not available in this system, installing"
 		pacman -S arch-install-scripts --noconfirm &> /dev/null
 	fi
+
+	LIB=$(find /lib/ -name "libncurses++w.so" )
+
+	if [ "$LIB" == "" ]; then
+		echo "ncurses is not available in this system, installing"
+		pacman -S ncurses --noconfirm &> /dev/null
+	fi
+
 
 	echo "All dependencies is ok!"
 
