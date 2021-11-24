@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+#poner los pesos en cada disco al mostrar
+#el yay de software hacer como usuario normal
+
 if [ "$(id -u)" -ne 0 ]; then
 	echo "ERROR: You need to be root."
 	exit 1
@@ -247,10 +250,10 @@ function disclaimer {
 		GNU Parted script example  for format a 20GB disk\n\n \
 
 		mklabel gpt \ \n \
-		mkpart primary fat32 1MiB 200MiB \ \n \
+		mkpart EFI fat32 1MiB 200MiB \ \n \
 		set 1 esp on \ \n \
-		mkpart primary ext4 200MiB 19.0GiB \ \n \
-		mkpart primary linux-swap 19.0GiB 100% \ \n" 20 70
+		mkpart ROOT ext4 200MiB 19.0GiB \ \n \
+		mkpart SWAP linux-swap 19.0GiB 100% \ \n" 20 70
 
 	elif [ "$DISKENVIRONMENT" == "SSD" ]; then
 	dialog --msgbox "Before installing, we recomend that your disk has the next partition scheme, before install\n\n\
@@ -261,9 +264,9 @@ function disclaimer {
 		GNU Parted script example for format a 20GB disk\n\n \
 
 		mklabel gpt \ \n \
-		mkpart primary fat32 1MiB 200MiB \ \n \
+		mkpart EFI fat32 1MiB 200MiB \ \n \
 		set 1 esp on \ \n \
-		mkpart primary f2fs 200MiB 100% \ \n" 20 70
+		mkpart ROOT f2fs 200MiB 100% \ \n" 20 70
 	fi
 	diskmenu
 
@@ -403,19 +406,20 @@ function diskmenu {
 	COUNT=0
 	MODEL=0
 	DEVICE=0
-	ARGSPOWEROFF=()
+	ARRAY=()
 
 	for PART in "${BLOCK[@]}"; do
 		DEVICE="/dev/$PART"
 		BLOCKSTAT="${BLOCK[$COUNT]}"
+		SIZE=$(lsblk -no SIZE /dev/"$PART" | head -1 | sed s/..//)
 		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
-		ARGSPOWEROFF+=("$DEVICE" "$MODEL")
+		ARRAY+=("$DEVICE" "$MODEL $SIZE")
 		COUNT=$(( COUNT + 1 ))
 	done
 
 		dialog --clear --backtitle "036 Creative Studios" --title "Choose a device" \
 		--menu "Choose a device for install"\
-		15 50 4 "${ARGSPOWEROFF[@]}" 2>"${DISKMENUTEMP}"
+		15 50 4 "${ARRAY[@]}" 2>"${DISKMENUTEMP}"
 
 	CHOICE=$(<"${DISKMENUTEMP}")
 
