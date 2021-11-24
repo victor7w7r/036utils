@@ -9,13 +9,22 @@ rm /tmp/diskenvtemp.sh* 2> /dev/null
 rm /tmp/diskmenutemp.sh* 2> /dev/null
 rm /tmp/rootpartmenutemp.sh* 2> /dev/null
 rm /tmp/swapppartmenutemp.sh* 2> /dev/null
+rm /tmp/localestemp.sh* 2> /dev/null
+rm /tmp/hosttemp.sh* 2> /dev/null
+rm /tmp/graphicaltemp.sh* 2> /dev/null
+rm /tmp/driverstemp.sh* 2> /dev/null
 
 DISKMENUTEMP=/tmp/diskmenutemp.sh.$$	
 DISKENVTEMP=/tmp/diskenvtemp.sh.$$	
 ROOTPARTMENUTEMP=/tmp/rootpartmenutemp.sh.$$	
 SWAPPARTMENUTEMP=/tmp/swapppartmenutemp.sh.$$	
+LOCALESTEMP=/tmp/localestemp.sh.$$
+HOSTTEMP=/tmp/hosttemp.sh.$$
+GRAPHICALTEMP=/tmp/graphicaltemp.sh.$$
+DRIVERSTEMP=/tmp/driverstemp.sh.$$
 
-function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; rm $SWAPPARTMENUTEMP  exit; }
+function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; 
+	rm $SWAPPARTMENUTEMP; rm $LOCALESTEMP; $HOSTTEMP; $GRAPHICALTEMP; $DRIVERSTEMP; exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
@@ -24,9 +33,10 @@ DISK=""
 ROOTPART=""
 EFIPART=""
 SWAPPART=""
+SUDOUSER=""
 
 function corelive { clear; cover; sleep 1s; verify; diskenv; }
-function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; aur; optimizations; icons; finisher; }
+function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; drivers; aur; optimizations; software; finisher; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -636,9 +646,7 @@ function toggler {
 
 	if [ -f /mnt/arch-setupper.sh ]; then
         echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
-        echo 'Please umount, and restart this script'
-		#unmount_filesystems
-		echo "desmontar"
+        echo 'Please umount all partitions, and restart this script'
     fi
 }
 
@@ -674,16 +682,423 @@ function configurator {
 	systemctl enable NetworkManage
 	systemctl enable sshd
 	systemctl start NetworkManager
-	systemctl start sshd
 	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
 	/etc/ssh/sshd_config &> /dev/null
+	systemctl start sshd
 
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
 
 }
 
+function hostnamer {
 
+	clear
+	dialog --title "036 rsyncer" \
+    --backtitle "036 Creative Studios" \
+    --inputbox "Please write your hostname (ex: A036-arch)" 8 80 2>"$HOSTTEMP"
+
+    RESPONSE=$?
+    DATA=$(<$HOSTTEMP)
+
+    case $RESPONSE in
+    0) 
+		echo "${DATA}" > /etc/hostname
+		echo "127.0.1.1        ${DATA}" >> /etc/hosts
+		return;;
+    1) 
+        clear; exit 0  
+        return;;
+    255) 
+        clear; exit 0
+        return;;
+    esac
+	
+}
+
+function localer {
+
+	clear
+	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n \
+		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 20 70
+
+	ln -sf /usr/share/zoneinfo/America/Guayaquil /etc/localtime
+	hwclock --systohc
+
+	dialog --title "Locale" \
+	--backtitle "036 Creative Studios" \
+	--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" \
+			Spanish "es_ES" \
+			English "en_US" \
+			Exit "Exit to the shell" 2>"${LOCALESTEMP}"
+
+		menuitem=$(<"${LOCALESTEMP}")
+
+			case $menuitem in
+				Spanish) 
+					sed -i 's/^#es_ES.UTF-8 UTF-8$/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+					locale-gen
+					echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
+					echo 'LC_TIME="es_ES.UTF-8"' >> /etc/locale.conf
+					echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/locale.conf
+					return;;
+				English) 
+					sed -i 's/^#en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+					locale-gen
+					echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
+					echo 'LC_TIME="en_US.UTF-8"' >> /etc/locale.conf
+					echo 'LANGUAGE="es_US:en"' >> /etc/locale.conf
+					return;;
+				*) clear; exit 0;;
+			esac
+}
+
+function newuser {
+
+	clear
+	echo -e "=============== ADD A USER TO A SUDO GROUP =============== \n" 
+	
+	read -r -p "Write your username: " SUDOUSER
+	passwd "$SUDOUSER"
+	usermod -aG wheel "$SUDOUSER"
+	sed -i 's/^#.*%wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers &> /dev/null
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+}
+
+function swapper {
+
+	clear
+	echo -e "=============== SWAPPING =============== \n" 
+
+	if [ $DISKENVIRONMENT == "HDD" ]; then
+
+		echo "vm.swappiness=60" >> /etc/sysctl.d/99-sysctl.conf
+
+	elif [ $DISKENVIRONMENT == "SSD" ]; then
+		dd if=/dev/zero of=/swapfile bs=1M count=1024 status=progress
+		chmod 600 /swapfile
+		mkswap /swapfile
+		swapon /swapfile
+		echo "swapfile none swap defaults 0 0" >> /etc/fstab
+		echo "vm.swappiness=1" >> /etc/sysctl.d/99-sysctl.conf
+	fi
+
+	
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
+
+}
+
+function xanmod {
+
+	clear
+	echo -e "=============== XANMOD KERNEL =============== \n" 
+	
+	sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+	sed -i 's/^SigLevel    = Required DatabaseOptional$/SigLevel = PackageOptional/' \
+		/etc/pacman.conf &> /dev/null
+	echo "[kernel]" >> /etc/pacman.conf
+	echo 'Server = https://repo.archlinuxrepo.dev/$arch/$repo' >> /etc/pacman.conf
+	pacman -Syyu xanmod-kernel xanmod-kernel-headers --noconfirm
+	pacman -R linux --noconfirm
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+}
+
+function graphical {
+
+	clear
+	dialog --title "Graphical Environment" \
+	--backtitle "036 Creative Studios" \
+	--menu "Choose a GUI, these are the common used, this script recommends XFCE" \
+			XFCE "Xfce Desktop Environment" \
+			GNOME "GNOME Desktop Environment" \
+			KDE "KDE Desktop Environment" \
+			XORG "Minimal xorg Desktop" \
+			CUTEFISH "Cutefish Desktop (Beta)" \
+			NOGUI "No install GUI" 2>"${GRAPHICALTEMP}"
+
+	menuitem=$(<"${GRAPHICALTEMP}")
+
+		case $menuitem in
+			XFCE) 
+
+				clear
+				echo -e "=============== XFCE =============== \n" 
+	
+				pacman -S xorg --noconfirm
+				pacman -S xfce4 xfce4-goodies xfce4-terminal ttf-ubuntu-font-family \
+					gtk-engines gtk-engine-murrine gnome-themes-standard \
+					xdg-user-dirs ttf-dejavu gvfs xfce4-notifyd network-manager-applet \
+					volumeicon firefox gdm grub-customizer nemo cinnamon-translations --noconfirm
+				systemctl enable gdm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			GNOME) 
+
+				clear
+				echo -e "=============== GNOME =============== \n" 
+				pacman -S xorg --noconfirm
+				pacman -S gnome xfce4 gdm gnome-themes-standard network-manager-applet \
+					firefox grub-customizer nemo cinnamon-translations --noconfirm
+				systemctl enable gdm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			KDE) 
+
+				clear
+				echo -e "=============== KDE =============== \n" 
+				pacman -S xorg --noconfirm
+				pacman -S plasma plasma-wayland-session kde-applications gnome-themes-standard network-manager-applet \
+					firefox grub-customizer nemo cinnamon-translations --noconfirm
+				systemctl enable sddm.service
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			XORG) 
+
+				clear
+				echo -e "=============== XORG ONLY =============== \n" 
+				pacman -S xorg --noconfirm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			CUTEFISH) 
+
+				clear
+				echo -e "=============== CUTEFISH =============== \n" 
+				pacman -S xorg --noconfirm
+				pacman -S curefish --noconfirm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			NOGUI) 
+				return;;
+
+			*) clear; exit 0;;
+		esac
+}
+
+function drivers {
+
+	clear
+	dialog --title "Graphical Drivers" \
+	--backtitle "036 Creative Studios" \
+	--menu "Choose your GPU drivers" \
+			Intel "Intel Graphics" \
+			ATI "ATI Cards" \
+			AMD "AMD Cards" \
+			NVIDIA "NVIDIA Cards" \
+			VMware "If you are executing Arch Linux as a guest" 2>"${DRIVERSTEMP}"
+
+	menuitem=$(<"${DRIVERSTEMP}")
+
+		case $menuitem in
+			Intel) 
+
+				clear
+				echo -e "=============== INTEL =============== \n" 
+
+				pacman -S xf86-video-intel intem-media-driver intel-media-sdk lib32-mesa --noconfirm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			ATI) 
+
+				clear
+				echo -e "=============== ATI =============== \n" 
+
+				pacman -S xf86-video-ati --noconfirm
+		
+				echo " "
+				echo -e "=============== AMD =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			AMD) 
+
+				clear
+				echo -e "=============== AMD =============== \n" 
+
+				pacman -S xf86-video-amdgpu --noconfirm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			NVIDIA) 
+
+				clear
+				echo -e "=============== NVIDIA =============== \n" 
+
+				pacman -S nvidia nvidia-utils --noconfirm
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			VMware) 
+
+				clear
+				echo -e "=============== VMware =============== \n" 
+
+				pacman -S gtkmm3 open-vm-tools xf86-input-vmmouse xf86-video-vmware --noconfirm
+				systemctl enable vmtoolsd
+
+				echo " "
+				echo -e "=============== OK =============== \n" 
+				read -r -p "Press Enter to continue..."
+				return;;
+
+			*) clear; exit 0;;
+		esac
+
+}
+
+function aur {
+
+	clear
+	echo -e "=============== AUR =============== \n" 
+
+	pacman -S --needed base-devel fakeroot packer go --noconfirm
+
+	sudo -u "$SUDOUSER" bash -c 'cd; git clone https://aur.archlinux.org/yay-bin.git'
+	sudo -u "$SUDOUSER" bash -c 'cd; cd yay-bin; makepkg -si'
+	sudo -u "$SUDOUSER" bash -c 'cd; rm -rf yay-bin'
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
+}
+
+function optimizations {
+
+	clear
+	echo -e "=============== OPTIMIZATIONS =============== \n" 
+
+	sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=".*"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog"/' \
+		/etc/default/grub &> /dev/null
+
+	grub-mkconfig -o /boot/grub/grub.cfg
+
+	systemctl mask lvm2-monitor
+
+	touch /etc/modprobe.d/blacklists.conf
+
+	echo 'blacklist iTCO_wdt' > /etc/modprobe.d/blacklists.conf
+	{
+		echo 'blacklist joydev'
+		echo 'blacklist mousedev'
+		echo 'blacklist mac_hid'
+	} >> /etc/modprobe.d/blacklists.conf
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
+}
+
+function software {
+
+	dialog --title "More Sofware!!" --backtitle "036 Creative Studios" \
+		--yesno "This script has a little pack of software, Do you like it?\n \
+			-> baobab \n \
+			-> ntfs-3g \n \
+			-> exfatprogs \n \
+			-> exfat-utils \n \
+			-> xarchiver \n \
+			-> gparted \n \
+			-> zerotier-one \n \
+			-> wine \n \
+			-> exe-thumbnailer \n \
+			-> brave \n \
+			-> github-desktop \n \
+			-> playonlinux \n \
+			-> discord \n \
+			-> visual-studio-code-bin \n \
+			-> zerotier-gui-git \n \
+			-> notion-app \n \
+			-> teamviewer \n \
+			-> numix-gtk-theme-git\n \
+			-> numix-icon-theme \n \
+			-> telegram-desktop \n \
+			-> preload " 60 20
+	clear
+	response=$?
+
+	if [ $response = 0 ]; then
+	
+	clear
+	echo -e "=============== SOFTWARE =============== \n" 
+
+	yay -S baobab ntfs-3g exfatprogs exfat-utils \
+		xarchiver gparted zerotier-one wine playonlinux xrdp \
+		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
+		notion-app teamviewer telegram-desktop preload \
+		brave-bin exe-thumbnailer github-desktop-bin \
+		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
+		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
+		numix-icon-theme-git numix-circle-icon-theme-git
+		
+	echo allowed_users=anybody > /etc/X11/Xwrapper.config
+	systemctl enable xrdp
+	systemctl enable xrdp-sesman
+	systemctl enable preload
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
+
+	elif [ $response -eq 1 ] || [ $response -eq 255 ]; then
+		clear
+		return
+	else
+		clear
+		exit 0
+	fi
+
+}
+
+function finisher {
+	clear
+	dialog --msgbox "READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub" 20 70
+
+	umount /mnt
+	echo "Please reboot and remove your live media"
+	exit 0
+
+}
 
 if [ "$1" == "chroot" ]; then
 	DISKENVIRONMENT=$2
@@ -695,4 +1110,8 @@ fi
 [ -f $DISKENVTEMP ] && rm $DISKENVTEMP 
 [ -f $DISKMENUTEMP ] && rm $DISKMENUTEMP 
 [ -f $ROOTPARTMENUTEMP ] && rm $ROOTPARTMENUTEMP
-[ -f $SWAPPARTMENUTEMP ] && rm  $SWAPPARTMENUTEMP
+[ -f $SWAPPARTMENUTEMP ] && rm $SWAPPARTMENUTEMP
+[ -f $LOCALESTEMP ] && rm $LOCALESTEMP
+[ -f $HOSTTEMP ] && rm $HOSTTEMP
+[ -f $GRAPHICALTEMP ] && rm $GRAPHICALTEMP
+[ -f $DRIVERSTEMP ] && rm $DRIVERSTEMP
