@@ -119,7 +119,7 @@ function whichverify() {
 
 function verify {
 
-    #ARCH=$(uname -m)
+    ARCH=$(uname -m)
     OPERATING=$(uname -o)
 	SELECTOR=""
 
@@ -129,18 +129,18 @@ function verify {
 		exit 1
 	fi
 	
-	#if [ -d /sys/firmware/efi ]; then
-	#	echo "ready" &> /dev/null
-	#else
-	#	clear
-	#	echo "ERROR: This scripts only works in UEFI/EFI systems, consider change your PC or check your BIOS"
-	#	exit 1
-	#fi
+	if [ -d /sys/firmware/efi ]; then
+		echo "ready" &> /dev/null
+	else
+		clear
+		echo "ERROR: This scripts only works in UEFI/EFI systems, consider change your PC or check your BIOS"
+		exit 1
+	fi
 
-    #if [ "$ARCH" != "x86_64" ]; then
-    #    echo "ERROR: This script is only intended to run on x86_64 PCs."
-    #    exit 1
-    #fi
+    if [ "$ARCH" != "x86_64" ]; then
+        echo "ERROR: This script is only intended to run on x86_64 PCs."
+        exit 1
+    fi
 
     SELECTOR="pacman"
 	whichverify "$SELECTOR"
