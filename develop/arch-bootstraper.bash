@@ -99,7 +99,6 @@ function diskenv {
 		SSD-NVMe "Solid State Disk or NVMe" 2>"${DISKENVTEMP}"
 
 	CHOICE=$(<"${DISKENVTEMP}")
-    $CHOICE echo
 	case $CHOICE in
 		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
         SSD-NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
@@ -228,7 +227,6 @@ function verify {
 
 function disclaimer {
 	clear
-	read -r -p "asdsads"
 	dialog --msgbox "DANGER!!!: Your destination device would be formatted and empty, formatting always cause data loss, PLEASE backup all your data before start" 8 70
 
 	if [ "$DISKENVIRONMENT" == "HDD" ] ; then
