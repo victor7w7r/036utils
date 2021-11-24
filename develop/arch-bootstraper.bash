@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-#poner los pesos en cada disco al mostrar
 #el yay de software hacer como usuario normal
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -1069,14 +1068,14 @@ function software {
 	clear
 	echo -e "=============== SOFTWARE =============== \n" 
 
-	yay -S baobab ntfs-3g exfatprogs exfat-utils \
+		sudo -u "$SUDOUSER" bash -c "yay -S baobab ntfs-3g exfatprogs exfat-utils \
 		xarchiver gparted zerotier-one wine playonlinux xrdp \
 		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
 		notion-app teamviewer telegram-desktop preload \
 		brave-bin exe-thumbnailer github-desktop-bin \
 		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
 		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
-		numix-icon-theme-git numix-circle-icon-theme-git
+		numix-icon-theme-git numix-circle-icon-theme-git"
 		
 	echo allowed_users=anybody > /etc/X11/Xwrapper.config
 	systemctl enable xrdp
