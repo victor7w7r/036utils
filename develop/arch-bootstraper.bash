@@ -647,6 +647,8 @@ function toggler {
         echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
         echo 'Please umount all partitions, and restart this script'
     fi
+
+	exit 0
 }
 
 function configurator {
@@ -724,7 +726,7 @@ function localer {
 
 	dialog --clear --backtitle "036 Creative Studios" \
 		--title "Locale" \
-		--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" 15 50 4 \
+		--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" 12 50 4 \
 		Spanish "es_ES" \
 		English "en_US" 2>"${LOCALESTEMP}"
 
@@ -733,7 +735,7 @@ function localer {
 		case $menuitem in
 			Spanish) 
 				clear
-				sed -i 's/^#es_ES.UTF-8 UTF-8$/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+				sed -i 's/^#es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
 				locale-gen
 				echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
 				echo 'LC_TIME="es_ES.UTF-8"' >> /etc/locale.conf
@@ -741,7 +743,7 @@ function localer {
 				return;;
 			English) 
 				clear
-				sed -i 's/^#en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+				sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
 				locale-gen
 				echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
 				echo 'LC_TIME="en_US.UTF-8"' >> /etc/locale.conf
@@ -907,7 +909,7 @@ function drivers {
 	clear
 	dialog --title "Graphical Drivers" \
 	--backtitle "036 Creative Studios" \
-	--menu "Choose your GPU drivers" 15 70 4 \
+	--menu "Choose your GPU drivers" 12 70 4 \
 			Intel "Intel Graphics" \
 			ATI "ATI Cards" \
 			AMD "AMD Cards" \
@@ -986,7 +988,7 @@ function drivers {
 function aur {
 
 	clear
-	echo -e "=============== AUR =============== \n" 
+	echo -e "=============== AUR (YAY ASKS YOU YOUR PASSWORD, PAY ATTENTION) ===============  \n" 
 
 	pacman -S --needed base-devel fakeroot packer go --noconfirm
 
@@ -1051,7 +1053,7 @@ function software {
 			-> numix-gtk-theme-git\n \
 			-> numix-icon-theme \n \
 			-> telegram-desktop \n \
-			-> preload " 40 60
+			-> preload " 26 65
 	clear
 	response=$?
 
@@ -1067,7 +1069,7 @@ function software {
 		brave-bin exe-thumbnailer github-desktop-bin \
 		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
 		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
-		numix-icon-theme-git numix-circle-icon-theme-git --noconfirm"
+		numix-icon-theme-git numix-circle-icon-theme-git"
 		
 	echo allowed_users=anybody > /etc/X11/Xwrapper.config
 	systemctl enable xrdp
@@ -1090,8 +1092,11 @@ function software {
 }
 
 function finisher {
+
 	clear
-	dialog --msgbox "READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub" 20 30
+	
+	rm -f /arch-setupper.sh &> /dev/nulldialog --msgbox 'READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub' 7 50
+	exit
 	clear
 	umount /mnt
 	echo "Please reboot and remove your live media"
