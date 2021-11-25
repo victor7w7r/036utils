@@ -633,7 +633,7 @@ function pacstraper {
 	
 	pacstrap /mnt base linux linux-firmware nano sudo vi vim git wget \
 	grub efibootmgr reflector os-prober rsync networkmanager neofetch \
-	openssh arch-install-scripts screen unrar p7zip zsh
+	openssh arch-install-scripts screen unrar p7zip zsh dialog
 
 	genfstab -U /mnt >> /mnt/etc/fstab
 
@@ -762,7 +762,8 @@ function newuser {
 	clear
 	echo -e "=============== ADD A USER TO A SUDO GROUP =============== \n" 
 	
-	read -r -p "Write your username: " SUDOUSER
+	read -r -p "Write your new user: " SUDOUSER
+	useradd --create-home "$SUDOUSER"
 	passwd "$SUDOUSER"
 	usermod -aG wheel "$SUDOUSER"
 	sed -i 's/^#.*%wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers &> /dev/null
@@ -912,7 +913,7 @@ function drivers {
 	clear
 	dialog --title "Graphical Drivers" \
 	--backtitle "036 Creative Studios" \
-	--menu "Choose your GPU drivers" 30 50 4 \
+	--menu "Choose your GPU drivers" 15 70 4 \
 			Intel "Intel Graphics" \
 			ATI "ATI Cards" \
 			AMD "AMD Cards" \
@@ -1056,7 +1057,7 @@ function software {
 			-> numix-gtk-theme-git\n \
 			-> numix-icon-theme \n \
 			-> telegram-desktop \n \
-			-> preload " 60 20
+			-> preload " 40 60
 	clear
 	response=$?
 
@@ -1065,14 +1066,14 @@ function software {
 	clear
 	echo -e "=============== SOFTWARE =============== \n" 
 
-		sudo -u "$SUDOUSER" bash -c "yay -S baobab ntfs-3g exfatprogs exfat-utils \
+		sudo -u "$SUDOUSER" bash -c "yay -S baobab ntfs-3g exfatprogs \
 		xarchiver gparted zerotier-one wine playonlinux xrdp \
 		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
 		notion-app teamviewer telegram-desktop preload \
 		brave-bin exe-thumbnailer github-desktop-bin \
 		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
 		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
-		numix-icon-theme-git numix-circle-icon-theme-git"
+		numix-icon-theme-git numix-circle-icon-theme-git --noconfirm"
 		
 	echo allowed_users=anybody > /etc/X11/Xwrapper.config
 	systemctl enable xrdp
@@ -1096,8 +1097,8 @@ function software {
 
 function finisher {
 	clear
-	dialog --msgbox "READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub" 20 70
-
+	dialog --msgbox "READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub" 20 30
+	clear
 	umount /mnt
 	echo "Please reboot and remove your live media"
 	exit 0
