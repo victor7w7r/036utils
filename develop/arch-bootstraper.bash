@@ -211,13 +211,7 @@ function verify {
 		pacman -S arch-install-scripts --noconfirm &> /dev/null
 	fi
 
-	LIB=$(pacman -Q ncurses)
-
-	if [[ "$LIB" =~ ^error ]]; then
-		echo "ncurses is not available in this system, installing"
-		pacman -S ncurses --noconfirm &> /dev/null
-	fi
-
+	pacman -S ncurses --noconfirm &> /dev/null
 
 	echo "All dependencies is ok!"
 
