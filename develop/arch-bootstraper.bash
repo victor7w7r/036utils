@@ -434,9 +434,9 @@ function rootpartmenu {
 	if [[ $DISK =~ sd[[:alpha:]] ]]; then
 		VERIFY=$(find "$DISK"* | sed '/[[:alpha:]]$/d')
 	elif [[ $DISK =~ mmcblk[[:digit:]] ]]; then
-		VERIFY=$(find "$DISK"* | sed '/k[[:digit:]]$/d')
+		VERIFY=$(find "$DISK"* | sed '/k[[:digit:]]p[[:digit:]]$/d')
 	elif [[ $DISK =~ nvme[[:digit:]]n[[:digit:]] ]]; then
-		VERIFY=$(find "$DISK"* | sed '/e[[:digit:]]$/d')
+		VERIFY=$(find "$DISK"* | sed '/e[[:digit:]]n[[:digit:]]p[[:digit:]]$/d')
 	fi
 
 	for PART in $VERIFY; do
