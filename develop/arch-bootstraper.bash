@@ -725,14 +725,14 @@ function localer {
 
 	clear
 	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n\n \
-		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 8 50
+		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 9 50
 
 	ln -sf /usr/share/zoneinfo/America/Guayaquil /etc/localtime
 	hwclock --systohc
 
 	dialog --clear --backtitle "036 Creative Studios" \
 		--title "Locale" \
-		--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" \
+		--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" 15 50 4 \
 		Spanish "es_ES" \
 		English "en_US" 2>"${LOCALESTEMP}"
 
@@ -819,9 +819,9 @@ function xanmod {
 function graphical {
 
 	clear
-	dialog --title "Graphical Environment" \
+	dialog --clear --title "Graphical Environment" \
 	--backtitle "036 Creative Studios" \
-	--menu "Choose a GUI, these are the common used, this script recommends XFCE" \
+	--menu "Choose a GUI, these are the common used, this script recommends XFCE" 15 50 4 \
 			XFCE "Xfce Desktop Environment" \
 			GNOME "GNOME Desktop Environment" \
 			KDE "KDE Desktop Environment" \
@@ -912,7 +912,7 @@ function drivers {
 	clear
 	dialog --title "Graphical Drivers" \
 	--backtitle "036 Creative Studios" \
-	--menu "Choose your GPU drivers" \
+	--menu "Choose your GPU drivers" 15 50 4 \
 			Intel "Intel Graphics" \
 			ATI "ATI Cards" \
 			AMD "AMD Cards" \
