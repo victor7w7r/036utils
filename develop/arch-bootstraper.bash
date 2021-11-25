@@ -725,7 +725,7 @@ function localer {
 
 	clear
 	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n \
-		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 20 30
+		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 10 50
 
 	ln -sf /usr/share/zoneinfo/America/Guayaquil /etc/localtime
 	hwclock --systohc
@@ -734,8 +734,7 @@ function localer {
 	--backtitle "036 Creative Studios" \
 	--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" \
 			Spanish "es_ES" \
-			English "en_US" \
-			Exit "Exit to the shell" 2>"${LOCALESTEMP}"
+			English "en_US" 2>"${LOCALESTEMP}"
 
 		menuitem=$(<"${LOCALESTEMP}")
 
