@@ -724,37 +724,37 @@ function hostnamer {
 function localer {
 
 	clear
-	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n \
-		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 10 50
+	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n\n \
+		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 8 50
 
 	ln -sf /usr/share/zoneinfo/America/Guayaquil /etc/localtime
 	hwclock --systohc
 
-	dialog --title "Locale" \
-	--backtitle "036 Creative Studios" \
-	--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" \
-			Spanish "es_ES" \
-			English "en_US" 2>"${LOCALESTEMP}"
+	dialog --clear --backtitle "036 Creative Studios" \
+		--title "Locale" \
+		--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" \
+		Spanish "es_ES" \
+		English "en_US" 2>"${LOCALESTEMP}"
 
 		menuitem=$(<"${LOCALESTEMP}")
 
-			case $menuitem in
-				Spanish) 
-					sed -i 's/^#es_ES.UTF-8 UTF-8$/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
-					locale-gen
-					echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
-					echo 'LC_TIME="es_ES.UTF-8"' >> /etc/locale.conf
-					echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/locale.conf
-					return;;
-				English) 
-					sed -i 's/^#en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
-					locale-gen
-					echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
-					echo 'LC_TIME="en_US.UTF-8"' >> /etc/locale.conf
-					echo 'LANGUAGE="es_US:en"' >> /etc/locale.conf
-					return;;
-				*) clear; exit 0;;
-			esac
+		case $menuitem in
+			Spanish) 
+				sed -i 's/^#es_ES.UTF-8 UTF-8$/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+				locale-gen
+				echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
+				echo 'LC_TIME="es_ES.UTF-8"' >> /etc/locale.conf
+				echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/locale.conf
+				return;;
+			English) 
+				sed -i 's/^#en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+				locale-gen
+				echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
+				echo 'LC_TIME="en_US.UTF-8"' >> /etc/locale.conf
+				echo 'LANGUAGE="es_US:en"' >> /etc/locale.conf
+				return;;
+			*) clear; exit 0;;
+		esac
 }
 
 function newuser {
