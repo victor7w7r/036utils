@@ -530,7 +530,7 @@ function swapmenu() {
 		esac
 
 	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		diskformat
+		diskformat "pass"
 	fi
 
 }
