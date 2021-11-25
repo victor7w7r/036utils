@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#el yay de software hacer como usuario normal
-
 if [ "$(id -u)" -ne 0 ]; then
 	echo "ERROR: You need to be root."
 	exit 1
@@ -393,7 +391,7 @@ function diskmenu {
 
 	for DEV in "${DIRTYDEVS[@]}"; do	
 
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d' | sed '/nvme[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d' | sed '/nvme[[:digit:]]n$/d') #/dev/sda1 /dev/sda2 ...
 
 		if [ "$ABSOLUTEPARTS" == "" ]; then
 			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
@@ -740,6 +738,7 @@ function localer {
 
 		case $menuitem in
 			Spanish) 
+				clear
 				sed -i 's/^#es_ES.UTF-8 UTF-8$/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
 				locale-gen
 				echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
@@ -747,6 +746,7 @@ function localer {
 				echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/locale.conf
 				return;;
 			English) 
+				clear
 				sed -i 's/^#en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
 				locale-gen
 				echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
@@ -912,7 +912,7 @@ function drivers {
 	clear
 	dialog --title "Graphical Drivers" \
 	--backtitle "036 Creative Studios" \
-	--menu "Choose your GPU drivers" 15 50 4 \
+	--menu "Choose your GPU drivers" 30 50 4 \
 			Intel "Intel Graphics" \
 			ATI "ATI Cards" \
 			AMD "AMD Cards" \
