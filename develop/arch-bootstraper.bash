@@ -699,7 +699,7 @@ function configurator {
 function hostnamer {
 
 	clear
-	dialog --title "036 rsyncer" \
+	dialog --title "Hostname" \
     --backtitle "036 Creative Studios" \
     --inputbox "Please write your hostname (ex: A036-arch)" 8 80 2>"$HOSTTEMP"
 
@@ -725,7 +725,7 @@ function localer {
 
 	clear
 	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n \
-		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 20 70
+		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 20 30
 
 	ln -sf /usr/share/zoneinfo/America/Guayaquil /etc/localtime
 	hwclock --systohc
