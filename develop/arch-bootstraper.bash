@@ -391,7 +391,7 @@ function diskmenu {
 
 	for DEV in "${DIRTYDEVS[@]}"; do	
 
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d' | sed '/nvme[[:digit:]]n$/d') #/dev/sda1 /dev/sda2 ...
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d' | sed '/nvme[[:digit:]]n[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
 
 		if [ "$ABSOLUTEPARTS" == "" ]; then
 			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
