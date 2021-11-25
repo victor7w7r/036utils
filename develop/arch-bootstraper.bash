@@ -659,8 +659,6 @@ function toggler {
 
 function configurator {
 	clear
-	echo "$DISKENVIRONMENT"
-	read -r -p "dsadsa"
 
 	echo -e "=============== ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
 
@@ -676,7 +674,7 @@ function configurator {
 
 	grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
 	grub-mkconfig -o /boot/grub/grub.cfg
-	umount /mnt/efi
+	umount /efi
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -686,7 +684,7 @@ function configurator {
 
 	echo -e "=============== START NETWORKMANAGER AND SSH SERVICES =============== \n" 
 
-	systemctl enable NetworkManage
+	systemctl enable NetworkManager
 	systemctl enable sshd
 	systemctl start NetworkManager
 	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
