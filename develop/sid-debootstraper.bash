@@ -943,8 +943,8 @@ function software {
 			-> playonlinux  \n \
 			-> preload  \n \
 			-> xrdp" 26 65
-	clear
 	response=$?
+	echo $?
 
 	if [ $response -eq 0 ]; then
 	
@@ -967,7 +967,7 @@ function software {
 	read -r -p "Press Enter to continue..."
 
 
-	elif [ $response -eq 1 ] || [ $response -eq 255 ]; then
+	elif [ $response -eq 1 ]; then
 		clear
 		return
 	else
