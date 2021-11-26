@@ -29,14 +29,9 @@ function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP;
 trap cleanup; SIGHUP SIGINT SIGTERM
 
 DISKENVIRONMENT=""
-DISK=""
-ROOTPART=""
-EFIPART=""
-SWAPPART=""
 SUDOUSER=""
 
-function corelive { clear; cover; sleep 1s; verify; diskenv; }
-function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; drivers; aur; optimizations; software; finisher; }
+function core { clear; cover; sleep 1s; verify; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -89,22 +84,6 @@ function cover {
 	echo ':.....::.....::.....::::.....:..:::::.....::.....:::..::..::...:::.....::::.....:::..::.....::.....::..:.....::.....:'
 	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
 	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
-}
-
-function diskenv {
-
-    dialog --clear --backtitle "036 Creative Studios" --title "Disk Environment" \
-		--menu "Please choose your disk type \n" 15 50 4 \
-        HDD "Hard Drive Disk" \
-		SSD-NVMe "Solid State Disk or NVMe" 2>"${DISKENVTEMP}"
-
-	CHOICE=$(<"${DISKENVTEMP}")
-	case $CHOICE in
-		HDD) DISKENVIRONMENT="HDD"; disclaimer ;;
-        SSD-NVMe) DISKENVIRONMENT="SSD"; disclaimer ;;
-		*) clear; exit 0; ;;
-	esac
-
 }
 
 function whichverify() {
@@ -221,140 +200,6 @@ function verify {
 
 }
 
-function disclaimer {
-	clear
-	dialog --msgbox "DANGER!!!: Your destination device would be formatted and empty, formatting always cause data loss, PLEASE backup all your data before start" 8 70
-
-	if [ "$DISKENVIRONMENT" == "HDD" ] ; then
-		dialog --msgbox "Before installing, we recomend that your disk has the next partition scheme, before install\n\n\
-		GPT -> \n \
-		1.	/dev/sdX1	EFI			200MB		fat32		esp\n\
-		2.	/dev/sdX2	archlinux	>20GB		ext4		primary\n\
-		3.	/dev/sdx3	linux-swap	2GB-4GB		swap		primary\n\n\
-
-		GNU Parted script example  for format a 20GB disk\n\n \
-
-		mklabel gpt \ \n \
-		mkpart EFI fat32 1MiB 200MiB \ \n \
-		set 1 esp on \ \n \
-		mkpart ROOT ext4 200MiB 19.0GiB \ \n \
-		mkpart SWAP linux-swap 19.0GiB 100% \ \n" 20 70
-
-	elif [ "$DISKENVIRONMENT" == "SSD" ]; then
-	dialog --msgbox "Before installing, we recomend that your disk has the next partition scheme, before install\n\n\
-		GPT -> \n \
-		1.	/dev/sdX1	EFI			200MB		fat32		esp\n\
-		2.	/dev/sdX2	archlinux	>20GB		f2fs/ext4		primary\n\
-
-		GNU Parted script example for format a 20GB disk\n\n \
-
-		mklabel gpt \ \n \
-		mkpart EFI fat32 1MiB 200MiB \ \n \
-		set 1 esp on \ \n \
-		mkpart ROOT f2fs 200MiB 100% \ \n" 20 70
-	fi
-	diskmenu
-
-}
-
-function diskverify() {
-
-	clear
-	LABEL=$(blkid -o value -s PTTYPE "$1")
-	EFI=""
-	EFIORDER=""
-	BLOCK=""
-
-	if [ "$LABEL" == "dos" ]; then
-		echo "ERROR: The device has a DOS Label Type (MBR), this script only works with gpt"
-		exit 1
-	fi
-
-	if [[ $1 =~ sd[[:alpha:]] ]]; then
-
-		EFI=$(fdisk -l "$1" | sed -ne '/EFI/p')
-		EFIORDER=$(echo "$EFI" | sed -ne '/[[:alpha:]]1/p' )
-
-		if [ "$DISKENVIRONMENT" == "SSD" ]; then
-			BLOCK=$(echo "$1" | cut -d "/" -f3)
-			ROTATIONAL="$(cat /sys/block/"$BLOCK"/queue/rotational)"
-
-			if  [ "$ROTATIONAL" == "1" ]; then
-				echo "ERROR: You choose a SSD device, but this device is rotational, if is that not the case, that device is USB"
-				exit 1
-			fi
-
-		elif [ "$DISKENVIRONMENT" == "HDD" ]; then
-		
-			BLOCK=$(echo "$1" | cut -d "/" -f3)
-			ROTATIONAL="$(cat /sys/block/"$BLOCK"/queue/rotational)"
-
-			if  [ "$ROTATIONAL" == "0" ]; then
-				echo "ERROR: ou choose a HDD device, but this device is not rotational, please check and run this script again"
-				exit 1
-			fi
-		fi
-
-		if [ "$EFI" == "" ]; then
-			echo "ERROR: The device doesn't have a EFI partition"
-			exit 1
-		fi
-		if [ "$EFIORDER" == "" ]; then
-			echo "ERROR: The device has the EFI partition in other side than $1 1"
-			exit 1
-		fi
-
-		DISK=$1
-		rootpartmenu
-
-	elif [[ $1 =~ mmcblk[[:digit:]] ]]; then
-
-		EFI=$(fdisk -l "$1" | sed -ne '/EFI/p')
-		EFIORDER=$(echo "$EFI" | sed -ne '/p1/p' )
-
-		if [ "$DISKENVIRONMENT" == "HDD" ]; then
-			echo "ERROR: You choose a HDD device, but this device is not rotational, please check and run this script again"
-			exit 1
-		fi
-
-		if [ "$EFI" == "" ]; then
-			echo "ERROR: The device doesn't have a EFI partition"
-			exit 1
-		fi
-		if [ "$EFIORDER" == "" ]; then
-			echo "ERROR: The device has the EFI partition in other side than $1 1"
-			exit 1
-		fi
-
-		DISK=$1
-		rootpartmenu
-
-	elif [[ $1 =~ nvme[[:digit:]] ]]; then
-
-		EFI=$(fdisk -l "$1" | sed -ne '/EFI/p')
-		EFIORDER=$(echo "$EFI" | sed -ne '/p1/p' )
-
-		if [ "$DISKENVIRONMENT" == "HDD" ]; then
-			echo "ERROR: You choose a HDD device, but this device is not rotational, please check and run this script again"
-			exit 1
-		fi
-
-		if [ "$EFI" == "" ]; then
-			echo "ERROR: The device doesn't have a EFI partition"
-			exit 1
-		fi
-		if [ "$EFIORDER" == "" ]; then
-			echo "ERROR: The device has the EFI partition in other side than $1 1"
-			exit 1
-		fi
-
-		DISK=$1
-		rootpartmenu
-
-	fi
-
-}
-
 function diskmenu {
 
 	clear
@@ -414,224 +259,6 @@ function diskmenu {
 	esac
 }
 
-function rootpartmenu {
-	#Menu para seleccionar la particion de raiz de arch
-	VERIFY=""
-	TYPE=""
-	COUNT=0
-	COUNTMOUNT=0
-	ISMOUNTED=0
-	ROOTPARTS=()
-
-	EFIPART=$(fdisk -l "$DISK" | sed -ne /EFI/p | cut -d " " -f1)
-
-	if [[ $DISK =~ sd[[:alpha:]] ]]; then
-		VERIFY=$(find "$DISK"* | sed '/[[:alpha:]]$/d')
-	elif [[ $DISK =~ mmcblk[[:digit:]] ]]; then
-		VERIFY=$(find "$DISK"* | sed '/k[[:digit:]]$/d')
-	elif [[ $DISK =~ nvme[[:digit:]]n[[:digit:]] ]]; then
-		VERIFY=$(find "$DISK"* | sed '/e[[:digit:]]n[[:digit:]]$/d')
-	fi
-
-	for PART in $VERIFY; do
-
-	if [ "$PART" != "$EFIPART" ]; then
-
-		ISMOUNTED=$(lsblk "$PART" | sed -ne '/\//p')
-		if [ "$ISMOUNTED" != "" ]; then
-			COUNTMOUNT=$(( COUNTMOUNT + 1 ))
-		else
-			ROOTPARTS+=("$PART" "$TYPE")
-		fi
-		COUNT=$((COUNT + 1))
-
-	fi
-
-	done
-
-	if [ "$COUNTMOUNT" -eq $COUNT ]; then
-		clear
-		echo "ERROR: All the partitions of the device are mounted in your system, please unmount the desired partition"
-		exit 1
-	fi
-
-	dialog --clear --backtitle "036 Creative Studios" --title "Select a root partition" \
-		--menu "Please select a partition \n" 15 50 4 "${ROOTPARTS[@]}" 2>"${ROOTPARTMENUTEMP}"
-
-	CHOICE=$(<"${ROOTPARTMENUTEMP}")
-	case $CHOICE in
-		"$CHOICE") ROOTPART="$CHOICE"; swapmenu "$CHOICE" ;;
-		*) clear; exit 0; ;;
-	esac
-}
-
-function swapmenu() {
-
-	if [ "$1" == "" ]; then
-		clear
-		exit 0
-	fi
-
-	if [ $DISKENVIRONMENT == "HDD" ]; then
-
-		VERIFY=""
-		TYPE=""
-		COUNT=0
-		COUNTMOUNT=0
-		ISMOUNTED=0
-		SWAPPARTS=()
-
-		if [[ $DISK =~ sd[[:alpha:]] ]]; then
-			VERIFY=$(find "$DISK"* | sed '/[[:alpha:]]$/d')
-		elif [[ $DISK =~ mmcblk[[:digit:]] ]]; then
-			VERIFY=$(find "$DISK"* | sed '/k[[:digit:]]$/d')
-		elif [[ $DISK =~ nvme[[:alpha:]] ]]; then
-			VERIFY=$(find "$DISK"* | sed '/e[[:digit:]]$/d')
-		fi
-
-		for PART in $VERIFY; do
-
-		if [ "$PART" != "$EFIPART" ]; then
-
-			if [ "$PART" != "$ROOTPART" ]; then
-
-				ISMOUNTED=$(lsblk "$PART" | sed -ne '/\//p')
-				if [ "$ISMOUNTED" != "" ]; then
-					COUNTMOUNT=$(( COUNTMOUNT + 1 ))
-				else
-					SWAPPARTS+=("$PART" "$TYPE")
-				fi
-					COUNT=$((COUNT + 1))
-			fi
-
-		fi
-
-		done
-
-		if [ "$COUNTMOUNT" -eq $COUNT ]; then
-			clear
-			echo "ERROR: All the partitions of the device are mounted in your system, please unmount the desired partition"
-			exit 1
-		fi
-
-		dialog --clear --backtitle "036 Creative Studios" --title "Select a swap partition" \
-			--menu "Please select a swap partition \n" 15 50 4 "${SWAPPARTS[@]}" 2>"${SWAPPARTMENUTEMP}"
-
-		CHOICE=$(<"${SWAPPARTMENUTEMP}")
-		case $CHOICE in
-			"$CHOICE") SWAPPART="$CHOICE"; diskformat "$CHOICE" ;;
-			*) clear; exit 0; ;;
-		esac
-
-	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		diskformat "pass"
-	fi
-
-}
-
-function diskformat {
-
-	if [ "$1" == "" ]; then
-		clear
-		exit 0
-	fi
-
-	if [ $DISKENVIRONMENT == "HDD" ]; then
-		dialog --title "DANGER ZONE!!!" --backtitle "036 Creative Studios" \
-			--yesno "This partitions will be format Continue? \n$EFIPART (EFI) \n$ROOTPART (ROOT) \n$SWAPPART (SWAP)" 8 60
-	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		dialog --title "DANGER ZONE!!!" --backtitle "036 Creative Studios" \
-			--yesno "This partitions will be format Continue? \n$EFIPART (EFI) \n$ROOTPART (ROOT)" 7 60
-	fi
-
-	clear
-	response=$?
-
-	if [ $response = 0 ]; then
-
-		if [ $DISKENVIRONMENT == "HDD" ]; then
-
-			echo -e "=============== FORMAT ROOT FILESYSTEM AND SWAP =============== \n" 
-
-			mkfs.ext4 "$ROOTPART"
-			mkswap "$SWAPPART"
-			swapon "$SWAPPART"
-
-			echo " "
-			echo -e "=============== OK =============== \n" 
-			read -r -p "Press Enter to continue..."
-			clear
-	
-		elif [ $DISKENVIRONMENT == "SSD" ]; then
-
-			echo -e "=============== FORMAT ROOT FILESYSTEM =============== \n" 
-
-			mkfs.f2fs -f "$ROOTPART"
-
-			echo " "
-			echo -e "=============== OK =============== \n" 
-			read -r -p "Press Enter to continue..."
-			clear
-	
-		fi
-
-		echo -e "=============== FORMAT EFI AND MOUNT =============== \n" 
-
-		mkfs.fat -F32 "$EFIPART"
-		mount "$ROOTPART" /mnt
-		mkdir /mnt/efi
-		mount "$EFIPART" /mnt/efi
-
-		echo " "
-		echo -e "=============== OK =============== \n" 
-		read -r -p "Press Enter to continue..."
-		clear
-
-		pacstraper
-
-
-	elif [ $response -eq 1 ]; then
-		clear
-		exit 0
-	else
-		clear
-		exit 0
-	fi
-	
-}
-
-function unmounter {
-	clear
-
-	if [ $DISKENVIRONMENT == "HDD" ]; then
-		umount "$EFIPART"
-		umount "$ROOTPART"
-		swapoff "$SWAPPART"
-	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		umount "$EFIPART"
-		umount "$ROOTPART"
-	fi
-	echo "unmounted filesystems succesfully"
-	exit 0
-}
-
-function pacstraper {
-
-	echo -e "=============== PACSTRAP: INSTALL LINUX BASE AND CORE PACKAGES =============== \n" 
-	
-	pacstrap /mnt base linux linux-firmware nano sudo vi vim git wget \
-	grub efibootmgr reflector os-prober rsync networkmanager neofetch \
-	openssh arch-install-scripts screen unrar p7zip zsh dialog
-
-	genfstab -U /mnt >> /mnt/etc/fstab
-
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
-
-	toggler
-
-}
 
 function toggler {
 
@@ -642,8 +269,6 @@ function toggler {
         echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
         echo 'Please umount all partitions, and restart this script'
     fi
-
-	umount /mnt
 
 	exit 0
 }
@@ -677,8 +302,10 @@ function configurator {
 
 	systemctl enable NetworkManager
 	systemctl enable sshd
+	systemctl start NetworkManager
 	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
 	/etc/ssh/sshd_config &> /dev/null
+	systemctl start sshd
 
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
@@ -1057,24 +684,19 @@ function software {
 	clear
 	echo -e "=============== SOFTWARE =============== \n" 
 
-	touch /home/"$SUDOUSER"/software.sh
-	{
-		yay -S baobab ntfs-3g exfatprogs \
+		sudo -u "$SUDOUSER" bash -c "yay -S baobab ntfs-3g exfatprogs \
 		xarchiver gparted zerotier-one wine playonlinux xrdp \
 		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
 		notion-app teamviewer telegram-desktop preload \
 		brave-bin exe-thumbnailer github-desktop-bin \
 		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
 		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
-		numix-icon-theme-git numix-circle-icon-theme-git
-
-		echo allowed_users=anybody > /etc/X11/Xwrapper.config
-		systemctl enable xrdp
-		systemctl enable xrdp-sesman
-		systemctl enable preload
-	} > /home/"$SUDOUSER"/software.sh
-
-	echo "We create a script called software.sh in your home directory, after reboot, use chmod +x at software.sh"
+		numix-icon-theme-git numix-circle-icon-theme-git"
+		
+	echo allowed_users=anybody > /etc/X11/Xwrapper.config
+	systemctl enable xrdp
+	systemctl enable xrdp-sesman
+	systemctl enable preload
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -1098,16 +720,13 @@ function finisher {
 	rm -f /arch-setupper.sh &> /dev/null
 	exit
 	clear
+	umount /mnt
 	echo "Please reboot and remove your live media"
+	exit 0
 
 }
 
-if [ "$1" == "chroot" ]; then
-	DISKENVIRONMENT=$2
-	corechroot
-else
-	corelive
-fi
+core
 
 [ -f $DISKENVTEMP ] && rm $DISKENVTEMP 
 [ -f $DISKMENUTEMP ] && rm $DISKMENUTEMP 
