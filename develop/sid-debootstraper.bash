@@ -652,6 +652,7 @@ function configurator {
 	response=$?
 
 	if [ $response = 0 ]; then
+		clear
 		tasksel install laptop
 	fi
 
@@ -660,11 +661,11 @@ function configurator {
 	echo -e "=============== GENERATE FSTAB AND ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
 
 	
-	SDA1=$(blkid -s UUID -o value "$EFIPART")
-	SDA2=$(blkid -s UUID -o value "$ROOTPART")
+	SDA1=$(sudo blkid -s UUID -o value "$EFIPART")
+	SDA2=$(sudo blkid -s UUID -o value "$ROOTPART")
 
 	if [ $DISKENVIRONMENT == "HDD" ]; then
-		SDA3=$(blkid -s UUID -o value "$SWAPPART")
+		SDA3=$(sudo blkid -s UUID -o value "$SWAPPART")
 		{
 			echo "UUID=$SDA2          /             ext4      defaults              1      1"
 			echo "UUID=$SDA1          /boot/efi     vfat      defaults              0      0"
