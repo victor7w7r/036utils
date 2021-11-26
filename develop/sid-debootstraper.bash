@@ -26,7 +26,7 @@ DRIVERSTEMP=/tmp/driverstemp.sh.$$
 function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; 
 	rm $SWAPPARTMENUTEMP; rm $LOCALESTEMP; $HOSTTEMP; $GRAPHICALTEMP; $DRIVERSTEMP; exit; }
 
-trap cleanup; SIGHUP SIGINT SIGTERM &> /dev/null
+trap cleanup &> /dev/null; SIGHUP SIGINT SIGTERM 
 
 DISKENVIRONMENT=""
 DISK=""
@@ -36,7 +36,7 @@ SWAPPART=""
 SUDOUSER=""
 
 function corelive { clear; cover; sleep 1s; verify; diskenv; }
-function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; optimizations; software; finisher; }
+function corechroot { debian; configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; optimizations; software; finisher; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -616,7 +616,7 @@ function toggler {
 	exit 0
 }
 
-function configurator {
+function debian {
 
 	echo -e "=============== DEBIAN: UPDATE SID REPOSITORIES =============== \n" 	
 
@@ -637,7 +637,14 @@ function configurator {
 		openssh-server python rsync screen unrar p7zip zsh linux-image-amd64 \
 		firmware-linux firmware-linux-free firmware-linux-nonfree blkid
 
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
 	clear
+
+}
+
+function configurator {
 
 	dialog --title "Laptop" --backtitle "036 Creative Studios" \
         --yesno "This PC is a Laptop?" 8 60
@@ -647,10 +654,6 @@ function configurator {
 	if [ $response = 0 ]; then
 		tasksel install laptop
 	fi
-
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
 
 	clear
 
@@ -674,7 +677,6 @@ function configurator {
 			echo "UUID=$SDA1          /boot/efi     		vfat      defaults              0      0"
 		} >> /etc/fstab
 	fi
-
 
 	passwd
 
