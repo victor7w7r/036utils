@@ -913,9 +913,8 @@ function optimizations {
 
 	sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=".*"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog"/' \
 		/etc/default/grub &> /dev/null
-	update-grub
+	/usr/sbin/update-grub
 	systemctl mask lvm2-monitor
-
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -983,7 +982,6 @@ function finisher {
 	clear
 	dialog --msgbox 'READY!!!, Your PC is succesfully installed with Debian Sid, if you have errors, please report at 036bootstraper in GitHub' 7 50
 	rm -f /deb-setupper.sh &> /dev/null
-	exit
 	clear
 	umount /mnt/sys
 	umount /mnt/proc
