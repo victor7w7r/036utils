@@ -618,6 +618,8 @@ function toggler {
 
 function debian {
 
+	clear
+
 	echo -e "=============== DEBIAN: UPDATE SID REPOSITORIES =============== \n" 	
 
 	echo "deb http://deb.debian.org/debian sid main contrib non-free" > /etc/apt/sources.list
@@ -986,6 +988,9 @@ function finisher {
 	rm -f /deb-setupper.sh &> /dev/null
 	exit
 	clear
+	umount /mnt/sys
+	umount /mnt/proc
+	umount /mnt/dev
 	umount /mnt
 	echo "Please reboot and remove your live media"
 	exit 0
