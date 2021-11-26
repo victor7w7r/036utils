@@ -111,10 +111,8 @@ function whichverify() {
 	stat=$(which "$1" 2>&1)
 
 	if [ "$stat" == "" ]; then
-		return 0
-	fi
-
-	if [[ "$stat" =~ ^which:* ]]; then 
+		return 1
+	elif [[ "$stat" =~ ^which:* ]]; then 
 		return 1
 	else
 		return 0
@@ -581,11 +579,12 @@ function unmounter {
 	clear
 
 	if [ $DISKENVIRONMENT == "HDD" ]; then
-		umount "$EFIPART"
+		umount /mnt/proc/
+		umount /mnt/sys/
+		umount /mnt/dev/
 		umount "$ROOTPART"
 		swapoff "$SWAPPART"
 	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		umount "$EFIPART"
 		umount "$ROOTPART"
 	fi
 	echo "unmounted filesystems succesfully"

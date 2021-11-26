@@ -604,11 +604,9 @@ function unmounter {
 	clear
 
 	if [ $DISKENVIRONMENT == "HDD" ]; then
-		umount "$EFIPART"
 		umount "$ROOTPART"
 		swapoff "$SWAPPART"
 	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		umount "$EFIPART"
 		umount "$ROOTPART"
 	fi
 	echo "unmounted filesystems succesfully"
