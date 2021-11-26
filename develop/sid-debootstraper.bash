@@ -608,10 +608,7 @@ function toggler {
 	cp "$0" /mnt/deb-setupper.sh
     chroot /mnt /bin/bash ./deb-setupper.sh chroot $DISKENVIRONMENT "$EFIPART" "$ROOTPART" "$SWAPPART"
 
-	if [ -f /mnt/deb-setupper.sh ]; then
-        echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
-        echo 'Please umount all partitions, and restart this script'
-    fi
+	unmounter
 
 	exit 0
 }
@@ -984,12 +981,8 @@ function finisher {
 	rm -f /deb-setupper.sh &> /dev/null
 	clear
 	umount /mnt/boot/efi &> /dev/null
-	umount /mnt/sys
-	umount /mnt/proc
-	umount /mnt/dev
-	umount /mnt
 	echo "Please reboot and remove your live media"
-	exit 0
+	exit
 
 }
 
