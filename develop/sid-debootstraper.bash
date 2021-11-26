@@ -26,7 +26,7 @@ DRIVERSTEMP=/tmp/driverstemp.sh.$$
 function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; 
 	rm $SWAPPARTMENUTEMP; rm $LOCALESTEMP; $HOSTTEMP; $GRAPHICALTEMP; $DRIVERSTEMP; exit; }
 
-trap cleanup &> /dev/null; SIGHUP SIGINT SIGTERM 
+trap cleanup &> /dev/null; SIGHUP SIGINT SIGTERM &> /dev/null
 
 DISKENVIRONMENT=""
 DISK=""
@@ -635,7 +635,7 @@ function debian {
 	apt install -y sudo locales git wget aptitude grub-efi-amd64 vim \
 		grub-efi efibootmgr net-tools network-manager-gnome dialog \
 		openssh-server python rsync screen unrar p7zip zsh linux-image-amd64 \
-		firmware-linux firmware-linux-free firmware-linux-nonfree blkid
+		firmware-linux firmware-linux-free firmware-linux-nonfree util-linux
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
