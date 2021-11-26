@@ -566,7 +566,7 @@ function diskformat {
 
 			echo -e "=============== FORMAT ROOT FILESYSTEM =============== \n" 
 
-			mkfs.f2fs "$ROOTPART"
+			mkfs.f2fs -f "$ROOTPART"
 
 			echo " "
 			echo -e "=============== OK =============== \n" 
