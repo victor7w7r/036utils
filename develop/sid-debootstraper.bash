@@ -36,7 +36,7 @@ SWAPPART=""
 SUDOUSER=""
 
 function corelive { clear; cover; sleep 1s; verify; diskenv; }
-function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; drivers; aur; optimizations; software; finisher; }
+function corechroot { configurator; hostnamer; localer; newuser; swapper; xanmod; graphical; optimizations; software; finisher; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -141,16 +141,6 @@ function verify {
         exit 1
     fi
 
-    SELECTOR="pacman"
-	whichverify "$SELECTOR"
-	local res=$?
-
-	if [ $res -eq 1 ]; then
-		clear
-		echo "ERROR: Arch Linux pacman is not available in this system, this system isn't Arch Linux?"
-		exit 1
-	fi
-
     PING=$(ping -c 1 8.8.8.8 2>&1) 
 
     if [[ "$PING" =~ unreachable* ]]; then
@@ -159,38 +149,13 @@ function verify {
 		exit 1
 	fi
 
-    echo "Updating Arch Repositories..."
-    pacman -Sy &> /dev/null
-
-    SELECTOR="lsb_release"
-	whichverify "$SELECTOR"
-	local res=$?
-
-	if [ $res -eq 1 ]; then
-		echo "lsb_release is not available in this system, installing"
-		pacman -S lsb-release --noconfirm &> /dev/null
-	fi
-
-	if [ "$OPERATING" != "GNU/Linux" ]; then
-		clear
-		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
-		exit 1
-	fi
-
-	IS_ARCH=$(lsb_release -is)
-
-	if [ "$IS_ARCH" != "Arch" ]; then
-		clear
-		echo "ERROR: Your Operating System is not Arch Linux, exiting"
-		exit 1
-	fi
-
 	SELECTOR="fsck.f2fs"
 	whichverify "$SELECTOR"
 	local res=$?
 	if [ $res -eq 1 ]; then
-		echo "f2fs.tools is not available in this system, installing"
-		pacman -S f2fs-tools --noconfirm &> /dev/null
+        clear
+		echo "f2fs-tools is not available in this system, please install it"
+		exit 1
 	fi
 
 	SELECTOR="dialog"
@@ -198,20 +163,20 @@ function verify {
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "dialog is not available in this system, installing"
-		pacman -S dialog --noconfirm &> /dev/null
+        clear
+		echo "dialog is not available in this system, please install it"
+		exit 1
 	fi
 
-    SELECTOR="pacstrap"
+    SELECTOR="debootstrap"
 	whichverify "$SELECTOR"
 	local res=$?
 
 	if [ $res -eq 1 ]; then
-		echo "pacstrap is not available in this system, installing"
-		pacman -S arch-install-scripts --noconfirm &> /dev/null
+		clear
+		echo "debootstrap is not available in this system, please install it"
+		exit 1
 	fi
-
-	pacman -S ncurses --noconfirm &> /dev/null
 
 	echo "All dependencies is ok!"
 
@@ -235,7 +200,7 @@ function disclaimer {
 		dialog --msgbox "Before installing, we recomend that your disk has the next partition scheme, before install\n\n\
 		GPT -> \n \
 		1.	/dev/sdX1	EFI			200MB		fat32		esp\n\
-		2.	/dev/sdX2	archlinux	>20GB		ext4		primary\n\
+		2.	/dev/sdX2	debian  	>20GB		ext4		primary\n\
 		3.	/dev/sdx3	linux-swap	2GB-4GB		swap		primary\n\n\
 
 		GNU Parted script example  for format a 20GB disk\n\n \
@@ -250,7 +215,7 @@ function disclaimer {
 	dialog --msgbox "Before installing, we recomend that your disk has the next partition scheme, before install\n\n\
 		GPT -> \n \
 		1.	/dev/sdX1	EFI			200MB		fat32		esp\n\
-		2.	/dev/sdX2	archlinux	>20GB		f2fs/ext4		primary\n\
+		2.	/dev/sdX2	debian	>20GB		f2fs/ext4		primary\n\
 
 		GNU Parted script example for format a 20GB disk\n\n \
 
@@ -585,15 +550,16 @@ function diskformat {
 
 		mkfs.fat -F32 "$EFIPART"
 		mount "$ROOTPART" /mnt
-		mkdir /mnt/efi
-		mount "$EFIPART" /mnt/efi
+        mkdir /mnt/boot
+		mkdir /mnt/boot/efi
+		mount "$EFIPART" /mnt/boot/efi
 
 		echo " "
 		echo -e "=============== OK =============== \n" 
 		read -r -p "Press Enter to continue..."
 		clear
 
-		pacstraper
+		debootstraper
 
 
 	elif [ $response -eq 1 ] || [ $response -eq 255 ]; then
@@ -621,15 +587,14 @@ function unmounter {
 	exit 0
 }
 
-function pacstraper {
+function debootstraper {
 
-	echo -e "=============== PACSTRAP: INSTALL LINUX BASE AND CORE PACKAGES =============== \n" 
+	echo -e "=============== DEBOOTSTRAP: INSTALL DEBIAN SID CORE =============== \n" 
 	
-	pacstrap /mnt base linux linux-firmware nano sudo vi vim git wget \
-	grub efibootmgr reflector os-prober rsync networkmanager neofetch \
-	openssh arch-install-scripts screen unrar p7zip zsh dialog
-
-	genfstab -U /mnt >> /mnt/etc/fstab
+	debootstrap --arch amd64 sid /mnt https://deb.debian.org/debian/
+    mount -t proc /proc /mnt/proc/
+    mount -t sysfs /sys /mnt/sys/
+    mount -o bind /dev /mnt/dev/
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -640,10 +605,10 @@ function pacstraper {
 
 function toggler {
 
-	cp "$0" /mnt/arch-setupper.sh
-	arch-chroot /mnt ./arch-setupper.sh chroot $DISKENVIRONMENT
+	cp "$0" /mnt/deb-setupper.sh
+    chroot /mnt /bin/bash ./deb-setupper.sh chroot $DISKENVIRONMENT "$EFIPART" "$ROOTPART" "$SWAPPART"
 
-	if [ -f /mnt/arch-setupper.sh ]; then
+	if [ -f /mnt/deb-setupper.sh ]; then
         echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
         echo 'Please umount all partitions, and restart this script'
     fi
@@ -652,6 +617,59 @@ function toggler {
 }
 
 function configurator {
+
+	echo -e "=============== DEBIAN: GENERATE FSTAB AND UPDATE SID REPOSITORIES =============== \n" 	
+
+	SDA1=$(blkid -s UUID -o value "$EFIPART")
+	SDA2=$(blkid -s UUID -o value "$ROOTPART")
+
+	if [ $DISKENVIRONMENT == "HDD" ]; then
+		SDA3=$(blkid -s UUID -o value "$SWAPPART")
+		{
+			echo "UUID=$SDA2          /             ext4      defaults              1      1"
+			echo "UUID=$SDA1          /boot/efi     vfat      defaults              0      0"
+			echo "UUID=$SDA3          none          swap      sw                    0      0"
+		} >> /etc/fstab
+
+	elif [ $DISKENVIRONMENT == "SSD" ]; then
+		{
+			echo "UUID=$SDA2          /             f2fs      discard               1      1"
+			echo "UUID=$SDA1          /boot/efi     		vfat      defaults              0      0"
+		} >> /etc/fstab
+	fi
+
+	echo "deb http://deb.debian.org/debian sid main contrib non-free" > /etc/apt/sources.list
+	echo "deb-src http://deb.debian.org/debian sid main contrib non-free" >> /etc/apt/sources.list
+
+	apt update
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+	clear
+
+	echo -e "=============== INSTALL CORE PACKAGES =============== \n" 
+
+	apt install -y sudo locales git wget aptitude grub-efi-amd64 vim \
+		grub-efi efibootmgr net-tools network-manager-gnome dialog \
+		openssh-server python rsync screen unrar p7zip zsh linux-image-amd64 \
+		firmware-linux firmware-linux-free firmware-linux-nonfree
+
+	clear
+
+	dialog --title "Laptop" --backtitle "036 Creative Studios" \
+        --yesno "This PC is a Laptop?" 8 60
+
+	response=$?
+
+	if [ $response = 0 ]; then
+		tasksel install laptop
+	fi
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
+
 	clear
 
 	echo -e "=============== ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
@@ -666,9 +684,10 @@ function configurator {
 
 	echo -e "=============== CONFIGURE GRUB =============== \n" 
 
-	grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
-	grub-mkconfig -o /boot/grub/grub.cfg
-	umount /efi
+	/usr/sbin/grub-install --target=x86_64-efi \
+		--boot-directory=/boot --efi-directory=/boot/efi --bootloader-id=GRUB
+	/usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+	umount /boot/efi
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -678,11 +697,12 @@ function configurator {
 
 	echo -e "=============== START NETWORKMANAGER AND SSH SERVICES =============== \n" 
 
-	systemctl enable NetworkManager
-	systemctl enable sshd
+	systemctl enable NetworkManager &> /dev/null
+	systemctl enable ssh &> /dev/null
 	systemctl start NetworkManager
 	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
-	/etc/ssh/sshd_config &> /dev/null
+		/etc/ssh/sshd_config &> /dev/null
+
 	systemctl start sshd
 
 	echo -e "=============== OK =============== \n" 
@@ -695,7 +715,7 @@ function hostnamer {
 	clear
 	dialog --title "Hostname" \
     --backtitle "036 Creative Studios" \
-    --inputbox "Please write your hostname (ex: A036-arch)" 8 80 2>"$HOSTTEMP"
+    --inputbox "Please write your hostname (ex: A036-debian)" 8 80 2>"$HOSTTEMP"
 
     RESPONSE=$?
     DATA=$(<$HOSTTEMP)
@@ -735,15 +755,15 @@ function localer {
 		case $menuitem in
 			Spanish) 
 				clear
-				sed -i 's/^#es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
-				locale-gen
-				echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
-				echo 'LC_TIME="es_ES.UTF-8"' >> /etc/locale.conf
-				echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/locale.conf
+				sed -i 's/^# es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+
+				echo 'LANG="es_ES.UTF-8"' >/etc/default/locale
+				echo 'LC_TIME="es_ES.UTF-8"' >> /etc/default/locale
+				echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/default/locale
 				return;;
 			English) 
 				clear
-				sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
+				sed -i 's/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
 				locale-gen
 				echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
 				echo 'LC_TIME="en_US.UTF-8"' >> /etc/locale.conf
@@ -759,10 +779,8 @@ function newuser {
 	echo -e "=============== ADD A USER TO A SUDO GROUP =============== \n" 
 	
 	read -r -p "Write your new user: " SUDOUSER
-	useradd --create-home "$SUDOUSER"
-	passwd "$SUDOUSER"
-	usermod -aG wheel "$SUDOUSER"
-	sed -i 's/^#.*%wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers &> /dev/null
+	adduser "$SUDOUSER"
+	usermod -aG sudo "$SUDOUSER"
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -776,7 +794,7 @@ function swapper {
 
 	if [ $DISKENVIRONMENT == "HDD" ]; then
 
-		echo "vm.swappiness=60" >> /etc/sysctl.d/99-sysctl.conf
+		echo "vm.swappiness=60" >> /etc/sysctl.conf
 
 	elif [ $DISKENVIRONMENT == "SSD" ]; then
 		dd if=/dev/zero of=/swapfile bs=1M count=1024 status=progress
@@ -784,7 +802,7 @@ function swapper {
 		mkswap /swapfile
 		swapon /swapfile
 		echo "swapfile none swap defaults 0 0" >> /etc/fstab
-		echo "vm.swappiness=1" >> /etc/sysctl.d/99-sysctl.conf
+		echo "vm.swappiness=1" >> /etc/sysctl.conf
 	fi
 
 	
@@ -800,13 +818,10 @@ function xanmod {
 	clear
 	echo -e "=============== XANMOD KERNEL =============== \n" 
 	
-	sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-	sed -i 's/^SigLevel    = Required DatabaseOptional$/SigLevel = PackageOptional/' \
-		/etc/pacman.conf &> /dev/null
-	echo "[kernel]" >> /etc/pacman.conf
-	echo 'Server = https://repo.archlinuxrepo.dev/$arch/$repo' >> /etc/pacman.conf
-	pacman -Syyu xanmod-kernel xanmod-kernel-headers --noconfirm
-	pacman -R linux --noconfirm
+	echo 'deb http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-kernel.list
+	wget -qO - https://dl.xanmod.org/gpg.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
+	apt update && sudo apt install linux-xanmod -y
+	apt remove linux-image-amd64 -y
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -834,12 +849,8 @@ function graphical {
 				clear
 				echo -e "=============== XFCE =============== \n" 
 	
-				pacman -S xorg --noconfirm
-				pacman -S xfce4 xfce4-goodies xfce4-terminal ttf-ubuntu-font-family \
-					gtk-engines gtk-engine-murrine gnome-themes-standard \
-					xdg-user-dirs ttf-dejavu gvfs xfce4-notifyd network-manager-applet \
-					volumeicon firefox gdm grub-customizer nemo cinnamon-translations --noconfirm
-				systemctl enable gdm
+			apt install -y xserver-xorg xfce4 xfce4-goodies xfce4-indicator-plugin \
+				ttf-ubuntu-font-family firefox gdm3 grub-customizer nemo cinnamon-l10n
 
 				echo " "
 				echo -e "=============== OK =============== \n" 
@@ -850,10 +861,9 @@ function graphical {
 
 				clear
 				echo -e "=============== GNOME =============== \n" 
-				pacman -S xorg --noconfirm
-				pacman -S gnome xfce4 gdm gnome-themes-standard network-manager-applet \
-					firefox grub-customizer nemo cinnamon-translations --noconfirm
-				systemctl enable gdm
+
+			apt install -y task-gnome-desktop \
+				ttf-ubuntu-font-family firefox grub-customizer nemo cinnamon-l10n
 
 				echo " "
 				echo -e "=============== OK =============== \n" 
@@ -862,12 +872,12 @@ function graphical {
 
 			KDE) 
 
+			apt install -y task-kde-desktop ttf-ubuntu-font-family firefox \
+				grub-customizer nemo cinnamon-l10n
+
 				clear
 				echo -e "=============== KDE =============== \n" 
-				pacman -S xorg --noconfirm
-				pacman -S plasma plasma-wayland-session kde-applications gnome-themes-standard network-manager-applet \
-					firefox grub-customizer nemo cinnamon-translations --noconfirm
-				systemctl enable sddm.service
+	
 
 				echo " "
 				echo -e "=============== OK =============== \n" 
@@ -878,19 +888,7 @@ function graphical {
 
 				clear
 				echo -e "=============== XORG ONLY =============== \n" 
-				pacman -S xorg --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			CUTEFISH) 
-
-				clear
-				echo -e "=============== CUTEFISH =============== \n" 
-				pacman -S xorg --noconfirm
-				pacman -S curefish --noconfirm
+			apt install -y xserver-xorg
 
 				echo " "
 				echo -e "=============== OK =============== \n" 
@@ -904,104 +902,6 @@ function graphical {
 		esac
 }
 
-function drivers {
-
-	clear
-	dialog --title "Graphical Drivers" \
-	--backtitle "036 Creative Studios" \
-	--menu "Choose your GPU drivers" 12 70 4 \
-			Intel "Intel Graphics" \
-			ATI "ATI Cards" \
-			AMD "AMD Cards" \
-			NVIDIA "NVIDIA Cards" \
-			VMware "If you are executing Arch Linux as a guest" 2>"${DRIVERSTEMP}"
-
-	menuitem=$(<"${DRIVERSTEMP}")
-
-		case $menuitem in
-			Intel) 
-
-				clear
-				echo -e "=============== INTEL =============== \n" 
-
-				pacman -S xf86-video-intel intem-media-driver intel-media-sdk lib32-mesa --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			ATI) 
-
-				clear
-				echo -e "=============== ATI =============== \n" 
-
-				pacman -S xf86-video-ati --noconfirm
-		
-				echo " "
-				echo -e "=============== AMD =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			AMD) 
-
-				clear
-				echo -e "=============== AMD =============== \n" 
-
-				pacman -S xf86-video-amdgpu --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			NVIDIA) 
-
-				clear
-				echo -e "=============== NVIDIA =============== \n" 
-
-				pacman -S nvidia nvidia-utils --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			VMware) 
-
-				clear
-				echo -e "=============== VMware =============== \n" 
-
-				pacman -S gtkmm3 open-vm-tools xf86-input-vmmouse xf86-video-vmware --noconfirm
-				systemctl enable vmtoolsd
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			*) clear; exit 0;;
-		esac
-
-}
-
-function aur {
-
-	clear
-	echo -e "=============== AUR (YAY ASKS YOU YOUR PASSWORD, PAY ATTENTION) ===============  \n" 
-
-	pacman -S --needed base-devel fakeroot packer go --noconfirm
-
-	sudo -u "$SUDOUSER" bash -c 'cd; git clone https://aur.archlinux.org/yay-bin.git'
-	sudo -u "$SUDOUSER" bash -c 'cd; cd yay-bin; makepkg -si'
-	sudo -u "$SUDOUSER" bash -c 'cd; rm -rf yay-bin'
-
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
-
-}
-
 function optimizations {
 
 	clear
@@ -1009,19 +909,9 @@ function optimizations {
 
 	sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=".*"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog"/' \
 		/etc/default/grub &> /dev/null
-
-	grub-mkconfig -o /boot/grub/grub.cfg
-
+	update-grub
 	systemctl mask lvm2-monitor
 
-	touch /etc/modprobe.d/blacklists.conf
-
-	echo 'blacklist iTCO_wdt' > /etc/modprobe.d/blacklists.conf
-	{
-		echo 'blacklist joydev'
-		echo 'blacklist mousedev'
-		echo 'blacklist mac_hid'
-	} >> /etc/modprobe.d/blacklists.conf
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -1033,27 +923,23 @@ function software {
 
 	dialog --title "More Sofware!!" --backtitle "036 Creative Studios" \
 		--yesno "This script has a little pack of software, Do you like it?\n \
+			-> gdebi \n \
+			-> synaptic \n \
+			-> aptitude \n \
+			-> libwnck-common \n \
+			-> libwnck22 \n \
 			-> baobab \n \
+			-> hfsutils \n \
+			-> hfsprogs \n \
 			-> ntfs-3g \n \
-			-> exfatprogs \n \
+			-> exfat-fuse \n \
 			-> exfat-utils \n \
-			-> xarchiver \n \
 			-> gparted \n \
-			-> zerotier-one \n \
+			-> xarchiver \n \
 			-> wine \n \
-			-> exe-thumbnailer \n \
-			-> brave \n \
-			-> github-desktop \n \
-			-> playonlinux \n \
-			-> discord \n \
-			-> visual-studio-code-bin \n \
-			-> zerotier-gui-git \n \
-			-> notion-app \n \
-			-> teamviewer \n \
-			-> numix-gtk-theme-git\n \
-			-> numix-icon-theme \n \
-			-> telegram-desktop \n \
-			-> preload " 26 65
+			-> playonlinux  \n \
+			-> preload  \n \
+			-> xrdp" 26 65
 	clear
 	response=$?
 
@@ -1062,19 +948,16 @@ function software {
 	clear
 	echo -e "=============== SOFTWARE =============== \n" 
 
-		sudo -u "$SUDOUSER" bash -c "yay -S baobab ntfs-3g exfatprogs \
-		xarchiver gparted zerotier-one wine playonlinux xrdp \
-		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
-		notion-app teamviewer telegram-desktop preload \
-		brave-bin exe-thumbnailer github-desktop-bin \
-		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
-		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
-		numix-icon-theme-git numix-circle-icon-theme-git"
+	apt install -y gdebi synaptic aptitude libwnck-common \
+		libwnck22 baobab hfsutils hfsprogs ntfs-3g \
+		exfat-fuse exfat-utils gparted xarchiver wine playonlinux xrdp preload \
+		numix-gtk-theme numix-icon-theme-circle
 		
-	echo allowed_users=anybody > /etc/X11/Xwrapper.config
+	adduser xrdp ssl-cert
 	systemctl enable xrdp
 	systemctl enable xrdp-sesman
 	systemctl enable preload
+	systemctl mask lvm2-monitor
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -1094,8 +977,8 @@ function software {
 function finisher {
 
 	clear
-	
-	rm -f /arch-setupper.sh &> /dev/nulldialog --msgbox 'READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub' 7 50
+	dialog --msgbox 'READY!!!, Your PC is succesfully installed with Debian Sid, if you have errors, please report at 036bootstraper in GitHub' 7 50
+	rm -f /deb-setupper.sh &> /dev/null
 	exit
 	clear
 	umount /mnt
@@ -1106,6 +989,10 @@ function finisher {
 
 if [ "$1" == "chroot" ]; then
 	DISKENVIRONMENT=$2
+	EFIPART=$3
+	ROOTPART=$4
+	SWAPPART=$5
+
 	corechroot
 else
 	corelive

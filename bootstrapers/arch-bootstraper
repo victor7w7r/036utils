@@ -171,12 +171,6 @@ function verify {
 		pacman -S lsb-release --noconfirm &> /dev/null
 	fi
 
-	if [ "$OPERATING" != "GNU/Linux" ]; then
-		clear
-		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
-		exit 1
-	fi
-
 	IS_ARCH=$(lsb_release -is)
 
 	if [ "$IS_ARCH" != "Arch" ]; then
@@ -851,7 +845,7 @@ function graphical {
 				clear
 				echo -e "=============== GNOME =============== \n" 
 				pacman -S xorg --noconfirm
-				pacman -S gnome xfce4 gdm gnome-themes-standard network-manager-applet \
+				pacman -S gnome gdm gnome-themes-standard network-manager-applet \
 					firefox grub-customizer nemo cinnamon-translations --noconfirm
 				systemctl enable gdm
 
@@ -1094,8 +1088,8 @@ function software {
 function finisher {
 
 	clear
-	
-	rm -f /arch-setupper.sh &> /dev/nulldialog --msgbox 'READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036shell in GitHub' 7 50
+	dialog --msgbox 'READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036bootstrap in GitHub' 7 50
+	rm -f /arch-setupper.sh &> /dev/null
 	exit
 	clear
 	umount /mnt
