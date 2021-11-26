@@ -26,7 +26,7 @@ DRIVERSTEMP=/tmp/driverstemp.sh.$$
 function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; 
 	rm $SWAPPARTMENUTEMP; rm $LOCALESTEMP; $HOSTTEMP; $GRAPHICALTEMP; $DRIVERSTEMP; exit; }
 
-trap cleanup; SIGHUP SIGINT SIGTERM
+trap cleanup; SIGHUP SIGINT SIGTERM &> /dev/null
 
 DISKENVIRONMENT=""
 DISK=""
@@ -618,25 +618,7 @@ function toggler {
 
 function configurator {
 
-	echo -e "=============== DEBIAN: GENERATE FSTAB AND UPDATE SID REPOSITORIES =============== \n" 	
-
-	SDA1=$(blkid -s UUID -o value "$EFIPART")
-	SDA2=$(blkid -s UUID -o value "$ROOTPART")
-
-	if [ $DISKENVIRONMENT == "HDD" ]; then
-		SDA3=$(blkid -s UUID -o value "$SWAPPART")
-		{
-			echo "UUID=$SDA2          /             ext4      defaults              1      1"
-			echo "UUID=$SDA1          /boot/efi     vfat      defaults              0      0"
-			echo "UUID=$SDA3          none          swap      sw                    0      0"
-		} >> /etc/fstab
-
-	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		{
-			echo "UUID=$SDA2          /             f2fs      discard               1      1"
-			echo "UUID=$SDA1          /boot/efi     		vfat      defaults              0      0"
-		} >> /etc/fstab
-	fi
+	echo -e "=============== DEBIAN: UPDATE SID REPOSITORIES =============== \n" 	
 
 	echo "deb http://deb.debian.org/debian sid main contrib non-free" > /etc/apt/sources.list
 	echo "deb-src http://deb.debian.org/debian sid main contrib non-free" >> /etc/apt/sources.list
@@ -653,7 +635,7 @@ function configurator {
 	apt install -y sudo locales git wget aptitude grub-efi-amd64 vim \
 		grub-efi efibootmgr net-tools network-manager-gnome dialog \
 		openssh-server python rsync screen unrar p7zip zsh linux-image-amd64 \
-		firmware-linux firmware-linux-free firmware-linux-nonfree
+		firmware-linux firmware-linux-free firmware-linux-nonfree blkid
 
 	clear
 
@@ -672,7 +654,27 @@ function configurator {
 
 	clear
 
-	echo -e "=============== ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
+	echo -e "=============== GENERATE FSTAB AND ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
+
+	
+	SDA1=$(blkid -s UUID -o value "$EFIPART")
+	SDA2=$(blkid -s UUID -o value "$ROOTPART")
+
+	if [ $DISKENVIRONMENT == "HDD" ]; then
+		SDA3=$(blkid -s UUID -o value "$SWAPPART")
+		{
+			echo "UUID=$SDA2          /             ext4      defaults              1      1"
+			echo "UUID=$SDA1          /boot/efi     vfat      defaults              0      0"
+			echo "UUID=$SDA3          none          swap      sw                    0      0"
+		} >> /etc/fstab
+
+	elif [ $DISKENVIRONMENT == "SSD" ]; then
+		{
+			echo "UUID=$SDA2          /             f2fs      discard               1      1"
+			echo "UUID=$SDA1          /boot/efi     		vfat      defaults              0      0"
+		} >> /etc/fstab
+	fi
+
 
 	passwd
 
