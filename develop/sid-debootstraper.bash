@@ -109,6 +109,11 @@ function diskenv {
 
 function whichverify() {
 	stat=$(which "$1" 2>&1)
+
+	if [ "$stat" == "" ]; then
+		return 0
+	fi
+
 	if [[ "$stat" =~ ^which:* ]]; then 
 		return 1
 	else

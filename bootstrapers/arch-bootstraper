@@ -1061,7 +1061,7 @@ function software {
 	{
 		yay -S baobab ntfs-3g exfatprogs \
 		xarchiver gparted zerotier-one wine playonlinux xrdp \
-		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
+		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																						 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
 		notion-app teamviewer telegram-desktop preload \
 		brave-bin exe-thumbnailer github-desktop-bin \
 		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
