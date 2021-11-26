@@ -637,7 +637,7 @@ function debian {
 	apt install -y sudo locales git wget aptitude grub-efi-amd64 vim \
 		grub-efi efibootmgr net-tools network-manager-gnome dialog \
 		openssh-server python rsync screen unrar p7zip zsh linux-image-amd64 \
-		firmware-linux firmware-linux-free firmware-linux-nonfree util-linux
+		firmware-linux firmware-linux-free firmware-linux-nonfree util-linux gnupg
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -663,22 +663,22 @@ function configurator {
 	echo -e "=============== GENERATE FSTAB AND ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
 
 	
-	SDA1=$(sudo blkid -s UUID -o value "$EFIPART")
-	SDA2=$(sudo blkid -s UUID -o value "$ROOTPART")
+	SDA1=$(/usr/sbin/blkid -s UUID -o value "$EFIPART")
+	SDA2=$(/usr/sbin/blkid -s UUID -o value "$ROOTPART")
 
 	if [ $DISKENVIRONMENT == "HDD" ]; then
-		SDA3=$(sudo blkid -s UUID -o value "$SWAPPART")
+		SDA3=$(/usr/sbin/blkid -s UUID -o value "$SWAPPART")
 		{
 			echo "UUID=$SDA2          /             ext4      defaults              1      1"
 			echo "UUID=$SDA1          /boot/efi     vfat      defaults              0      0"
 			echo "UUID=$SDA3          none          swap      sw                    0      0"
-		} >> /etc/fstab
+		} > /etc/fstab
 
 	elif [ $DISKENVIRONMENT == "SSD" ]; then
 		{
 			echo "UUID=$SDA2          /             f2fs      discard               1      1"
 			echo "UUID=$SDA1          /boot/efi     		vfat      defaults              0      0"
-		} >> /etc/fstab
+		} > /etc/fstab
 	fi
 
 	passwd
@@ -706,11 +706,8 @@ function configurator {
 
 	systemctl enable NetworkManager &> /dev/null
 	systemctl enable ssh &> /dev/null
-	systemctl start NetworkManager
 	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
 		/etc/ssh/sshd_config &> /dev/null
-
-	systemctl start sshd
 
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
@@ -786,8 +783,8 @@ function newuser {
 	echo -e "=============== ADD A USER TO A SUDO GROUP =============== \n" 
 	
 	read -r -p "Write your new user: " SUDOUSER
-	adduser "$SUDOUSER"
-	usermod -aG sudo "$SUDOUSER"
+	/usr/sbin/adduser "$SUDOUSER"
+	/usr/sbin/usermod -aG sudo "$SUDOUSER"
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -825,9 +822,9 @@ function xanmod {
 	clear
 	echo -e "=============== XANMOD KERNEL =============== \n" 
 	
-	echo 'deb http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-kernel.list
-	wget -qO - https://dl.xanmod.org/gpg.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
-	apt update && sudo apt install linux-xanmod -y
+	echo 'deb http://deb.xanmod.org releases main' | tee /etc/apt/sources.list.d/xanmod-kernel.list
+	wget -qO - https://dl.xanmod.org/gpg.key | apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
+	apt update && apt install linux-xanmod -y
 	apt remove linux-image-amd64 -y
 
 	echo " "
