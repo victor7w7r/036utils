@@ -99,6 +99,7 @@ function verify {
 
     ARCH=$(uname -m)
     OPERATING=$(uname -o)
+	ORACLE=$(cat os -release | head -n 1 | cut -d "=" -f2)
 	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
@@ -115,18 +116,25 @@ function verify {
 		exit 1
 	fi
 
+
+    if [[ "$ORACLE" =~ \"Oracle ]]; then
+        echo "ERROR: This script is only intended to run on x86_64 PCs."
+        exit 1
+    fi
+
+	
     if [ "$ARCH" != "x86_64" ]; then
         echo "ERROR: This script is only intended to run on x86_64 PCs."
         exit 1
     fi
 
-    SELECTOR="pacman"
+    SELECTOR="dnf"
 	whichverify "$SELECTOR"
 	local res=$?
 
 	if [ $res -eq 1 ]; then
 		clear
-		echo "ERROR: Arch Linux pacman is not available in this system, this system isn't Arch Linux?"
+		echo "ERROR: DNF is not available in this system, this system isn't Oracle Linux?"
 		exit 1
 	fi
 
@@ -138,33 +146,8 @@ function verify {
 		exit 1
 	fi
 
-    echo "Updating Arch Repositories..."
+    echo "Updating RHEL Repositories..."
     pacman -Sy &> /dev/null
-
-    SELECTOR="lsb_release"
-	whichverify "$SELECTOR"
-	local res=$?
-
-	if [ $res -eq 1 ]; then
-		echo "lsb_release is not available in this system, installing"
-		pacman -S lsb-release --noconfirm &> /dev/null
-	fi
-
-	IS_ARCH=$(lsb_release -is)
-
-	if [ "$IS_ARCH" != "Arch" ]; then
-		clear
-		echo "ERROR: Your Operating System is not Arch Linux, exiting"
-		exit 1
-	fi
-
-	SELECTOR="fsck.f2fs"
-	whichverify "$SELECTOR"
-	local res=$?
-	if [ $res -eq 1 ]; then
-		echo "f2fs.tools is not available in this system, installing"
-		pacman -S f2fs-tools --noconfirm &> /dev/null
-	fi
 
 	SELECTOR="dialog"
 	whichverify "$SELECTOR"
@@ -174,16 +157,7 @@ function verify {
 		echo "dialog is not available in this system, installing"
 		pacman -S dialog --noconfirm &> /dev/null
 	fi
-
-    SELECTOR="pacstrap"
-	whichverify "$SELECTOR"
-	local res=$?
-
-	if [ $res -eq 1 ]; then
-		echo "pacstrap is not available in this system, installing"
-		pacman -S arch-install-scripts --noconfirm &> /dev/null
-	fi
-
+	
 	pacman -S ncurses --noconfirm &> /dev/null
 
 	echo "All dependencies is ok!"
@@ -258,7 +232,6 @@ function diskmenu {
 		*) clear; exit 0;;
 	esac
 }
-
 
 function toggler {
 
