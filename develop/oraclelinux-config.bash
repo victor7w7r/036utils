@@ -83,7 +83,7 @@ function verify {
 
     ARCH=$(uname -m)
     OPERATING=$(uname -o)
-	ORACLE=$(cat os -release | head -n 1 | cut -d "=" -f2)
+	ORACLE=$(cat /etc/os-release | head -n 1 | cut -d "=" -f2)
 	SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
@@ -431,7 +431,7 @@ function ohmyzsh {
 			git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 			sed -i -e 's/plugins=(.*/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' .zshrc
 		} > /home/"$HOME"/omz.sh
-		
+
 		chown "$HOME" /home/"$HOME"/omz.sh
 
 	done
