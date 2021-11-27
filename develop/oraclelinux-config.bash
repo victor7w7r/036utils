@@ -133,7 +133,7 @@ function verify {
 	fi
 
     echo "Updating Oracle Linux Repositories... Please Wait"
-    dnf update --assumeyes 2> /dev/null
+    dnf update --assumeyes &> /dev/null
 
 	SELECTOR="dialog"
 	whichverify "$SELECTOR"
@@ -141,7 +141,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "dialog is not available in this system, installing"
-		dnf install dialog --assumeyes 2> /dev/null
+		dnf install dialog --assumeyes &> /dev/null
 	fi
 	
 
