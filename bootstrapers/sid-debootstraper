@@ -924,6 +924,8 @@ function ohmyzsh {
 		sed -i -e 's/plugins=(.*/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' .zshrc
 	} > /home/"$SUDOUSER"/omz.sh
 
+	chown "$SUDOUSER" /home/"$SUDOUSER"/omz.sh
+
 	echo "We create a script called omz.sh in your home directory, after reboot, use chmod +x at omz.sh"
 
 	echo " "

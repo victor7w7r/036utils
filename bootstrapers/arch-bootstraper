@@ -1012,6 +1012,8 @@ function ohmyzsh {
 		sed -i -e 's/plugins=(.*/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' .zshrc
 	} > /home/"$SUDOUSER"/omz.sh
 
+	chown "$SUDOUSER" /home/"$SUDOUSER"/omz.sh
+
 	echo "We create a script called omz.sh in your home directory, after reboot, use chmod +x at omz.sh"
 
 	echo " "
@@ -1096,6 +1098,8 @@ function software {
 		systemctl enable xrdp-sesman
 		systemctl enable preload
 	} > /home/"$SUDOUSER"/software.sh
+
+	chown "$SUDOUSER" /home/"$SUDOUSER"/software.sh
 
 	echo "We create a script called software.sh in your home directory, after reboot, use chmod +x at software.sh"
 
