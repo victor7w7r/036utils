@@ -5,33 +5,17 @@ if [ "$(id -u)" -ne 0 ]; then
 	exit 1
 fi
 
-rm /tmp/diskenvtemp.sh* 2> /dev/null
-rm /tmp/diskmenutemp.sh* 2> /dev/null
-rm /tmp/rootpartmenutemp.sh* 2> /dev/null
-rm /tmp/swapppartmenutemp.sh* 2> /dev/null
 rm /tmp/localestemp.sh* 2> /dev/null
 rm /tmp/hosttemp.sh* 2> /dev/null
-rm /tmp/graphicaltemp.sh* 2> /dev/null
-rm /tmp/driverstemp.sh* 2> /dev/null
-
-DISKMENUTEMP=/tmp/diskmenutemp.sh.$$	
-DISKENVTEMP=/tmp/diskenvtemp.sh.$$	
-ROOTPARTMENUTEMP=/tmp/rootpartmenutemp.sh.$$	
-SWAPPARTMENUTEMP=/tmp/swapppartmenutemp.sh.$$	
+	
 LOCALESTEMP=/tmp/localestemp.sh.$$
 HOSTTEMP=/tmp/hosttemp.sh.$$
-GRAPHICALTEMP=/tmp/graphicaltemp.sh.$$
-DRIVERSTEMP=/tmp/driverstemp.sh.$$
 
-function cleanup { rm $DISKENVTEMP; rm $DISKMENUTEMP; rm $ROOTPARTMENUTEMP; 
-	rm $SWAPPARTMENUTEMP; rm $LOCALESTEMP; $HOSTTEMP; $GRAPHICALTEMP; $DRIVERSTEMP; exit; }
+function cleanup { rm $LOCALESTEMP; $HOSTTEMP; exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
-DISKENVIRONMENT=""
-SUDOUSER=""
-
-function core { clear; cover; sleep 1s; verify; }
+function core { clear; cover; sleep 1s; verify; packages; hostnamer; localer; cockpit; graphical; remote; kvm; software; finisher; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -118,7 +102,7 @@ function verify {
 
 
     if [[ "$ORACLE" =~ \"Oracle ]]; then
-        echo "ERROR: This script is only intended to run on x86_64 PCs."
+        echo "ERROR: This script is only intended to run on Oracle Linux"
         exit 1
     fi
 
@@ -146,8 +130,8 @@ function verify {
 		exit 1
 	fi
 
-    echo "Updating RHEL Repositories..."
-    pacman -Sy &> /dev/null
+    echo "Updating Oracle Linux Repositories... Please Wait"
+    dnf update --assumeyes 2> /dev/null
 
 	SELECTOR="dialog"
 	whichverify "$SELECTOR"
@@ -155,10 +139,9 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "dialog is not available in this system, installing"
-		pacman -S dialog --noconfirm &> /dev/null
+		dnf install dialog --assumeyes 2> /dev/null
 	fi
 	
-	pacman -S ncurses --noconfirm &> /dev/null
 
 	echo "All dependencies is ok!"
 
@@ -174,111 +157,12 @@ function verify {
 
 }
 
-function diskmenu {
-
-	clear
-	COUNT=0
-	BLOCK=()
-	DIRTYDEVS=()
-
-	DEVICES=$(find /dev/disk/by-path/ | sed 's/^\/dev\/disk\/by-path\///') # 3.0_high_speed_000000123AFF-0:0 ...
-
-	for DEVICE in $DEVICES; do
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-path/$DEVICE") # ../../sda ../../sda1 ... 
-		COUNT=$(( COUNT + 1 ))
-	done
-
-	if [ $COUNT -eq 0 ]; then
-		clear
-		echo "FATAL ERROR: There's not disks available in your system, please verify!!!"
-		exit 1
-	fi
-
-	COUNT=0
-
-	for DEV in "${DIRTYDEVS[@]}"; do	
-
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d' | sed '/nvme[[:digit:]]n[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
-
-		if [ "$ABSOLUTEPARTS" == "" ]; then
-			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
-			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
-		fi
-		
-	done
-
-	COUNT=0
-	MODEL=0
-	DEVICE=0
-	ARRAY=()
-
-	for PART in "${BLOCK[@]}"; do
-		DEVICE="/dev/$PART"
-		BLOCKSTAT="${BLOCK[$COUNT]}"
-		SIZE=$(lsblk -no SIZE /dev/"$PART" | head -1 | sed s/..//)
-		MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)" #KINGSTON 
-		ARRAY+=("$DEVICE" "$MODEL $SIZE")
-		COUNT=$(( COUNT + 1 ))
-	done
-
-		dialog --clear --backtitle "036 Creative Studios" --title "Choose a device" \
-		--menu "Choose a device for install"\
-		15 50 4 "${ARRAY[@]}" 2>"${DISKMENUTEMP}"
-
-	CHOICE=$(<"${DISKMENUTEMP}")
-
-	case $CHOICE in
-		"$CHOICE") diskverify "$CHOICE";;
-		*) clear; exit 0;;
-	esac
-}
-
-function toggler {
-
-	cp "$0" /mnt/arch-setupper.sh
-	arch-chroot /mnt ./arch-setupper.sh chroot $DISKENVIRONMENT
-
-	if [ -f /mnt/arch-setupper.sh ]; then
-        echo 'ERROR: Something failed inside the chroot, not unmounting filesystems so you can investigate.'
-        echo 'Please umount all partitions, and restart this script'
-    fi
-
-	exit 0
-}
-
-function configurator {
+function packages {
 	clear
 
-	echo -e "=============== ROOT PASSWORD FOR YOUR SYSTEM =============== \n" 
+	echo -e "=============== CORE PACKAGES =============== \n" 
 
-	passwd
-
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
-
-	clear
-
-	echo -e "=============== CONFIGURE GRUB =============== \n" 
-
-	grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
-	grub-mkconfig -o /boot/grub/grub.cfg
-	umount /efi
-
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
-
-	clear
-
-	echo -e "=============== START NETWORKMANAGER AND SSH SERVICES =============== \n" 
-
-	systemctl enable NetworkManager
-	systemctl enable sshd
-	systemctl start NetworkManager
-	sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
-	/etc/ssh/sshd_config &> /dev/null
-	systemctl start sshd
+	dnf -y install net-tools wget nano zsh
 
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
@@ -297,8 +181,7 @@ function hostnamer {
 
     case $RESPONSE in
     0) 
-		echo "${DATA}" > /etc/hostname
-		echo "127.0.1.1        ${DATA}" >> /etc/hosts
+		hostnamectl set-hostname "${DATA}" 
 		return;;
     1) 
         clear; exit 0  
@@ -314,282 +197,170 @@ function localer {
 
 	clear
 	dialog --msgbox "America/Guayaquil is the timezone by default, if you want to change, here is the command\n\n \
-		ln -sf /usr/share/zoneinfo/REGION/CITY /etc/localtime" 9 50
+		timedatectl set-timezone REGION/CITY" 9 50
 
-	ln -sf /usr/share/zoneinfo/America/Guayaquil /etc/localtime
-	hwclock --systohc
+	timedatectl set-timezone America/Guayaquil
 
 	dialog --clear --backtitle "036 Creative Studios" \
 		--title "Locale" \
-		--menu "Choose your locale, if you want to change to other locales, check the README of the Github of this project" 12 50 4 \
-		Spanish "es_ES" \
-		English "en_US" 2>"${LOCALESTEMP}"
+		--menu "Choose your keyboard layout" 12 50 4 \
+		Spanish "es" \
+		English "us" 2>"${LOCALESTEMP}"
 
 		menuitem=$(<"${LOCALESTEMP}")
 
 		case $menuitem in
 			Spanish) 
 				clear
-				sed -i 's/^#es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
-				locale-gen
-				echo 'LANG="es_ES.UTF-8"' > /etc/locale.conf
-				echo 'LC_TIME="es_ES.UTF-8"' >> /etc/locale.conf
-				echo 'LANGUAGE="es_EC:es_ES:es"' >> /etc/locale.conf
+				localectl set-keymap es
 				return;;
 			English) 
 				clear
-				sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen &> /dev/null
-				locale-gen
-				echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
-				echo 'LC_TIME="en_US.UTF-8"' >> /etc/locale.conf
-				echo 'LANGUAGE="es_US:en"' >> /etc/locale.conf
+				localectl set-keymap us
 				return;;
 			*) clear; exit 0;;
 		esac
 }
 
-function newuser {
+function cockpit {
 
 	clear
-	echo -e "=============== ADD A USER TO A SUDO GROUP =============== \n" 
+	echo -e "=============== COCKPIT SERVICE (IP:9090) =============== \n" 
 	
-	read -r -p "Write your new user: " SUDOUSER
-	useradd --create-home "$SUDOUSER"
-	passwd "$SUDOUSER"
-	usermod -aG wheel "$SUDOUSER"
-	sed -i 's/^#.*%wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers &> /dev/null
+	systemctl enable --now cockpit.socket
+	systemctl start cockpit.socket
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
-}
 
-function swapper {
-
-	clear
-	echo -e "=============== SWAPPING =============== \n" 
-
-	if [ $DISKENVIRONMENT == "HDD" ]; then
-
-		echo "vm.swappiness=60" >> /etc/sysctl.d/99-sysctl.conf
-
-	elif [ $DISKENVIRONMENT == "SSD" ]; then
-		dd if=/dev/zero of=/swapfile bs=1M count=1024 status=progress
-		chmod 600 /swapfile
-		mkswap /swapfile
-		swapon /swapfile
-		echo "swapfile none swap defaults 0 0" >> /etc/fstab
-		echo "vm.swappiness=1" >> /etc/sysctl.d/99-sysctl.conf
-	fi
-
-	
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
-
-
-}
-
-function xanmod {
-
-	clear
-	echo -e "=============== XANMOD KERNEL =============== \n" 
-	
-	sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-	sed -i 's/^SigLevel    = Required DatabaseOptional$/SigLevel = PackageOptional/' \
-		/etc/pacman.conf &> /dev/null
-	echo "[kernel]" >> /etc/pacman.conf
-	echo 'Server = https://repo.archlinuxrepo.dev/$arch/$repo' >> /etc/pacman.conf
-	pacman -Syyu xanmod-kernel xanmod-kernel-headers --noconfirm
-	pacman -R linux --noconfirm
-
-	echo " "
-	echo -e "=============== OK =============== \n" 
-	read -r -p "Press Enter to continue..."
 }
 
 function graphical {
 
-	clear
-	dialog --clear --title "Graphical Environment" \
-	--backtitle "036 Creative Studios" \
-	--menu "Choose a GUI, these are the common used, this script recommends XFCE" 15 50 4 \
-			XFCE "Xfce Desktop Environment" \
-			GNOME "GNOME Desktop Environment" \
-			KDE "KDE Desktop Environment" \
-			XORG "Minimal xorg Desktop" \
-			CUTEFISH "Cutefish Desktop (Beta)" \
-			NOGUI "No install GUI" 2>"${GRAPHICALTEMP}"
+	LISTHOME=""
 
-	menuitem=$(<"${GRAPHICALTEMP}")
+	dialog --title "Graphical" --backtitle "036 Creative Studios" \
+		--yesno "Install XFCE as Desktop Environment?" 8 60
 
-		case $menuitem in
-			XFCE) 
-
-				clear
-				echo -e "=============== XFCE =============== \n" 
+	response=$?
 	
-				pacman -S xorg --noconfirm
-				pacman -S xfce4 xfce4-goodies xfce4-terminal ttf-ubuntu-font-family \
-					gtk-engines gtk-engine-murrine gnome-themes-standard \
-					xdg-user-dirs ttf-dejavu gvfs xfce4-notifyd network-manager-applet \
-					volumeicon firefox gdm grub-customizer nemo cinnamon-translations --noconfirm
-				systemctl enable gdm
+	if [ $response = 0 ]; then
 
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
+		clear
+		echo -e "=============== EPEL & XFCE =============== \n" 
+		
+		dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm --assumeyes 
+		dnf update --assumeyes 
+		dnf groupinstall "base-x" --assumeyes 
+		dnf groupinstall "xfce" --assumeyes 
+		dnf install xfce4-whiskermenu-plugin --assumeyes 
+		touch .xinitrc
+		echo "xfce4-session" > .xinitrc
 
-			GNOME) 
+		LISTHOME=$(ls /home)
 
-				clear
-				echo -e "=============== GNOME =============== \n" 
-				pacman -S xorg --noconfirm
-				pacman -S gnome gdm gnome-themes-standard network-manager-applet \
-					firefox grub-customizer nemo cinnamon-translations --noconfirm
-				systemctl enable gdm
+		for HOME in $LISTHOME; do
+			touch /home/"$HOME"/.xinitrc
+			echo "xfce4-session" > /home/"$HOME"/.xinitrc
+			chown "$HOME" /home/"$HOME"/.xinitrc
+		done
 
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
+		echo " "
+		echo -e "=============== OK =============== \n" 
+		read -r -p "Press Enter to continue..."
 
-			KDE) 
+	else
+	
+		clear
+		echo -e "=============== EPEL =============== \n" 
+		
+		dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm --assumeyes 
+	
+		echo " "
+		echo -e "=============== OK =============== \n" 
+		read -r -p "Press Enter to continue..."
+		return
+	fi
 
-				clear
-				echo -e "=============== KDE =============== \n" 
-				pacman -S xorg --noconfirm
-				pacman -S plasma plasma-wayland-session kde-applications gnome-themes-standard network-manager-applet \
-					firefox grub-customizer nemo cinnamon-translations --noconfirm
-				systemctl enable sddm.service
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			XORG) 
-
-				clear
-				echo -e "=============== XORG ONLY =============== \n" 
-				pacman -S xorg --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			CUTEFISH) 
-
-				clear
-				echo -e "=============== CUTEFISH =============== \n" 
-				pacman -S xorg --noconfirm
-				pacman -S curefish --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			NOGUI) 
-				return;;
-
-			*) clear; exit 0;;
-		esac
 }
 
 function drivers {
 
 	clear
-	dialog --title "Graphical Drivers" \
-	--backtitle "036 Creative Studios" \
-	--menu "Choose your GPU drivers" 12 70 4 \
-			Intel "Intel Graphics" \
-			ATI "ATI Cards" \
-			AMD "AMD Cards" \
-			NVIDIA "NVIDIA Cards" \
-			VMware "If you are executing Arch Linux as a guest" 2>"${DRIVERSTEMP}"
 
-	menuitem=$(<"${DRIVERSTEMP}")
+	dialog --title "VMware" --backtitle "036 Creative Studios" \
+		--yesno "This is a VMware Guest" 8 60
 
-		case $menuitem in
-			Intel) 
+	clear
+	response=$?
 
-				clear
-				echo -e "=============== INTEL =============== \n" 
+	if [ $response = 0 ]; then
 
-				pacman -S xf86-video-intel intem-media-driver intel-media-sdk lib32-mesa --noconfirm
+	clear
+	dnf install open-vm-tools open-vm-tools-desktop --assumeyes 
 
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			ATI) 
-
-				clear
-				echo -e "=============== ATI =============== \n" 
-
-				pacman -S xf86-video-ati --noconfirm
-		
-				echo " "
-				echo -e "=============== AMD =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			AMD) 
-
-				clear
-				echo -e "=============== AMD =============== \n" 
-
-				pacman -S xf86-video-amdgpu --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			NVIDIA) 
-
-				clear
-				echo -e "=============== NVIDIA =============== \n" 
-
-				pacman -S nvidia nvidia-utils --noconfirm
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			VMware) 
-
-				clear
-				echo -e "=============== VMware =============== \n" 
-
-				pacman -S gtkmm3 open-vm-tools xf86-input-vmmouse xf86-video-vmware --noconfirm
-				systemctl enable vmtoolsd
-
-				echo " "
-				echo -e "=============== OK =============== \n" 
-				read -r -p "Press Enter to continue..."
-				return;;
-
-			*) clear; exit 0;;
-		esac
+	elif [ $response -eq 1 ]; then
+		clear
+		return
+	else
+		clear
+		return
+	fi
 
 }
 
-function aur {
+function remote {
 
 	clear
-	echo -e "=============== AUR (YAY ASKS YOU YOUR PASSWORD, PAY ATTENTION) ===============  \n" 
 
-	pacman -S --needed base-devel fakeroot packer go --noconfirm
+	dialog --title "SSH" --backtitle "036 Creative Studios" \
+		--yesno "Permit Root Login?" 8 60
 
-	sudo -u "$SUDOUSER" bash -c 'cd; git clone https://aur.archlinux.org/yay-bin.git'
-	sudo -u "$SUDOUSER" bash -c 'cd; cd yay-bin; makepkg -si'
-	sudo -u "$SUDOUSER" bash -c 'cd; rm -rf yay-bin'
+	response=$?
+
+	if [ $response = 0 ]; then
+
+		clear
+
+		echo -e "=============== SSH: PERMIT ROOT LOGIN ===============  \n" 
+
+		sed -i 's/^#PermitRootLogin\s.*$/PermitRootLogin Yes/' \
+			/etc/ssh/sshd_config &> /dev/null
+		systemctl enable sshd
+		systemctl restart sshd
+
+		echo " "
+		echo -e "=============== OK =============== \n" 
+		read -r -p "Press Enter to continue..."
+
+	fi
+
+	clear
+
+	echo -e "=============== XRDP ===============  \n" 
+
+	LISTHOME=""
+
+	dnf install xrdp --assumeyes 
+
+	LISTHOME=$(ls /home)
+
+	for HOME in $LISTHOME; do
+		touch /home/"$HOME"/.Xclients
+		echo "xfce4-session" > /home/"$HOME"/.Xclients
+		chmod a+x /home/"$HOME"/.Xclients
+		chown "$HOME" /home/"$HOME"/.Xclients
+	done
+
+	systemctl enable xrdp
+	systemctl enable xrdp-sesman
+	systemctl start xrdp
+	systemctl start xrdp-sesman
+	firewall-cmd --permanent --add-port=3389/tcp 
+	firewall-cmd --reload
+	chcon --type=bin_t /usr/sbin/xrdp
+	chcon --type=bin_t /usr/sbin/xrdp-sesman
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -597,30 +368,46 @@ function aur {
 
 }
 
-function optimizations {
+function kvm {
 
-	clear
-	echo -e "=============== OPTIMIZATIONS =============== \n" 
+	dialog --title "KVM" --backtitle "036 Creative Studios" \
+		--yesno "Install Oracle Linux KVM Suite?" 8 60
 
-	sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=".*"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog"/' \
-		/etc/default/grub &> /dev/null
+	response=$?
 
-	grub-mkconfig -o /boot/grub/grub.cfg
+	if [ $response = 0 ]; then
 
-	systemctl mask lvm2-monitor
+	echo -e "=============== KVM ===============  \n" 
 
-	touch /etc/modprobe.d/blacklists.conf
+	dnf config-manager --enable ol8_appstream ol8_kvm_appstream ol8_developer_EPEL
+	dnf module install virt --assumeyes 
+	dnf install virt-install virt-viewer virt-manager edk2-ovmf virt-v2v cockpit-machines --assumeyes
+	virt-host-validate qemu
+	systemctl enable libvirtd
+	systemctl start libvirtd
+	dnf install dnf-plugins-core --assumeyes 
+	dnf config-manager --add-repo https://www.kraxel.org/repos/firmware.repo
+	dnf install edk2.git-ovmf-x64 --assumeyes 
 
-	echo 'blacklist iTCO_wdt' > /etc/modprobe.d/blacklists.conf
-	{
-		echo 'blacklist joydev'
-		echo 'blacklist mousedev'
-		echo 'blacklist mac_hid'
-	} >> /etc/modprobe.d/blacklists.conf
+	echo "nvram = [" >> /etc/libvirt/qemu.conf
+	echo "	\"/usr/edk.git/OVMF_CODE.fd:/usr/edk.git/OVMF_VARS.fd\"" >> /etc/libvirt/qemu.conf
+	echo "]" >> /etc/libvirt/qemu.conf
+
+	systemctl restart libvirtd
+	systemctl enable serial-getty@ttyS0.service
+	systemctl start serial-getty@ttyS0.service
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
 	read -r -p "Press Enter to continue..."
+
+	elif [ $response -eq 1 ]; then
+		clear
+		return
+	else
+		clear
+		return
+	fi
 
 }
 
@@ -630,25 +417,14 @@ function software {
 		--yesno "This script has a little pack of software, Do you like it?\n \
 			-> baobab \n \
 			-> ntfs-3g \n \
-			-> exfatprogs \n \
-			-> exfat-utils \n \
-			-> xarchiver \n \
 			-> gparted \n \
-			-> zerotier-one \n \
-			-> wine \n \
-			-> exe-thumbnailer \n \
-			-> brave \n \
-			-> github-desktop \n \
-			-> playonlinux \n \
-			-> discord \n \
-			-> visual-studio-code-bin \n \
-			-> zerotier-gui-git \n \
-			-> notion-app \n \
-			-> teamviewer \n \
-			-> numix-gtk-theme-git\n \
+			-> nautilus \n \
+			-> gedit \n \
+			-> tar \n \
+			-> yum-utils \n \
+			-> numix-gtk-theme \n \
 			-> numix-icon-theme \n \
-			-> telegram-desktop \n \
-			-> preload " 26 65
+			-> numix-icon-theme-circle" 26 65
 	clear
 	response=$?
 
@@ -657,19 +433,14 @@ function software {
 	clear
 	echo -e "=============== SOFTWARE =============== \n" 
 
-		sudo -u "$SUDOUSER" bash -c "yay -S baobab ntfs-3g exfatprogs \
-		xarchiver gparted zerotier-one wine playonlinux xrdp \
-		discord visual-studio-code-bin zerotier-gui-git \																																																																																																																																																																																																																																																																																																																																																																																			 balena-etcher brave-bin exe-thumbnailer github-desktop preload \
-		notion-app teamviewer telegram-desktop preload \
-		brave-bin exe-thumbnailer github-desktop-bin \
-		wps-office xorgxrdp gobject-introspection libdbusmenu-gtk2 \
-		libdbusmenu-glib libdbusmenu-gtk3 appmenu-gtk-module numix-gtk-theme \
-		numix-icon-theme-git numix-circle-icon-theme-git"
-		
-	echo allowed_users=anybody > /etc/X11/Xwrapper.config
-	systemctl enable xrdp
-	systemctl enable xrdp-sesman
-	systemctl enable preload
+	dnf install -y baobab ntfs-3g gparted exfatprogs nautilus gedit tar yum-utils --assumeyes
+
+	dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --assumeyes
+	dnf install numix-gtk-theme --assumeyes
+	dnf install gnome-icon-theme --assumeyes
+	dnf install numix-icon-theme --assumeyes
+	dnf install numix-icon-theme-circle --assumeyes
+	dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm --assumeyes
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
@@ -681,7 +452,7 @@ function software {
 		return
 	else
 		clear
-		exit 0
+		return
 	fi
 
 }
@@ -689,23 +460,14 @@ function software {
 function finisher {
 
 	clear
-	dialog --msgbox 'READY!!!, Your PC is succesfully installed with Arch Linux, if you have errors, please report at 036bootstrap in GitHub' 7 50
-	rm -f /arch-setupper.sh &> /dev/null
-	exit
+	dialog --msgbox 'READY!!!, Your Server is succesfully configured, if you have errors, please report at 036bootstrap in GitHub' 7 50
 	clear
-	umount /mnt
-	echo "Please reboot and remove your live media"
+	echo "Please reboot yout server to make changes"
 	exit 0
 
 }
 
 core
 
-[ -f $DISKENVTEMP ] && rm $DISKENVTEMP 
-[ -f $DISKMENUTEMP ] && rm $DISKMENUTEMP 
-[ -f $ROOTPARTMENUTEMP ] && rm $ROOTPARTMENUTEMP
-[ -f $SWAPPARTMENUTEMP ] && rm $SWAPPARTMENUTEMP
 [ -f $LOCALESTEMP ] && rm $LOCALESTEMP
 [ -f $HOSTTEMP ] && rm $HOSTTEMP
-[ -f $GRAPHICALTEMP ] && rm $GRAPHICALTEMP
-[ -f $DRIVERSTEMP ] && rm $DRIVERSTEMP

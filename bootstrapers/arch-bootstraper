@@ -998,17 +998,21 @@ function aur {
 function ohmyzsh {
 
 	clear
-	echo -e "=============== OH MY ZSH ===============  \n" 
+	echo -e "=============== OMZ =============== \n" 
 
-	sudo -u "$SUDOUSER" bash -c 'cd; sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
-	sudo -u "$SUDOUSER" bash -c 'cd; sed -i -e "s/ZSH_THEME=.*/ZSH_THEME=\"pmcgee\"/" .zshrc'
-	sudo -u "$SUDOUSER" bash -c 'cd; sed -i -e "/^source $ZSH.*/i ZSH_DISABLE_COMPFIX=true" .zshrc'
+	touch /home/"$SUDOUSER"/omz.sh
+	{
+		sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+		sed -i -e 's/ZSH_THEME=.*/ZSH_THEME=\"pmcgee\"/' .zshrc
+		sed -i -e '/^source $ZSH.*/i ZSH_DISABLE_COMPFIX=true' .zshrc
+		sudo ln -s "$HOME"/.zshrc /root/.zshrc
+		sudo ln -s "$HOME"/.oh-my-zsh /root/.oh-my-zsh
+		git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+		git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+		sed -i -e 's/plugins=(.*/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' .zshrc
+	} > /home/"$SUDOUSER"/omz.sh
 
-	ln -s /home/"$SUDOUSER"/.zshrc /root/.zshrc
-	ln -s /home/"$SUDOUSER"/.oh-my-zsh /root/.oh-my-zsh
-	sudo -u "$SUDOUSER" bash -c 'cd; git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
-	sudo -u "$SUDOUSER" bash -c 'cd; git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
-	sudo -u "$SUDOUSER" bash -c 'cd; sed -i -e "s/plugins=(.*/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/" .zshrc'
+	echo "We create a script called omz.sh in your home directory, after reboot, use chmod +x at omz.sh"
 
 	echo " "
 	echo -e "=============== OK =============== \n" 
