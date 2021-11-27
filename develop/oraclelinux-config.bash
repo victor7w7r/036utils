@@ -72,7 +72,7 @@ function cover {
 
 function whichverify() {
 	stat=$(which "$1" 2>&1)
-	if [[ "$stat" =~ ^which:* ]]; then 
+	if [[ "$stat" =~ which:* ]]; then 
 		return 1
 	else
 		return 0
@@ -102,7 +102,7 @@ function verify {
 
 
     if [[ "$ORACLE" =~ \"Oracle.* ]]; then
-		echo "ready" 2> /dev/null
+		echo "ready" &> /dev/null
 	else
      	echo "ERROR: This script is only intended to run on Oracle Linux"
         exit 1
