@@ -101,8 +101,10 @@ function verify {
 	fi
 
 
-    if [[ "$ORACLE" =~ \"Oracle ]]; then
-        echo "ERROR: This script is only intended to run on Oracle Linux"
+    if [[ "$ORACLE" =~ \"Oracle.* ]]; then
+		echo "ready" 2> /dev/null
+	else
+     	echo "ERROR: This script is only intended to run on Oracle Linux"
         exit 1
     fi
 
