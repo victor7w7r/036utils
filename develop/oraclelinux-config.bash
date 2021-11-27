@@ -15,7 +15,7 @@ function cleanup { rm $LOCALESTEMP; $HOSTTEMP; exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
-function core { clear; cover; sleep 1s; verify; packages; hostnamer; localer; cockpit; graphical; remote; kvm; software; finisher; }
+function core { clear; cover; sleep 1s; verify; packages; hostnamer; localer; cockpit; graphical; remote; kvm; ohmyzsh; software; finisher; }
 
 function cover {
 	echo '          					    ``...`                                                    '
@@ -271,7 +271,7 @@ function graphical {
 		read -r -p "Press Enter to continue..."
 
 	else
-	
+
 		clear
 		echo -e "=============== EPEL =============== \n" 
 		
@@ -408,6 +408,31 @@ function kvm {
 		clear
 		return
 	fi
+
+}
+
+function ohmyzsh {
+
+	clear
+	echo -e "=============== OMZ =============== \n" 
+
+	touch /home/"$SUDOUSER"/omz.sh
+	{
+		sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+		sed -i -e 's/ZSH_THEME=.*/ZSH_THEME=\"pmcgee\"/' .zshrc
+		sed -i -e '/^source $ZSH.*/i ZSH_DISABLE_COMPFIX=true' .zshrc
+		sudo ln -s "$HOME"/.zshrc /root/.zshrc
+		sudo ln -s "$HOME"/.oh-my-zsh /root/.oh-my-zsh
+		git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+		git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+		sed -i -e 's/plugins=(.*/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' .zshrc
+	} > /home/"$SUDOUSER"/omz.sh
+
+	echo "We create a script called omz.sh in your home directory, after reboot, use chmod +x at omz.sh"
+
+	echo " "
+	echo -e "=============== OK =============== \n" 
+	read -r -p "Press Enter to continue..."
 
 }
 
