@@ -219,6 +219,15 @@ function verify {
 		exit 1
 	fi
 
+		SELECTOR="dialog"
+	whichverify "$SELECTOR"
+	local res=$?
+
+	if [ $res -eq 1 ]; then
+		echo "ERROR: The ejecutable de dialog, no se encuentra en el sistema, por favor instalalo"
+		exit 1
+	fi
+
 	echo "Todo ok!"
 
 	START=$(date +%s)

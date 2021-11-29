@@ -218,6 +218,15 @@ function verify {
 		echo "ERROR: The rsync binary is not available in this system, please install"
 		exit 1
 	fi
+	.
+	SELECTOR="dialog"
+	whichverify "$SELECTOR"
+	local res=$?
+
+	if [ $res -eq 1 ]; then
+		echo "ERROR: The dialog binary is not available in this system, please install"
+		exit 1
+	fi
 
 	echo "All dependencies is ok!"
 
