@@ -14,9 +14,9 @@ Shell Utilites for GNU/Linux and macOS
 - efitoggler: Mount or unmount a efi partition, like a toggle switch (Only runs in macOS)
 - usb-manager: Dialog-based application that has several options like mount, unmount and poweroff USB devices (Only runs in GNU/Linux).
   - You need the next binaries `dialog udisks2`
-- ext4-optimizer: Dialog-based application that defrag and optimize ext4 filesystem.
+- ext4-optimizer: Dialog-based application that defrag and optimize ext4 filesystem (Only runs in GNU/Linux).
   - You need the next binaries `dialog e4defrag`
-- rsyncer: Dialog-based simple application that copy all contents from a source directory to a destination directory, it's recommended to copy root filesystems
+- rsyncer: Dialog-based simple application that copy all contents from a source directory to a destination directory, it's recommended to copy root filesystems (Only runs in GNU/Linux).
   - You need the next binaries `dialog rsync`
 
 ## Installation and usage
