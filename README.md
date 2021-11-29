@@ -44,7 +44,7 @@ I born and live in Ecuador, of course i made a spanish scripts version, sorry fo
 
 - Editor: [vscode](https://code.visualstudio.com/)
 - Lint and Syntax Check: [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
-- Operating System Test: [Arch Linux ARM](https://archlinuxarm.org/)
+- Operating System Tests: [Arch Linux ARM](https://archlinuxarm.org/)
 
 ## Thanks at this repositories for code snippets
 
