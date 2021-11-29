@@ -6,7 +6,7 @@ if [ "$EUID" != "0" ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: En este sistema no existe el binario de superusuario."
-		exit 0
+		exit 1
 	fi
 fi
 
@@ -131,7 +131,7 @@ function validator() {
 				return 0
 			fi
 		else
-			exit 0;
+			exit 0
 		fi
 	elif [ "$1" == "dest" ]; then
 		if [ "$2" != "" ]; then
@@ -150,7 +150,7 @@ function validator() {
 			sourceaction
 		fi
 	else
-		exit 0;
+		exit 0
 	fi
 	
 }
@@ -207,7 +207,7 @@ function verify {
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		echo "ERROR: Este sistema no es GNU/Linux, saliendo"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="rsync"
@@ -216,7 +216,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo"
-		exit 0
+		exit 1
 	fi
 
 	echo "Todo ok!"

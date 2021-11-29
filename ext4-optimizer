@@ -6,7 +6,7 @@ if [ "$EUID" != "0" ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: In this system the binary sudo doesn't exist."
-		exit 0
+		exit 1
 	fi
 fi
 
@@ -124,7 +124,7 @@ function ext4stat {
 	if [ $EXTCOUNT -eq 0 ]; then
 		clear
 		echo "ERROR: There's not ext4 partitions available"
-		exit 0
+		exit 1
 	fi
 
 }
@@ -136,7 +136,7 @@ function verify {
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="e4defrag"
@@ -145,7 +145,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: e4defrag binary is not present in this system, please install"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="fsck.ext4"
@@ -154,7 +154,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: fsck.ext4 is not present in this system, please install"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="dialog"
@@ -163,7 +163,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: The dialog binary is not available in this system, please install"
-		exit 0
+		exit 1
 	fi
 
 	ext4stat
@@ -295,7 +295,7 @@ function defragmenu {
 	if [ $EXTCOUNT -eq 0 ]; then
 		clear
 		echo "ERROR: There's not ext4 partitions available"
-		exit 0
+		exit 1
 	fi
 
 	for PARTITIONSDEF in "${EXTPARTS[@]}"; do

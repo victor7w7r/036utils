@@ -6,7 +6,7 @@ if [ "$EUID" != "0" ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: En este sistema no existe el binario de superusuario."
-		exit 0
+		exit 1
 	fi
 fi
 
@@ -20,7 +20,7 @@ MOUNTTEMP=/tmp/mounttemp.sh.$$
 POWEROFFTEMP=/tmp/powerofftemp.sh$$
 UNMOUNTTEMP=/tmp/unmounttemp.sh$$
 
-function cleanup { rm $OUTPUT; rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit; }
+function cleanup { rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit; }
 
 trap cleanup; SIGHUP SIGINT SIGTERM
 
@@ -95,7 +95,7 @@ function usbstat {
 	if [ "$VERIFYUSB" == "" ]; then
 		clear
         echo "ERROR: No hay dispositivos USB conectados en esta PC, o los mismos estan apagados"
-		exit 0
+		exit 1
 	fi
 }
 
@@ -107,7 +107,7 @@ function verify {
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		echo "ERROR: Este sistema no es GNU/Linux, saliendo"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="udisksctl"
@@ -116,7 +116,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: El \"udisks command line tool (udisksctl)\" no existe, por favor installe udisks"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="dialog"
@@ -125,12 +125,12 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: El ejecutable de dialog, no se encuentra en el sistema, por favor instalalo"
-		exit 0
+		exit 1
 	fi
 	
 	if [ "$SERVICE" == "inactive"  ]; then
 		echo "ERROR: EL servicio udisks2 no esta ejecutandose, por favor ejecutalo"
-		exit 0
+		exit 1
 	fi
 
 	usbstat

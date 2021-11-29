@@ -6,7 +6,7 @@ if [ "$EUID" != "0" ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: En este sistema no existe el binario de superusuario."
-		exit 0
+		exit 1
 	fi
 fi
 

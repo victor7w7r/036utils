@@ -6,7 +6,7 @@ if [ "$EUID" != "0" ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: En este sistema no existe el binario de superusuario."
-		exit 0
+		exit 1
 	fi
 fi
 
@@ -124,7 +124,7 @@ function ext4stat {
 	if [ $EXTCOUNT -eq 0 ]; then
 		clear
 		echo "ERROR: No hay particiones ext4 disponibles en el sistema"
-		exit 0
+		exit 1
 	fi
 
 }
@@ -136,7 +136,7 @@ function verify {
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		echo "ERROR: Este sistema no es GNU/Linux, saliendo"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="e4defrag"
@@ -145,7 +145,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: EL ejecutable e4defrag no está presente en tu sistema, por favor instalalo"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="fsck.ext4"
@@ -154,7 +154,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: fsck.ext4 no está presente en tu sistema, por favor instalalo"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="dialog"
@@ -163,7 +163,7 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: The dialog binary no está presente en tu sistema, por favor instalalo"
-		exit 0
+		exit 1
 	fi
 
 	ext4stat
@@ -294,7 +294,7 @@ function defragmenu {
 	if [ $EXTCOUNT -eq 0 ]; then
 		clear
 		echo "ERROR: No hay particiones ext4 disponibles en el sistema"
-		exit 0
+		exit 1
 	fi
 
 	for PARTITIONSDEF in "${EXTPARTS[@]}"; do

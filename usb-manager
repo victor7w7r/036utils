@@ -6,7 +6,7 @@ if [ "$EUID" != "0" ]; then
 		SUDO=sudo
 	else
 		echo "ERROR: In this system the binary sudo doesn't exist."
-		exit 0
+		exit 1
 	fi
 fi
 
@@ -95,7 +95,7 @@ function usbstat {
 	if [ "$VERIFYUSB" == "" ]; then
 		clear
 		echo "ERROR: There's no USB drives connected in this PC, or the devices are shutdown"
-		exit 0
+		exit 1
 	fi
 }
 
@@ -108,7 +108,7 @@ function verify {
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		clear
 		echo 'ERROR: Your Operating System is not GNU/Linux, exiting'
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="udisksctl"
@@ -118,7 +118,7 @@ function verify {
 	if [ $res -eq 1 ]; then
 		clear
 		echo "ERROR: The udisks command line tool (udisksctl) doesn't exist, please install udisks2"
-		exit 0
+		exit 1
 	fi
 
 	SELECTOR="dialog"
@@ -127,12 +127,12 @@ function verify {
 
 	if [ $res -eq 1 ]; then
 		echo "ERROR: The dialog binary is not available in this system, please install"
-		exit 0
+		exit 1
 	fi
 	
 	if [ "$SERVICE" == "inactive"  ]; then
 		echo "ERROR: The udisks2 service is not running, please enable the service"
-		exit 0
+		exit 1
 	fi
 
 	usbstat
