@@ -1,0 +1,364 @@
+#!/usr/bin/env bash
+
+if [ "$(id -u)" -ne 0 ]; then
+	echo "ERROR: You need to be root, execute with sudo / Necesitas ser superusuario, ejecuta con sudo"
+	exit 1
+fi
+
+rm /tmp/menu.sh* 2> /dev/null
+rm /tmp/defrag.sh* 2> /dev/null
+INPUT=/tmp/menu.sh.$$
+DEFRAG=/tmp/defrag.sh.$$
+
+LANGUAGE=0
+
+function cleanup { rm $INPUT; rm $DEFRAG; exit; }
+
+trap cleanup; SIGHUP SIGINT SIGTERM
+
+function core { clear; language; cover; sleep 1s; verify; menu; }
+
+function printer() {
+
+    local RED="\e[31m"; local GREEN="\e[32m"; local YELLOW="\e[33m"
+    local RESET="\e[0m"; local MESSAGE_TYPE=""; local MESSAGE=""
+    MESSAGE_TYPE="${1}"; POSITION="${2}";
+
+	local DICTIONARY_ENG=(
+		"Your Operating System is not GNU/Linux, exiting"
+		"In this system the binary sudo doesn't exist."
+		"e4defrag binary is not present in this system, please install"
+		"fsck.ext4 is not present in this system, please install"
+		"The dialog binary is not available in this system, please install"
+		"All dependencies is ok!"		
+		"There's not ext4 partitions available, only works with USB devices"
+		"All the ext4 partitions are mounted in your system, please unmount the desired partition to optimize"
+		"=============== VERIFY FILESYSTEM ERRORS =============== \n" 
+		"=============== FAILURE =============== \n" 
+		"=============== OK =============== \n" 
+		"=============== OPTIMIZE FILESYSTEM =============== \n" 
+		"=============== DEFRAG FILESYSTEM =============== \n" 
+		"=============== LAST VERIFY FILESYSTEM =============== \n" 
+	)
+
+	local DICTIONARY_ESP=(
+		"Este sistema no es GNU/Linux, saliendo"
+		"En este sistema no existe el binario de superusuario."
+		"El ejecutable e4defrag no está presente en tu sistema, por favor instalalo"
+		"fsck.ext4 no está presente en tu sistema, por favor instalalo"
+		"dialog no está presente en tu sistema, por favor instalalo"
+		"Todo ok!"
+		"No hay particiones ext4 disponibles en el sistema, solofunciona con dispositivos USB"
+		"Todas las particiones ext4 estan montadas en el sistema, por favor desmontar la particion deseada para optimizar"
+		"=============== VERIFICAR ERRORES EN EL SISTEMA DE ARCHIVOS =============== \n" 
+		"=============== FALLA =============== \n" 
+		"=============== LISTO =============== \n" 
+		"=============== OPTIMIZAR EL SISTEMA DE ARCHIVOS =============== \n" 
+		"=============== DESFRAGMENTAR EL SISTEMA DE ARCHIVOS =============== \n" 
+		"=============== VERIFICAR POR ULTIMA VEZ EL SISTEMA DE ARCHIVOS =============== \n" 
+	)
+
+	if [ "$LANGUAGE" -eq 1 ]; then
+		case ${MESSAGE_TYPE} in
+			print) echo -e "${DICTIONARY_ENG[$POSITION]}";;
+			info) echo -e "[${GREEN}+${RESET}] INFO: ${DICTIONARY_ENG[$POSITION]}";; 
+			warn) echo -e "[${YELLOW}*${RESET}] WARNING: ${DICTIONARY_ENG[$POSITION]}";; 
+			error) echo -e "[${RED}!${RESET}] ERROR: ${DICTIONARY_ENG[$POSITION]}";;
+			*) echo -e "[?] UNKNOWN: ${MESSAGE}";;
+		esac
+	else 
+		case ${MESSAGE_TYPE} in
+			print) echo -e "${DICTIONARY_ESP[$POSITION]}";;
+			info) echo -e "[${GREEN}+${RESET}] INFO: ${DICTIONARY_ESP[$POSITION]}";; 
+			warn) echo -e "[${YELLOW}*${RESET}] ADVERTENCIA: ${DICTIONARY_ESP[$POSITION]}";; 
+			error) echo -e "[${RED}!${RESET}] ERROR: ${DICTIONARY_ESP[$POSITION]}";;
+			*) echo -e "[?] UNKNOWN: ${MESSAGE}";;
+		esac
+	fi
+    
+}
+
+function reader() {
+
+	POSITION="${1}";
+
+	local DICTIONARY_ENG=(
+		"Choose a Option\n" 
+		"Optimize a ext4 partition"
+		"Exit to the shell" 
+		"Please select a partition" 
+		"Press Enter to continue..."
+		"Optimize"
+		"Exit"
+	)
+
+	local DICTIONARY_ESP=(
+		"Seleccione una opcion\n"
+		"Optimizar una particion de tipo ext4" 
+		"Salir al shell"
+		"Por favor selecciona una partition"
+		"Presione Enter para continuar..."
+		"Optimizar"
+		"Salir"
+	)
+
+	if [ "$LANGUAGE" -eq 1 ]; then
+		echo "${DICTIONARY_ENG[$POSITION]}"
+	else 
+		echo "${DICTIONARY_ESP[$POSITION]}"
+	fi
+
+}
+
+function commandverify() {
+	if ! command -v "$1" &> /dev/null; then return 1; else return 0; fi
+}
+
+function language {
+		
+	echo "Bienvenido / Welcome"
+	echo "Please, choose your language / Por favor selecciona tu idioma"
+	echo "1) English"
+	echo "2) Espanol"
+	read -n 1 -r OPTION
+
+	case $OPTION in
+		1) LANGUAGE=1;;
+		2) LANGUAGE=2;;
+		*) exit 1;;
+	esac
+}
+
+function cover {
+	
+	echo '                                     `"~>v??*^;rikD&MNBQku*;`                                           '
+	echo '                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       '
+	echo '                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    '
+	echo '                            !9WWWWWWU>`>&WWWWWWUH!_JNWWWWWQz  ^EWWWWg|                                  '
+	echo '                           _SWWWWWNe: /RWWWWWWNNHBRuyix&WWWWWg2?-"VNWWW6_                               '
+	echo '                         "kWWWWWNz. .zNWWWWWWw=, ^NsLQNW**MWWWW&WQJuNWWWNr.                             '
+	echo '                       .FNWWWWNu. rL&WWWWWWg!!*;^Jo!*BN0aFx)>|!;;;;;!~\r)xFwaao?|,                      '
+	echo '                     .sNWWWWMi` -,#WWWWWWNi"` Siwu UWv  .;^|^;`               .!*lUSF*;                 '
+	echo '                    )BWWWWWo.   9NWWWWWW0; ;PvLc*aU&^ |L=-``.;>*=                   ;)wmkL_             '
+	echo '                  _QWWWWWq"   .aWWWWWWWs`  rF<>\^gQ, /i   ,;;.  !2                      ,*k0F\`         '
+	echo '                 *NWWWWNv   ,/&WWWWWWNr "!SL92l)BU.  ^x   x. L,  I_                        `>P&F;       '
+	echo '               `2WWWWWg;    !BWWWWWWD"   .s;!\xNa     /L,   !L`  P,                           .?&gr     '
+	echo '              ,QWWWWWS`  >;LWWWWWWWk`_;!\u|  ^Ml        ;~!^,  `iv                              `?Ng^   '
+	echo '             ^BWWWWWi   *i7NWWWWWWc "a;;?ii"~NV             `;?},                                 ,9WF  '
+	echo '            >WWWWWB!  ` ;8WWWWWWM=  r>`;F/2wNc          .;||!,                                      oW#.'
+	echo '           ?WWWWW#"  `2;7NWWWWW&_ =_=u%ir`>Wi                                                        PW6'
+	echo '          rWWWWWc   `||>WWWWWWU.  r^?7;!v*W)                                                         ,WW|'
+	echo '         ^NWWWB!  ! \jrmWWWWWw  `vL.k*\vkW$>rr*r;`        ;rL{7)>!`                                   mWF'
+	echo '        .BWWW$,   ,u. PWWWWW) ,r`)|)!__LWv     `;L"     |s>:```._|JuL                                 qWE'
+	echo '        uWWWH` .vi"Fo*WWWWN>   ^v  r*`>W}                                                             &Ws '
+	echo '       ;WWWP`  `=*ox_pWWWB; ^)i`9xr,#7W*            .     ,\*`                                       |WW! '
+	echo '       SWWD` >LLr^_y*NWWQ"  ,<?P~|iF0W}            ~;   v_ `o;                                      .0WU'
+	echo '      ^WW0,.!F2xULFi5WW0` >7vr!!z_`*Wv             `|;;^!,~!`                                      .8W8.'
+	echo '      dWN;`>JyrkIr`!NWN! ,uFia!9?*2WI                                                             ;QWD.'
+	echo '     =WW7`_S)~Fxv| xWWi ;}drqa=;=uWRNmL,                                                         rWWt`  '
+	echo '     DWP`;LiL;}c*rsWW&`,Po_e7L/ =Nc `>oD$aaw%ouic7)*r>=|^^~!;;;;;;;;;;;;;~^\>rvL{JctxiiiiuusoF2kgBS/  '
+	echo '    ;WN\\Uy>*rF.,pWWWr-;?J"vov^^Nu         `.,"_;!~^\=>r*v?LL{}Jjjjjjj}}7?vr>\^!;____-""",,,..``    '
+	echo '    iW?_**>^;>"~&EeWg=|liv*s!~?NL'
+	echo '    wWc*$>*~~L6Ni QW! \Uursx >WJ'
+	echo '    2M)o*_F "R0; .Wd~U7,``;*iN>'
+	echo '    xWe?vI7cMu`  ,W&>xssr~=PB|'
+	echo '    "W% ,cBZ_    `M2l\/i,,QQ,'
+	echo '     |U$di_       UBu>i)yBy`'
+	echo '                  ^Wx,rDR!'
+	echo '                   \ZUl^'
+	echo '.oPYo. .oPYo. .pPYo.   .oPYo.                       o   o                 .oPYo.   o              8  o                '
+	echo '8  .o8     `8 8        8    8                       8                     8        8              8                   '
+	echo '8 .P`8   .oP` 8oPYo.   8      oPYo. .oPYo. .oPYo.  o8P o8 o    o .oPYo.   `Yooo.  o8P o    o .oPYo8 o8 .oPYo. .oPYo.  '
+	echo '8.d` 8    `b. 8`  `8   8      8  `` 8oooo8 .oooo8   8   8 Y.  .P 8oooo8       `8   8  8    8 8    8  8 8    8 Yb..   '
+	echo '8o`  8     :8 8.  .P   8    8 8     8.     8    8   8   8 `b..d` 8.            8   8  8    8 8    8  8 8    8   `Yb. '
+	echo '`YooP` `YooP` `YooP`   `YooP` 8     `Yooo` `YooP8   8   8  `YP`  `Yooo`   `YooP`   8  `YooP` `YooP`  8 `YooP` `YooP. '
+	echo ':.....::.....::.....::::.....:..:::::.....::.....:::..::..::...:::.....::::.....:::..::.....::.....::..:.....::.....:'
+	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+}
+
+function verify {
+
+    OPERATING=$(uname -o)
+	local SELECTOR=""
+
+	if [ "$OPERATING" != "GNU/Linux" ]; then
+		clear; printer error 0; exit 1
+	fi
+
+	SELECTOR="e4defrag"; commandverify "$SELECTOR"; local res=$?
+	if [ $res -eq 1 ]; then clear; printer error 2; exit 1; fi
+	SELECTOR="fsck.ext4"; commandverify "$SELECTOR"; local res=$?
+	if [ $res -eq 1 ]; then clear; printer error 3; exit 1; fi
+	SELECTOR="dialog"; commandverify "$SELECTOR"; local res=$?
+	if [ $res -eq 1 ]; then clear; printer error 4 exit 1; fi
+
+	ext4listener first not
+	printer print 5
+
+	START=$(date +%s)
+	CHARS="/-\|"
+
+	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
+		for (( i=0; i<${#CHARS}; i++ )); do
+			sleep 0.08; echo -en "${CHARS:$i:1}" "\r"
+		done
+	done
+	clear
+}
+
+function ext4listener() {
+
+	MENUABLE="${1}";
+	ECHOPARTS="${2}";
+
+	local COUNT=0; local EXTCOUNT=0; local MOUNTCOUNT=0
+	local ABSOLUTEPARTS=""; local DIRTYDEVS=()
+	local EXTPARTS=(); local UMOUNTS=()
+
+	ROOT=$(df -h | sed -ne '/\/$/p' | cut -d" " -f1)
+	VERIFY=$(find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///')
+
+	for DEVICE in $VERIFY; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
+		COUNT=$(( COUNT + 1 ))	
+	done
+	
+	COUNT=0
+
+	for DEV in "${DIRTYDEVS[@]}"; do
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
+		if [ "$ABSOLUTEPARTS" != "" ]; then
+			if [ "$ABSOLUTEPARTS" != "$ROOT" ]; then
+				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d'| sed '/blk[[:digit:]]$/d') #sda1 sda2 ...
+				COUNT=$(( COUNT + 1 ))
+			fi
+		fi
+	done
+
+	for PART in "${PARTS[@]}"; do
+		TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
+		if [ "$TYPE" == "ext4" ]; then
+			EXTCOUNT=$((EXTCOUNT + 1))
+			EXTPARTS+=("$PART")
+		fi
+	done
+
+	if [ $EXTCOUNT -eq 0 ]; then 
+		clear; printer error 6
+		if [ "$MENUABLE" = "menu" ]; then 
+		 	read -r -p "$ENTER"; return 0
+		else
+			exit 1 
+		fi
+	fi
+
+	for PARTITIONSDEF in "${EXTPARTS[@]}"; do
+		MOUNTED=$(lsblk "/dev/$PARTITIONSDEF" | sed -ne '/\//p')
+		if [ "$MOUNTED" != "" ]; then
+			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
+		else
+			UMOUNTS+=("/dev/$PARTITIONSDEF" "ext4")
+		fi
+	done
+
+	if [ $MOUNTCOUNT -eq $EXTCOUNT ]; then 
+		clear; printer error 7
+		if [ "$MENUABLE" = "menu" ]; then 
+		 	read -r -p "$ENTER"; return 0
+		else
+			exit 1 
+		fi
+	fi
+
+	if [ "$ECHOPARTS" = "print" ]; then echo "${UMOUNTS[@]}"; fi
+
+}
+
+function menu {
+
+	RES1=$(reader 0)
+	RES2=$(reader 1)
+	RES3=$(reader 2)
+	RES4=$(reader 5)
+	RES5=$(reader 6)
+
+	while true; do
+
+		dialog --clear --backtitle "036 Creative Studios" \
+			--title "036 ext4 Optimizer" \
+			--menu "$RES1" 15 60 4 \
+			"$RES4" "$RES2" \
+			"$RES5" "$RES3" 2>"${INPUT}"
+
+		menuitem=$(<"${INPUT}")
+
+		case $menuitem in
+			"$RES4") defragmenu;;
+			"$RES5") clear; exit 0;;
+			*) clear; exit 0;;
+		esac
+	done
+}
+
+function defragmenu {
+
+	local UMOUNTS=()
+	IFS=" " read -r -a UMOUNTS <<< "$(ext4listener menu print)"
+
+	RES1=$(reader 1)
+	RES2=$(reader 3)
+
+	dialog --clear --backtitle "036 Creative Studios" --title "$RES1" \
+		--menu "$RES2" 15 50 4 "${UMOUNTS[@]}" 2>"${DEFRAG}"
+
+	CHOICE=$(<"${DEFRAG}")
+	case $CHOICE in
+		"$CHOICE") defragaction "$CHOICE";;
+		null) clear; exit 0; ;;
+	esac
+}
+
+function defragaction() {
+
+	RES=$(reader 4)
+	clear
+	CODE=0
+
+	if [ "$1" == "" ]; then return 0; fi
+	printer print 8
+	fsck.ext4 -y -f -v "$1"
+	CODE=$?
+
+	if [ $CODE -ne 0 ]; then echo " "; printer print 9; read -r -p "$RES"; return 0; fi
+	echo " "; printer print 10; read -r -p "$RES"; clear
+
+	printer print 11;
+	fsck.ext4 -y -f -v -D "$1"
+	CODE=$?
+
+	if [ $CODE -ne 0 ]; then echo " "; printer print 9; read -r -p "$RES"; return 0; fi
+	echo " "; printer print 10; read -r -p "$RES"; clear
+
+	mkdir /tmp/optimize 2> /dev/null
+	mount "$1" /tmp/optimize
+
+	printer print 12;
+	e4defrag -v "$1"
+	CODE=$?
+
+	echo " "; umount "$1"; printer print 10; read -r -p "$RES"; clear
+
+	printer print 13;
+	fsck.ext4 -y -f -v "$1"
+	CODE=$?
+
+	if [ $CODE -ne 0 ]; then echo " "; printer print 9; read -r -p "$RES"; return 0; fi
+	echo " "; printer print 10; read -r -p "$RES"; clear
+	
+}
+
+core
+
+[ -f $INPUT ] && rm $INPUT
+[ -f $DEFRAG ] && rm $DEFRAG

@@ -1,0 +1,459 @@
+#!/usr/bin/env bash
+
+if ! command -v sudo &> /dev/null; then 
+	echo "ERROR: You doesn't have the sudo binary, please install / No tienes sudo, por favor instalalo"
+	exit 1
+fi
+
+rm /tmp/menu.sh* 2> /dev/null
+rm /tmp/mounttemp.sh* 2> /dev/null
+rm /tmp/powerofftemp.sh* 2> /dev/null
+rm /tmp/unmounttemp.sh* 2> /dev/null
+
+INPUT=/tmp/menu.sh.$$	
+MOUNTTEMP=/tmp/mounttemp.sh.$$
+POWEROFFTEMP=/tmp/powerofftemp.sh$$
+UNMOUNTTEMP=/tmp/unmounttemp.sh$$
+
+LANGUAGE=0
+
+function cleanup { rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit; }
+
+trap cleanup; SIGHUP SIGINT SIGTERM
+
+function core { clear; language; cover; sleep 1s; verify; usbverify; menu; }
+
+function printer() {
+
+    local RED="\e[31m"; local GREEN="\e[32m"; local YELLOW="\e[33m"
+    local RESET="\e[0m"; local MESSAGE_TYPE=""; local MESSAGE=""
+    MESSAGE_TYPE="${1}"; POSITION="${2}";
+
+	local DICTIONARY_ENG=(
+		"Your Operating System is not GNU/Linux, exiting"
+		"In this system the binary sudo doesn't exist."
+		"The udisks command line tool (udisksctl) doesn't exist, please install udisks2"
+		"The dialog binary is not available in this system, please install"
+		"The udisks2 service is not running, please enable the service"
+		"All dependencies is ok!"
+		"There's no USB drives connected in this PC, or the devices are shutdown"
+		"All the partitions are mounted in your system"
+		"Your attempt to get authorization is not valid (Invalid Password)"
+		"This partition is already mounted"
+	 	"There's not partitions mounted in your system"
+		"Your partition is unmounted"
+	)
+
+	local DICTIONARY_ESP=(
+		"Este sistema no es GNU/Linux, saliendo"
+		"En este sistema no existe el binario de superusuario."
+		"El \"udisks command line tool (udisksctl)\" no existe, por favor instale udisks2"
+		"El ejecutable de dialog, no se encuentra en el sistema, por favor instalalo"
+		"El servicio udisks2 no esta ejecutandose, por favor ejecutalo"
+		"Todo ok!"
+		"No hay dispositivos USB conectados en esta PC, o los mismos estan apagados"
+		"Todas las particiones estan montadas en el sistema"
+		"Tu intento de autorizacion como superusuario no fue exitoso (Contrasena Incorrecta)"
+		"Esta particion esta montada actualmente"
+		"No hay particiones montadas en el sistema"
+		"Esta particion no esta montada"
+	)
+
+	if [ "$LANGUAGE" -eq 1 ]; then
+		case ${MESSAGE_TYPE} in
+			print) echo -e "${DICTIONARY_ENG[$POSITION]}";;
+			info) echo -e "[${GREEN}+${RESET}] INFO: ${DICTIONARY_ENG[$POSITION]}";; 
+			warn) echo -e "[${YELLOW}*${RESET}] WARNING: ${DICTIONARY_ENG[$POSITION]}";; 
+			error) echo -e "[${RED}!${RESET}] ERROR: ${DICTIONARY_ENG[$POSITION]}";;
+			*) echo -e "[?] UNKNOWN: ${MESSAGE}";;
+		esac
+	else 
+		case ${MESSAGE_TYPE} in
+			print) echo -e "${DICTIONARY_ESP[$POSITION]}";;
+			info) echo -e "[${GREEN}+${RESET}] INFO: ${DICTIONARY_ESP[$POSITION]}";; 
+			warn) echo -e "[${YELLOW}*${RESET}] ADVERTENCIA: ${DICTIONARY_ESP[$POSITION]}";; 
+			error) echo -e "[${RED}!${RESET}] ERROR: ${DICTIONARY_ESP[$POSITION]}";;
+			*) echo -e "[?] UNKNOWN: ${MESSAGE}";;
+		esac
+	fi
+    
+}
+
+function reader() {
+
+	POSITION="${1}";
+
+	local DICTIONARY_ENG=(
+		"Choose a Option\n" 
+		"Mount a partition of a device"
+		"Unmount a partition of a device" 
+		"Unmount and secure turn-off a USB" 
+		"Exit to the shell"
+		"Press Enter to continue..."
+		"Mount a Partition"
+		"Please Mount a partition \n"
+		"SUCCESS: "
+		"Umount a Partition"
+		"Please umount a partition \n"
+		"Poweroff a Device"
+		"Choose for poweroff a device \nCAUTION: All the partitions will be force unmounted"
+		"Mount"
+		"Unmount"
+		"Power-off"
+		"Exit"
+	)
+
+	local DICTIONARY_ESP=(
+		"Elija una opcion\n"
+		"Montar una particion de un dispositivo" 
+		"Desmontar una particion de un dispositivo" 
+		"Desmontar todo y expulsar de manera segura un dispositivo"
+		"Salir al shell"
+		"Presione Enter para continuar..."
+		"Montar una particion"
+		"Por favor, monta una particion \n"
+		"LISTO: "
+		"Desmontar una particion" 
+		"Por favor, desmonta una particion \n"
+		"Apagar un dispositivo" 
+		"Elija uno para apagar \nCUIDADO: Todas las particiones del dispositivo se desmontaran"
+		"Montar"
+		"Desmontar"
+		"Apagar"
+		"Salir"
+	)
+
+	if [ "$LANGUAGE" -eq 1 ]; then
+		echo "${DICTIONARY_ENG[$POSITION]}"
+	else 
+		echo "${DICTIONARY_ESP[$POSITION]}"
+	fi
+
+}
+
+function commandverify() {
+	if ! command -v "$1" &> /dev/null; then return 1; else return 0; fi
+}
+
+function language {
+		
+	echo "Bienvenido / Welcome"
+	echo "Please, choose your language / Por favor selecciona tu idioma"
+	echo "1) English"
+	echo "2) Espanol"
+	read -n 1 -r OPTION
+
+	case $OPTION in
+		1) LANGUAGE=1;;
+		2) LANGUAGE=2;;
+		*) exit 1;;
+	esac
+}
+
+function cover {
+	
+	echo '                                     `"~>v??*^;rikD&MNBQku*;`                                           '
+	echo '                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       '
+	echo '                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    '
+	echo '                            !9WWWWWWU>`>&WWWWWWUH!_JNWWWWWQz  ^EWWWWg|                                  '
+	echo '                           _SWWWWWNe: /RWWWWWWNNHBRuyix&WWWWWg2?-"VNWWW6_                               '
+	echo '                         "kWWWWWNz. .zNWWWWWWw=, ^NsLQNW**MWWWW&WQJuNWWWNr.                             '
+	echo '                       .FNWWWWNu. rL&WWWWWWg!!*;^Jo!*BN0aFx)>|!;;;;;!~\r)xFwaao?|,                      '
+	echo '                     .sNWWWWMi` -,#WWWWWWNi"` Siwu UWv  .;^|^;`               .!*lUSF*;                 '
+	echo '                    )BWWWWWo.   9NWWWWWW0; ;PvLc*aU&^ |L=-``.;>*=                   ;)wmkL_             '
+	echo '                  _QWWWWWq"   .aWWWWWWWs`  rF<>\^gQ, /i   ,;;.  !2                      ,*k0F\`         '
+	echo '                 *NWWWWNv   ,/&WWWWWWNr "!SL92l)BU.  ^x   x. L,  I_                        `>P&F;       '
+	echo '               `2WWWWWg;    !BWWWWWWD"   .s;!\xNa     /L,   !L`  P,                           .?&gr     '
+	echo '              ,QWWWWWS`  >;LWWWWWWWk`_;!\u|  ^Ml        ;~!^,  `iv                              `?Ng^   '
+	echo '             ^BWWWWWi   *i7NWWWWWWc "a;;?ii"~NV             `;?},                                 ,9WF  '
+	echo '            >WWWWWB!  ` ;8WWWWWWM=  r>`;F/2wNc          .;||!,                                      oW#.'
+	echo '           ?WWWWW#"  `2;7NWWWWW&_ =_=u%ir`>Wi                                                        PW6'
+	echo '          rWWWWWc   `||>WWWWWWU.  r^?7;!v*W)                                                         ,WW|'
+	echo '         ^NWWWB!  ! \jrmWWWWWw  `vL.k*\vkW$>rr*r;`        ;rL{7)>!`                                   mWF'
+	echo '        .BWWW$,   ,u. PWWWWW) ,r`)|)!__LWv     `;L"     |s>:```._|JuL                                 qWE'
+	echo '        uWWWH` .vi"Fo*WWWWN>   ^v  r*`>W}                                                             &Ws '
+	echo '       ;WWWP`  `=*ox_pWWWB; ^)i`9xr,#7W*            .     ,\*`                                       |WW! '
+	echo '       SWWD` >LLr^_y*NWWQ"  ,<?P~|iF0W}            ~;   v_ `o;                                      .0WU'
+	echo '      ^WW0,.!F2xULFi5WW0` >7vr!!z_`*Wv             `|;;^!,~!`                                      .8W8.'
+	echo '      dWN;`>JyrkIr`!NWN! ,uFia!9?*2WI                                                             ;QWD.'
+	echo '     =WW7`_S)~Fxv| xWWi ;}drqa=;=uWRNmL,                                                         rWWt`  '
+	echo '     DWP`;LiL;}c*rsWW&`,Po_e7L/ =Nc `>oD$aaw%ouic7)*r>=|^^~!;;;;;;;;;;;;;~^\>rvL{JctxiiiiuusoF2kgBS/  '
+	echo '    ;WN\\Uy>*rF.,pWWWr-;?J"vov^^Nu         `.,"_;!~^\=>r*v?LL{}Jjjjjjj}}7?vr>\^!;____-""",,,..``    '
+	echo '    iW?_**>^;>"~&EeWg=|liv*s!~?NL'
+	echo '    wWc*$>*~~L6Ni QW! \Uursx >WJ'
+	echo '    2M)o*_F "R0; .Wd~U7,``;*iN>'
+	echo '    xWe?vI7cMu`  ,W&>xssr~=PB|'
+	echo '    "W% ,cBZ_    `M2l\/i,,QQ,'
+	echo '     |U$di_       UBu>i)yBy`'
+	echo '                  ^Wx,rDR!'
+	echo '                   \ZUl^'
+	echo '.oPYo. .oPYo. .pPYo.   .oPYo.                       o   o                 .oPYo.   o              8  o                '
+	echo '8  .o8     `8 8        8    8                       8                     8        8              8                   '
+	echo '8 .P`8   .oP` 8oPYo.   8      oPYo. .oPYo. .oPYo.  o8P o8 o    o .oPYo.   `Yooo.  o8P o    o .oPYo8 o8 .oPYo. .oPYo.  '
+	echo '8.d` 8    `b. 8`  `8   8      8  `` 8oooo8 .oooo8   8   8 Y.  .P 8oooo8       `8   8  8    8 8    8  8 8    8 Yb..   '
+	echo '8o`  8     :8 8.  .P   8    8 8     8.     8    8   8   8 `b..d` 8.            8   8  8    8 8    8  8 8    8   `Yb. '
+	echo '`YooP` `YooP` `YooP`   `YooP` 8     `Yooo` `YooP8   8   8  `YP`  `Yooo`   `YooP`   8  `YooP` `YooP`  8 `YooP` `YooP. '
+	echo ':.....::.....::.....::::.....:..:::::.....::.....:::..::..::...:::.....::::.....:::..::.....::.....::..:.....::.....:'
+	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+	echo ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+}
+
+function verify {
+
+    OPERATING=$(uname -o)
+	SERVICE=$(systemctl is-active udisks2)
+	local SELECTOR=""
+
+	if [ "$OPERATING" != "GNU/Linux" ]; then
+		clear; printer error 0; exit 1
+	fi	
+
+	SELECTOR="udisksctl"; commandverify "$SELECTOR"; local res=$?
+	if [ $res -eq 1 ]; then clear; printer error 2; exit 1; fi
+	SELECTOR="dialog"; commandverify "$SELECTOR"; local res=$?
+	if [ $res -eq 1 ]; then clear; printer error 3; exit 1; fi
+	if [ "$SERVICE" == "inactive"  ]; then clear; printer error 4; exit 1; fi
+
+	usbverify
+	printer print 5
+
+	START=$(date +%s)
+	CHARS="/-\|"
+
+	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
+		for (( i=0; i<${#CHARS}; i++ )); do
+			sleep 0.08; echo -en "${CHARS:$i:1}" "\r"
+		done
+	done
+	clear
+
+}
+
+function usbverify {
+
+	VERIFYUSB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///')
+	if [ "$VERIFYUSB" == "" ]; then clear; printer error 6; exit 1; fi
+}
+
+function menu {
+
+	RESM1=$(reader 0); RESM2=$(reader 1); RESM3=$(reader 2)
+	RESM4=$(reader 3); RESM5=$(reader 4)
+
+	RESM6=$(reader 13); RESM7=$(reader 14); RESM8=$(reader 15); 
+	RESM9=$(reader 16); 
+
+	while true; do
+
+		dialog --clear --backtitle "036 Creative Studios" \
+			--title "036 USB Manager" \
+			--menu "$RESM1" 15 60 4 \
+			"$RESM6" "$RESM2" \
+			"$RESM7" "$RESM3" \
+			"$RESM8" "$RESM4" \
+			"$RESM9" "$RESM5" 2>"${INPUT}"
+
+		menuitem=$(<"${INPUT}")
+
+		case $menuitem in
+			"$RESM6") usblistener mount;;
+			"$RESM7") usblistener unmount;;
+			"$RESM8") usblistener off;;
+			"$RESM9") clear; exit 0;;
+			*) clear; exit 0;;
+		esac
+	done
+}
+
+function usblistener() {
+
+	clear; usbverify;
+	RES=$(reader 5);
+
+	SELECTOR="${1}"
+
+	local COUNT=0
+
+	local PARTS=(); local BLOCK=(); local FLAGS=()
+	local MOUNTS=(); local UNMOUNTS=(); local ARGS=()
+	local ARGSPOWEROFF=(); local BLOCKCOUNT=0
+	local MOUNTCOUNT=0; local UNMOUNTCOUNT=0
+	local TYPE=0; local MODEL=0; local DEVICE=0; 
+	local FLAGSCOUNT=0; local CHOICE=0
+
+	USB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+	
+	for DEVICE in $USB; do
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
+		COUNT=$(( COUNT + 1 ))
+	done
+	COUNT=0
+	for DEV in "${DIRTYDEVS[@]}"; do
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
+		if [ "$ABSOLUTEPARTS" != "" ]; then
+			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') #sda1 sda2 ...
+			COUNT=$(( COUNT + 1 ))
+		else
+			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
+			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
+			FLAGS+=( "$COUNT" ) 
+		fi
+	done
+
+	for PARTITIONS in "${PARTS[@]}"; do
+		MOUNTED=$(lsblk "/dev/$PARTITIONS" | sed -ne '/\//p')
+
+		if [ "$MOUNTED" != "" ]; then
+			UNMOUNTCOUNT=$(( UNMOUNTCOUNT + 1 ))
+			MOUNTS+=("$PARTITIONS")
+			
+		else
+			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
+			UNMOUNTS+=("$PARTITIONS")
+		fi
+	done
+
+	if [ "${SELECTOR}" == "mount" ]; then
+		RES2=$(reader 6); RES3=$(reader 7);
+			
+		if [ $UNMOUNTCOUNT -eq $COUNT ]; then
+			printer error 7; read -r -p "$RES"; menu; return 0
+		fi
+		COUNT=0		
+		for PART in "${UNMOUNTS[@]}"; do
+			DEVICE="/dev/$PART"
+			TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
+			TEMP="${FLAGS[$FLAGSCOUNT]}"
+			if [ "$COUNT" == "$TEMP" ]; then
+				BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
+				FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
+			fi
+			MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
+			ARGS+=("$DEVICE" "$MODEL $TYPE")
+			COUNT=$(( COUNT + 1 ))
+		done		
+
+		dialog --clear --backtitle "036 Creative Studios" --title "$RES2" \
+			--menu "$RES3" 15 50 4 "${ARGS[@]}" 2>"${MOUNTTEMP}"
+
+		CHOICE=$(<"${MOUNTTEMP}")
+		case $CHOICE in
+			"$CHOICE") mountaction "$CHOICE";;
+			null) clear; exit 0; ;;
+		esac
+
+	elif [ "${SELECTOR}" == "unmount" ]; then
+
+		RES2=$(reader 9); RES3=$(reader 10);
+		if [ $MOUNTCOUNT -eq $COUNT ]; then
+			printer error 10;  read -r -p "$RES"; menu; return 0
+		fi
+		COUNT=0
+		for PART in "${MOUNTS[@]}"; do
+			DEVICE="/dev/$PART"
+			TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
+			TEMP="${FLAGS[$FLAGSCOUNT]}"
+			if [ "$COUNT" == "$TEMP" ]; then
+				BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
+				FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
+			fi
+			MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
+			ARGS+=("$DEVICE" "$MODEL $TYPE")
+			COUNT=$(( COUNT + 1 ))
+		done
+
+		dialog --clear --backtitle "036 Creative Studios" --title "$RES2" \
+		--menu "$RES3" 15 50 4 "${ARGS[@]}" 2>"${UNMOUNTTEMP}"
+
+		CHOICE=$(<"${UNMOUNTTEMP}")
+		case $CHOICE in
+			"$CHOICE") unmountaction "$CHOICE";;
+			null) clear; exit 0; ;;
+		esac
+
+	elif [ "${SELECTOR}" == "off" ]; then
+
+		RES2=$(reader 11); RES3=$(reader 12);
+		for PART in "${BLOCK[@]}"; do
+			DEVICE="/dev/$PART"
+			BLOCKSTAT="${BLOCK[$COUNT]}"
+			MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
+			ARGSPOWEROFF+=("$DEVICE" "$MODEL")
+			COUNT=$(( COUNT + 1 ))
+		done
+
+		dialog --clear --backtitle "036 Creative Studios" --title "$RES2" \
+		--menu "$RES3"\
+		15 50 4 "${ARGSPOWEROFF[@]}" 2>"${POWEROFFTEMP}"
+
+		CHOICEOFF=$(<"${POWEROFFTEMP}")
+		case $CHOICEOFF in
+			"$CHOICEOFF") poweroffaction "$CHOICEOFF";;
+			*) clear;;
+		esac
+
+	fi
+
+}
+
+function mountaction() {
+	
+	RES1=$(reader 5); RES2=$(reader 8);
+	clear
+
+	if [ "$1" == "" ]; then return 0; fi
+
+	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
+
+	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then printer error 8; read -r -p "$RES1"
+	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then printer error 9; read -r -p "$RES1"
+	else dialog --msgbox "$RES2$DATAMOUNT" 7 35; fi
+}
+
+function unmountaction() {
+
+	RES1=$(reader 5); RES2=$(reader 8);
+	clear
+
+	if [ "$1" == "" ]; then return 0; fi
+
+	DATAMOUNT=$(sudo udisksctl unmount -b "$1" 2>&1)
+
+	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then printer error 8; read -r -p "$RES1"
+	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then printer error 9; read -r -p "$RES1"
+	else dialog --msgbox "$RES2$DATAMOUNT" 7 35; fi
+}
+
+
+function poweroffaction() {
+
+	clear
+	if [ "$1" == "" ]; then return 0; fi
+
+	BLOCKTEMP=$(echo "$1" | cut -d "/" -f3)
+	PARTITIONSQUERY=$(find /dev -name "${BLOCKTEMP}[[:digit:]]" | sort -n | sed 's/^\/dev\///')
+	
+	for PARTITION in $PARTITIONSQUERY; do
+		udisksctl unmount -b "/dev/$PARTITION" &> /dev/null
+		for (( i=0; i<${#CHARS}; i++ )); do
+			sleep 0.08; echo -en "${CHARS:$i:1}" "\r"
+		done
+	done
+
+	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
+	udisksctl power-off -b "$1"
+	
+	if [ "$LANGUAGE" -eq 1 ]; then
+		dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
+	else 
+		dialog --msgbox "LISTO: Tu dispositivo $MODEL se ha apagado exitosamente" 7 35
+	fi
+	
+}
+
+core
+
+[ -f $INPUT ] && rm $INPUT 
+[ -f $MOUNTTEMP ] && rm $MOUNTTEMP
+[ -f $POWEROFFTEMP ] && rm $POWEROFFTEMP
+[ -f $UNMOUNTTEMP ] && rm $UNMOUNTTEMP
