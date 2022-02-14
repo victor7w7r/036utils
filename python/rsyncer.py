@@ -8,27 +8,17 @@ import os
 LANGUAGE=0
 
 def main():
-    utils.clear(); language(); cover(); verify(); toggle()
+    utils.clear(); language(); cover(); verify()
 
 def printer(type, position):
     
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
   
     DICTIONARY_ENG=[
-		"Your Operating System is not macOS, exiting",
-		"All dependencies is ok!",
-		"EFI Folder is mounted, unmounting",
-		"EFI Folder is not mounted, mounting",
-		"Done!",
-        "Your Python versión is less than 3.5, exiting"
+		
     ]
     DICTIONARY_ESP=[
-		"Tu sistema operativo no es macOS, saliendo",
-		"¡Todo ok!",
-		"La carpeta EFI esta montada, desmontando",
-		"La carpeta EFI no esta montada, montando",
-		"¡Listo!",
-        "Tu versión de Python es menor que 3.5, saliendo"
+		
     ]	
     
     if LANGUAGE == 1:
@@ -43,6 +33,9 @@ def printer(type, position):
         elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ESP[position]}")
         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ESP[position]}")
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
+
+def reader():
+    pass
 
 def language(): 
     
@@ -109,49 +102,20 @@ def cover():
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify():
-    if platform != "darwin":
-       utils.clear(); printer("error",0); exit(1)
+    pass
 
-    if version_info < (3, 5):
-        utils.clear(); printer("error",5); exit(1)
-        
-    printer("print", 1)
+def validator():
+    pass
 
-    spinner = utils.spinning()
-    for _ in range(15):
-        stdout.write(next(spinner))
-        stdout.flush()
-        sleep(0.1)
-        stdout.write('\b')
-    
-def toggle():
-    EFIPART=sp.Popen(r"""
-                         #!/bin/bash
-                         diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
-                      """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip("\n")
+def sourceaction():
+    pass
 
-    EFI=sp.Popen(r"""
-                        #!/bin/bash
-                        EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
-                        MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p")
-                        echo $MOUNTROOT
-                  """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip("\n")
-    
-    if EFI != "":
-        printer("print",2)
-        sp.call(['sudo','diskutil','unmount',EFIPART])
-        sp.call(['sudo','rm','-rf','/Volumes/EFI'])
-        utils.clear()
-        printer("print",4)
-        
-    else:
-        printer("print",3)
-        sp.call(['sudo','mkdir','/Volumes/EFI'])
-        sp.call(['sudo','mount','-t', 'msdos','/dev/'+EFIPART,'/Volumes/EFI'])
-        sp.call(['open','/Volumes/EFI'])
-        utils.clear()
-        printer("print",4)
-    
+def destiaction():
+    pass
+
+def syncer():
+    pass
+
 class utils:
     
     def clear(): os.system('clear')

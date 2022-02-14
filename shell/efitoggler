@@ -136,13 +136,13 @@ function toggle {
     MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p")
 
     if [ "$MOUNTROOT" != "" ]; then
-        printer print 3; sudo diskutil unmount "$EFIPART"
-		sudo rm -rf /Volumes/EFI; clear; printer print 5
+        printer print 2; sudo diskutil unmount "$EFIPART"
+		sudo rm -rf /Volumes/EFI; clear; printer print 4
 
     else
-        printer print 4; sudo mkdir /Volumes/EFI
+        printer print 3; sudo mkdir /Volumes/EFI
         sudo mount -t msdos /dev/"$EFIPART" /Volumes/EFI
-        open /Volumes/EFI; clear; printer print 5
+        open /Volumes/EFI; clear; printer print 4
     fi
 }
 
