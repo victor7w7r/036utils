@@ -5,7 +5,7 @@ import termios
 import subprocess as sp
 import os
 
-LANGUAGE=0
+LANGUAGE: int=0
 
 def main() -> None: utils.clear(); language(); cover(); verify(); toggle()
 
@@ -43,7 +43,7 @@ def printer(type: str, position: int) -> None:
         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ESP[position]}")
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
-def language(): 
+def language() -> None: 
     
     global LANGUAGE
     
@@ -52,13 +52,13 @@ def language():
     print("1) English")
     print("2) Espanol")
     
-    option=utils.char()
+    option: str = utils.char()
   
     if option == "1": LANGUAGE=1
     elif option == "2": LANGUAGE=2
     else: exit(1)
 
-def cover():
+def cover() -> None:
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
     print(r'''                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    ''')
@@ -104,7 +104,7 @@ def cover():
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
-def verify():
+def verify() -> None:
     if platform != "darwin":
         utils.clear(); printer("error",0); exit(1)
 
@@ -119,13 +119,13 @@ def verify():
         stdout.flush(); sleep(0.1)
         stdout.write('\b')
     
-def toggle():
-    EFIPART=sp.Popen(r"""
+def toggle() -> None:
+    EFIPART: str = sp.Popen(r"""
                          #!/bin/bash
                          diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
                       """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip("\n")
 
-    EFI=sp.Popen(r"""
+    EFI: str = sp.Popen(r"""
                         #!/bin/bash
                         EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
                         MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p")
@@ -147,9 +147,9 @@ def toggle():
     
 class utils:
     
-    def clear(): os.system('clear')
+    def clear() -> None: os.system('clear')
     
-    def char():
+    def char() -> str:
         fd = stdin.fileno()
         oldSettings = termios.tcgetattr(fd)
         try:

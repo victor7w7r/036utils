@@ -1,23 +1,21 @@
-from doctest import testfile
 from sys import stdin, stdout, platform, version_info
+from this import s
 from time import sleep
 from tty import setcbreak
 import termios
 import subprocess as sp
 import os
 import re
-
-from pendulum import test_local_timezone
 from dialog import Dialog
 
 d = Dialog(dialog="dialog")
 d.set_background_title("036 Creative Studios")
 
-LANGUAGE=0
+LANGUAGE: int=0
 
-def main(): utils.clear(); language(); cover(); verify()
+def main() -> None: utils.clear(); language(); cover(); verify(); menu()
 
-def printer(type, position, additional=""):
+def printer(type: str, position: int, additional: str = "") -> None:
     
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
   
@@ -36,7 +34,8 @@ def printer(type, position, additional=""):
 		"=============== OPTIMIZE FILESYSTEM =============== \n",
 		"=============== DEFRAG FILESYSTEM =============== \n",
 		"=============== LAST VERIFY FILESYSTEM =============== \n",
-        "Your Python versión is less than 3.5, exiting"
+        "Your Python versión is less than 3.5, exiting",
+        "You need to be root, execute with sudo"
     )
     
     DICTIONARY_ESP=(
@@ -54,7 +53,8 @@ def printer(type, position, additional=""):
 		"=============== OPTIMIZAR EL SISTEMA DE ARCHIVOS =============== \n",
 		"=============== DESFRAGMENTAR EL SISTEMA DE ARCHIVOS =============== \n",
 		"=============== VERIFICAR POR ULTIMA VEZ EL SISTEMA DE ARCHIVOS =============== \n",
-        "Tu versión de Python es menor que 3.5, saliendo"
+        "Tu versión de Python es menor que 3.5, saliendo",
+        "Necesitas ser superusuario, ejecuta con sudo"
     )
     
     if LANGUAGE == 1:
@@ -70,36 +70,36 @@ def printer(type, position, additional=""):
         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ESP[position]}")
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
-def reader(position):
+def reader(position: int) -> str:
     
     DICTIONARY_ENG=(
-		"Choose a Option\n" 
-		"Optimize a ext4 partition"
-		"Exit to the shell" 
-		"Please select a partition" 
-		"Press Enter to continue..."
-		"Optimize"
+		"Choose a Option\n", 
+		"Optimize a ext4 partition",
+		"Exit to the shell",
+		"Please select a partition" ,
+		"Press Enter to continue...",
+		"Optimize",
 		"Exit"
 	)
 
     DICTIONARY_ESP=(
-		"Seleccione una opcion\n"
-		"Optimizar una particion de tipo ext4" 
-		"Salir al shell"
-		"Por favor selecciona una partition"
-		"Presione Enter para continuar..."
-		"Optimizar"
+		"Seleccione una opcion\n",
+		"Optimizar una particion de tipo ext4",
+		"Salir al shell",
+		"Por favor selecciona una partition",
+		"Presione Enter para continuar...",
+		"Optimizar",
 		"Salir"
 	)
  
     if LANGUAGE == 1: return DICTIONARY_ENG[position]
     else: return DICTIONARY_ESP[position]
 
-def commandverify(cmd):
+def commandverify(cmd: str) -> bool:
     return sp.call("type " + cmd, shell=True, 
         stdout=sp.PIPE, stderr=sp.PIPE) == 0
 
-def language():
+def language() -> None:
     
     global LANGUAGE
     
@@ -108,13 +108,13 @@ def language():
     print("1) English")
     print("2) Espanol")
     
-    option=utils.char()
+    option: str = utils.char()
   
     if option == "1": LANGUAGE=1
     elif option == "2": LANGUAGE=2
     else: exit(1)
 
-def cover():
+def cover() -> None:
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
     print(r'''                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    ''')
@@ -160,8 +160,12 @@ def cover():
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
-def verify():
+def verify() -> None:
     
+    utils.clear()
+    
+    if os.geteuid() != 0:
+        utils.clear(); printer("error",15); exit(1)
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
     if platform != "linux":
@@ -173,7 +177,6 @@ def verify():
     if not commandverify("dialog"):
         utils.clear(); printer("error",4); exit(1)
         
-    utils.clear()
     ext4listener()
     printer("print",5)    
     
@@ -185,16 +188,17 @@ def verify():
      
     utils.clear();
     
-def ext4listener(menuable="", echoparts=""):
+def ext4listener(menuable: str = "", echoparts: str = "") -> list[str, str]:
     
-    COUNT=0; EXTCOUNT=0; MOUNTCOUNT=0
-    ABSOLUTEPARTS=""; DIRTYDEVS=[]
-    EXTPARTS=[]; UMOUNTS=[]; PARTS=[]
+    COUNT: int = 0; EXTCOUNT: int = 0; MOUNTCOUNT: int = 0
+    ABSOLUTEPARTS: str = ""; DIRTYDEVS: list = []
+    EXTPARTS: list = []; PARTS: list = []
+    UMOUNTS: list[str, str] = []
     
-    ROOT = sp.Popen(r"""#!/bin/bash
+    ROOT: str = sp.Popen(r"""#!/bin/bash
                         df -h | sed -ne '/\/$/p' | cut -d" " -f1
                       """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').replace("\n", "")
-    VERIFY = sp.Popen(r"""#!/bin/bash
+    VERIFY: str = sp.Popen(r"""#!/bin/bash
                         find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'
                        """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').split("\n")
 
@@ -213,35 +217,84 @@ def ext4listener(menuable="", echoparts=""):
         if ABSOLUTEPARTS != "":
             if ABSOLUTEPARTS != ROOT:
                 PARTS.append(sp.Popen(r"""#!/bin/bash
-                                        echo """+DEV+""" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
+                                        echo """+DEV+""" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
                                         shell=True, stdout=sp.PIPE).stdout.read()
-                                        .decode('utf-8').rstrip().split("\n")[0]); COUNT += 1
-                
+                                        .decode('utf-8').rstrip().split("\n")[0]); COUNT += 1    
+   
     for PART in PARTS:
-        TYPE = sp.Popen(r'''#!/bin.bash
+        TYPE: str = sp.Popen(r'''#!/bin.bash
                  lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
                  shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip()
-        if(TYPE == "ext4"): EXTCOUNT+=1; EXTPARTS.append(PART)
+        if(TYPE == "ext4"): EXTCOUNT += 1; EXTPARTS.append(PART)     
     
     if (EXTCOUNT == 0):
         utils.clear(); printer("error",6)
-        if(menuable == "menu"):
-            input(reader(4))
+        if(menuable == "menu"): input(reader(4)); return
+        else: exit(1)
+        
+    for PARTITIONSDEF in EXTPARTS:
+        MOUNTED: str = sp.Popen("lsblk /dev/"+PARTITIONSDEF+" | sed -ne '/\//p'", shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip()
+        if(MOUNTED != ""): MOUNTCOUNT += 1
+        else: 
+            UMOUNTS.append(["/dev/"+PARTITIONSDEF,"ext4"])
+        
+    if(MOUNTCOUNT == EXTCOUNT):
+        utils.clear(); printer("error",7)
+        if(menuable == "menu"): input(reader(4)); return
+        else: exit(1)
+        
+    if(echoparts == "print" ): return UMOUNTS;
+        
+def menu() -> None:
+    choices = [(reader(5),reader(1)),(reader(6),reader(2))]
+    response = d.menu(reader(0), 15, 60, 4, choices)
+    if(response[0] == "ok" and response[1] == reader(5)):
+        defragmenu()
+    else: exit(0)
 
-def menu():
-    response = d.menu(reader(0), 8, 80)
+def defragmenu() -> None:
+    utils.clear()
+    choices = ext4listener("menu","print")
+    response = d.menu(reader(0), 15, 50, 4, choices)
+    if(response[0] == "ok"):
+        defragaction(response[1])
+    else: exit(0)
 
-def defragmenu():
-    pass
-
-def defragaction():
-    pass
+def defragaction(part: str) -> None:
+    utils.clear()
+    if(part == ""): return
+    
+    printer("print",8)
+    
+    proc1 = sp.Popen("fsck.ext4 -y -f -v " + part, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    print(proc1.stdout.read().decode("utf-8"))
+    if(proc1.returncode != 0): printer("print",9); input(reader(4)); return
+    print(" ");  printer("print",10); input(reader(4)); utils.clear()
+    
+    printer("print",11)
+    
+    proc2 = sp.Popen("fsck.ext4 -y -f -v -D " + part, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    print(proc2.stdout.read().decode("utf-8"))
+    if(proc2.returncode != 0): printer("print",9); input(reader(4)); return
+    print(" ");  printer("print",10); input(reader(4)); utils.clear()
+    
+    sp.call("mkdir /tmp/optimize 2> /dev/null", shell=True) 
+    sp.call("mount "+part+" /tmp/optimize", shell=True) 
+    
+    printer("print",12)
+    
+    proc3 = sp.Popen("e4defrag -v " + part, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    print(proc3.stdout.read().decode("utf-8"))
+    
+    print(" ");
+    sp.call("umount "+part, shell=True); printer("print",10)
+    input(reader(4)); utils.clear()
 
 class utils:
     
-    def clear(): os.system('clear')
+    def clear() -> None: os.system('clear')
     
-    def char():
+    def char() -> str:
         fd = stdin.fileno()
         oldSettings = termios.tcgetattr(fd)
         try:

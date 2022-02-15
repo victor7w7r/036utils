@@ -10,13 +10,13 @@ from dialog import Dialog
 d = Dialog(dialog="dialog")
 d.set_background_title("036 Creative Studios")
 
-SOURCE=""
-DEST=""
-LANGUAGE=0
+SOURCE: str = ""
+DEST: str = ""
+LANGUAGE: int = 0
 
-def main(): utils.clear(); language(); cover(); verify()
+def main() -> None: utils.clear(); language(); cover(); verify()
 
-def printer(type, position, additional=""):
+def printer(type: str, position: int, additional: str = "") -> None:
     
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
   
@@ -57,7 +57,7 @@ def printer(type, position, additional=""):
         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ESP[position]}")
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
-def reader(position):
+def reader(position: int) -> str:
     
     DICTIONARY_ENG=(
 		"Please write your source directory",
@@ -74,11 +74,11 @@ def reader(position):
     if LANGUAGE == 1: return DICTIONARY_ENG[position]
     else: return DICTIONARY_ESP[position]
 
-def commandverify(cmd):
+def commandverify(cmd: str) -> bool:
     return sp.call("type " + cmd, shell=True, 
         stdout=sp.PIPE, stderr=sp.PIPE) == 0
 
-def language():
+def language() -> None:
     
     global LANGUAGE
     
@@ -87,13 +87,13 @@ def language():
     print("1) English")
     print("2) Espanol")
     
-    option=utils.char()
+    option: str = utils.char()
   
     if option == "1": LANGUAGE=1
     elif option == "2": LANGUAGE=2
     else: exit(1)
 
-def cover():
+def cover() -> None:
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
     print(r'''                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    ''')
@@ -139,7 +139,7 @@ def cover():
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
-def verify():
+def verify() -> None:
     
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
@@ -160,7 +160,7 @@ def verify():
      
     utils.clear(); sourceaction()
     
-def validator(type, data):
+def validator(type: str, data: str) -> None:
     
     global SOURCE; global DEST
     
@@ -186,19 +186,19 @@ def validator(type, data):
     else:
          exit(0)
         
-def sourceaction():
+def sourceaction() -> None:
     response = d.inputbox(reader(0), 8, 80)
     if(response[0] == "ok" ): validator("source",response[1])
     elif(response[0] == "cancel" ): exit(0)
 
-def destiaction():
+def destiaction() -> None:
     response = d.inputbox(reader(1), 8, 80)
     if(response[0] == "ok" ): validator("dest",response[1])
     elif(response[0] == "cancel" ): exit(0)
 
-def syncer():
-    SOURCEREADY=""
-    DESTREADY=""
+def syncer() -> None:
+    SOURCEREADY: str=""
+    DESTREADY: str=""
     
     if re.search(".*\/$", SOURCE): SOURCEREADY = SOURCE
     else: SOURCEREADY = SOURCE + '/'
@@ -216,9 +216,9 @@ def syncer():
 
 class utils:
     
-    def clear(): os.system('clear')
+    def clear() -> None: os.system('clear')
     
-    def char():
+    def char() -> str:
         fd = stdin.fileno()
         oldSettings = termios.tcgetattr(fd)
         try:
