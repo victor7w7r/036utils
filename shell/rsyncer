@@ -210,6 +210,7 @@ function validator() {
 		else
 			exit 0
 		fi
+
 	elif [ "$1" == "dest" ]; then
 		if [ "$2" != "" ]; then
 			if [ -d "$2" ]; then
@@ -302,7 +303,7 @@ function syncer {
 
 	echo -e "\n =============== OK =============== \n" 
 	printer print 7
-	exit 1
+	exit 0
 }
 
 core

@@ -209,6 +209,8 @@ function verify {
 
 function ext4listener() {
 
+	ENTER=$(reader 4)
+
 	MENUABLE="${1}";
 	ECHOPARTS="${2}";
 
@@ -220,6 +222,7 @@ function ext4listener() {
 	VERIFY=$(find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///')
 
 	for DEVICE in $VERIFY; do
+
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
 		COUNT=$(( COUNT + 1 ))	
 	done

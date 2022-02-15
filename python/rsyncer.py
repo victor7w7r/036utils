@@ -4,22 +4,45 @@ from tty import setcbreak
 import termios
 import subprocess as sp
 import os
+import re
+from dialog import Dialog
 
+d = Dialog(dialog="dialog")
+d.set_background_title("036 Creative Studios")
+
+SOURCE=""
+DEST=""
 LANGUAGE=0
 
-def main():
-    utils.clear(); language(); cover(); verify()
+def main(): utils.clear(); language(); cover(); verify()
 
-def printer(type, position):
+def printer(type, position, additional=""):
     
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
   
-    DICTIONARY_ENG=[
-		
-    ]
-    DICTIONARY_ESP=[
-		
-    ]	
+    DICTIONARY_ENG=(
+		"Your Operating System is not GNU/Linux, exiting",
+		"In this system the binary sudo doesn't exist.",
+		"The rsync binary is not available in this system, please install",
+		"The dialog binary is not available in this system, please install",
+		"All dependencies is ok!",
+		"The directory "+ additional +" doesn't exist",
+		"=============== START RSYNC =============== \n" ,
+		"Done!\n",
+        "Your Python versión is less than 3.5, exiting"
+    )
+    
+    DICTIONARY_ESP=(
+        "Este sistema no es GNU/Linux, saliendo",
+		"En este sistema no existe el binario de superusuario.",
+		"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
+		"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
+		"¡Todo ok!",
+		"El directorio "+ additional +" no existe",
+		"=============== EMPEZAR RSYNC =============== \n" ,
+		"Listo!\n",
+        "Tu versión de Python es menor que 3.5, saliendo"
+    )
     
     if LANGUAGE == 1:
          if type == "print": print(f"{DICTIONARY_ENG[position]}")
@@ -34,10 +57,28 @@ def printer(type, position):
         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ESP[position]}")
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
-def reader():
-    pass
+def reader(position):
+    
+    DICTIONARY_ENG=(
+		"Please write your source directory",
+		"Please write your destination directory to copy",
+		"Press Enter to continue...",
+	)
 
-def language(): 
+    DICTIONARY_ESP=(
+		"Por favor escriba su directorio de origen",
+		"Por favor escriba su directorio de destino",
+		"Presione Enter para continuar..."
+	)
+ 
+    if LANGUAGE == 1: return DICTIONARY_ENG[position]
+    else: return DICTIONARY_ESP[position]
+
+def commandverify(cmd):
+    return sp.call("type " + cmd, shell=True, 
+        stdout=sp.PIPE, stderr=sp.PIPE) == 0
+
+def language():
     
     global LANGUAGE
     
@@ -48,12 +89,9 @@ def language():
     
     option=utils.char()
   
-    if option == "1":
-        LANGUAGE=1
-    elif option == "2":
-        LANGUAGE=2
-    else:
-        exit(1)
+    if option == "1": LANGUAGE=1
+    elif option == "2": LANGUAGE=2
+    else: exit(1)
 
 def cover():
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
@@ -102,19 +140,79 @@ def cover():
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify():
-    pass
-
-def validator():
-    pass
-
+    
+    if version_info < (3, 5):
+        utils.clear(); printer("error",8); exit(1)
+    if platform != "linux":
+        utils.clear(); printer("error",0); exit(1)
+    if not commandverify("rsync"):
+        utils.clear(); printer("error",2); exit(1)
+    if not commandverify("dialog"):
+        utils.clear(); printer("error",3); exit(1)
+    
+    printer("print",4)    
+    
+    spinner = utils.spinning()
+    for _ in range(15):
+        stdout.write(next(spinner))
+        stdout.flush(); sleep(0.1)  
+        stdout.write('\b')
+     
+    utils.clear(); sourceaction()
+    
+def validator(type, data):
+    
+    global SOURCE; global DEST
+    
+    if(type == "source"):
+        if(data != ""):
+            if(os.path.exists(data)):
+                SOURCE=data; destiaction();
+                return
+            else:
+                utils.clear(); printer("error", 5, data)
+                input(reader(2)); sourceaction(); return
+        else:
+            exit(0)
+    elif(type == "dest"):
+        if(data != ""):
+            if(os.path.exists(data)):
+                DEST=data; syncer(); return
+            else:
+                utils.clear(); printer("error", 5, data)
+                input(reader(2)); destiaction(); return
+        else:
+            sourceaction()
+    else:
+         exit(0)
+        
 def sourceaction():
-    pass
+    response = d.inputbox(reader(0), 8, 80)
+    if(response[0] == "ok" ): validator("source",response[1])
+    elif(response[0] == "cancel" ): exit(0)
 
 def destiaction():
-    pass
+    response = d.inputbox(reader(1), 8, 80)
+    if(response[0] == "ok" ): validator("dest",response[1])
+    elif(response[0] == "cancel" ): exit(0)
 
 def syncer():
-    pass
+    SOURCEREADY=""
+    DESTREADY=""
+    
+    if re.search(".*\/$", SOURCE): SOURCEREADY = SOURCE
+    else: SOURCEREADY = SOURCE + '/'
+    if re.search(".*\/$", DEST): DESTREADY = DEST
+    else: DESTREADY = DEST + '/'
+    
+    utils.clear()    
+    printer("print",6)
+    print(f"SOURCE:{SOURCEREADY}")
+    print(f"DESTINATION:{DESTREADY}")
+    sp.call(['sudo','rsync','-axHAWXS','--numeric-ids','--info=progress2',SOURCEREADY,DESTREADY])
+    print("\n =============== OK =============== \n" )
+    printer("print",7)
+    exit(0)
 
 class utils:
     
