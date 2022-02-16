@@ -1,6 +1,6 @@
-# 036shell
+# 036utils
 
-Shell Utilites for GNU/Linux and macOS
+TUI Utilites for GNU/Linux and macOS with Bash and Python
 
 ![Alt text](brandwhite.png?raw=true "Title")
 
@@ -8,6 +8,7 @@ Shell Utilites for GNU/Linux and macOS
 
 - Basic or medium understanding of GNU/Linux
 - Some binaries, depending on the application
+- For Python scripts, you need Python 3.5 or above
 
 ## Description of every script
 
@@ -19,34 +20,41 @@ Shell Utilites for GNU/Linux and macOS
 - rsyncer: Dialog-based simple application that copy all contents from a source directory to a destination directory, it's recommended to copy root filesystems (Only runs in GNU/Linux).
   - You need the next binaries `dialog rsync`
 
+## Also Python?
+
+- I recommend to use python scripts, works at 100% similar than bash scripts, the performance in python is better
+- Only one module is required, please install pythondialog locally
+
+```bash
+$ pip install pythondialog
+```
+
 ## Installation and usage
 
 - Clone this repository
-  - `git clone https://github.com/victor7w7r/036shell`
+  - `git clone https://github.com/victor7w7r/036utils`
 
-- Choose your favourite script, give the right permissions and run
+- Choose your favourite script and run
 
 ```bash
-$ cd 036shell
+$ cd 036utils/python
+$ python3 ext4-optimizer.py
+```
+
+- For bash scripts, give the right permissions and run
+
+```bash
+$ cd 036shell/shell
 $ chmod +x ext4-optimizer
 $ ./ext4-optimizer
 ```
 
-## Spanish Folder?
-
-I born and live in Ecuador, of course i made a spanish scripts version, sorry for my bad english. :blush:
-
 ## TODO
 
-- [ ] Code Optimization
+- [ ] More Code Optimization
 
 ## Development Suite
 
 - Editor: [vscode](https://code.visualstudio.com/)
-- Lint and Syntax Check: [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
-- Operating System Tests: [Arch Linux ARM](https://archlinuxarm.org/)
-
-## Thanks at this repositories for code snippets
-
-- [Desktopify](https://github.com/wimpysworld/desktopify) (Convert Ubuntu Server for Raspberry Pi to a Desktop.)
-- [ZeroTierOne](https://github.com/zerotier/ZeroTierOne) (Free VPN)
+- Lint and Syntax Check: [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck), [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
+- Operating Systems for tests: [Arch Linux ARM](https://archlinuxarm.org/), [Kali Linux](https://www.kali.org/)
