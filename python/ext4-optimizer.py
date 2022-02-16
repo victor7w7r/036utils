@@ -1,21 +1,19 @@
+from subprocess import call, PIPE, Popen
 from sys import stdin, stdout, platform, version_info
-from this import s
+from os import geteuid, system
+from termios import tcgetattr, tcsetattr, TCSADRAIN
 from time import sleep
 from tty import setcbreak
-import termios
-import subprocess as sp
-import os
-import re
 from dialog import Dialog
 
 d = Dialog(dialog="dialog")
 d.set_background_title("036 Creative Studios")
 
-LANGUAGE: int=0
+LANGUAGE: int = 0
 
 def main() -> None: utils.clear(); language(); cover(); verify(); menu()
 
-def printer(type: str, position: int, additional: str = "") -> None:
+def printer(type: str, position: int) -> None:
     
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
   
@@ -96,8 +94,8 @@ def reader(position: int) -> str:
     else: return DICTIONARY_ESP[position]
 
 def commandverify(cmd: str) -> bool:
-    return sp.call("type " + cmd, shell=True, 
-        stdout=sp.PIPE, stderr=sp.PIPE) == 0
+    return call("type " + cmd, shell=True, 
+        stdout=PIPE, stderr=PIPE) == 0
 
 def language() -> None:
     
@@ -162,9 +160,7 @@ def cover() -> None:
 
 def verify() -> None:
     
-    utils.clear()
-    
-    if os.geteuid() != 0:
+    if geteuid() != 0:
         utils.clear(); printer("error",15); exit(1)
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
@@ -195,36 +191,36 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str, str]:
     EXTPARTS: list = []; PARTS: list = []
     UMOUNTS: list[str, str] = []
     
-    ROOT: str = sp.Popen(r"""#!/bin/bash
+    ROOT: str = Popen(r"""#!/bin/bash
                         df -h | sed -ne '/\/$/p' | cut -d" " -f1
-                      """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').replace("\n", "")
-    VERIFY: str = sp.Popen(r"""#!/bin/bash
+                      """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').replace("\n", "")
+    VERIFY: str = Popen(r"""#!/bin/bash
                         find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'
-                       """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').split("\n")
+                       """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').split("\n")
 
     for DEVICE in VERIFY:
-        DIRTYDEVS.append(sp.Popen('''#!/bin/bash
+        DIRTYDEVS.append(Popen('''#!/bin/bash
                                    readlink "/dev/disk/by-id/''' +DEVICE+'''"''', shell=True, 
-                                   stdout=sp.PIPE).stdout.read().decode('utf-8')
+                                   stdout=PIPE).stdout.read().decode('utf-8')
                                     .rstrip().split("\n")[0])
     DIRTYDEVS = list(filter(('').__ne__, DIRTYDEVS))
 
     for DEV in DIRTYDEVS:
-        ABSOLUTEPARTS = sp.Popen(r"""#!/bin/bash
+        ABSOLUTEPARTS = Popen(r"""#!/bin/bash
                              echo """+DEV+""" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
-                             shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip()
+                             shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
         
         if ABSOLUTEPARTS != "":
             if ABSOLUTEPARTS != ROOT:
-                PARTS.append(sp.Popen(r"""#!/bin/bash
+                PARTS.append(Popen(r"""#!/bin/bash
                                         echo """+DEV+""" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
-                                        shell=True, stdout=sp.PIPE).stdout.read()
+                                        shell=True, stdout=PIPE).stdout.read()
                                         .decode('utf-8').rstrip().split("\n")[0]); COUNT += 1    
    
     for PART in PARTS:
-        TYPE: str = sp.Popen(r'''#!/bin.bash
+        TYPE: str = Popen(r'''#!/bin.bash
                  lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
-                 shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip()
+                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
         if(TYPE == "ext4"): EXTCOUNT += 1; EXTPARTS.append(PART)     
     
     if (EXTCOUNT == 0):
@@ -233,7 +229,7 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str, str]:
         else: exit(1)
         
     for PARTITIONSDEF in EXTPARTS:
-        MOUNTED: str = sp.Popen("lsblk /dev/"+PARTITIONSDEF+" | sed -ne '/\//p'", shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip()
+        MOUNTED: str = Popen("lsblk /dev/"+PARTITIONSDEF+" | sed -ne '/\//p'", shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
         if(MOUNTED != ""): MOUNTCOUNT += 1
         else: 
             UMOUNTS.append(["/dev/"+PARTITIONSDEF,"ext4"])
@@ -266,42 +262,42 @@ def defragaction(part: str) -> None:
     
     printer("print",8)
     
-    proc1 = sp.Popen("fsck.ext4 -y -f -v " + part, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    proc1 = Popen("fsck.ext4 -y -f -v " + part, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     print(proc1.stdout.read().decode("utf-8"))
     if(proc1.returncode != 0): printer("print",9); input(reader(4)); return
     print(" ");  printer("print",10); input(reader(4)); utils.clear()
     
     printer("print",11)
     
-    proc2 = sp.Popen("fsck.ext4 -y -f -v -D " + part, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    proc2 = Popen("fsck.ext4 -y -f -v -D " + part, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     print(proc2.stdout.read().decode("utf-8"))
     if(proc2.returncode != 0): printer("print",9); input(reader(4)); return
     print(" ");  printer("print",10); input(reader(4)); utils.clear()
     
-    sp.call("mkdir /tmp/optimize 2> /dev/null", shell=True) 
-    sp.call("mount "+part+" /tmp/optimize", shell=True) 
+    call("mkdir /tmp/optimize 2> /dev/null", shell=True) 
+    call("mount "+part+" /tmp/optimize", shell=True) 
     
     printer("print",12)
     
-    proc3 = sp.Popen("e4defrag -v " + part, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    proc3 = Popen("e4defrag -v " + part, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     print(proc3.stdout.read().decode("utf-8"))
     
     print(" ");
-    sp.call("umount "+part, shell=True); printer("print",10)
+    call("umount "+part, shell=True); printer("print",10)
     input(reader(4)); utils.clear()
 
 class utils:
     
-    def clear() -> None: os.system('clear')
+    def clear() -> None: system('clear')
     
     def char() -> str:
         fd = stdin.fileno()
-        oldSettings = termios.tcgetattr(fd)
+        oldSettings = tcgetattr(fd)
         try:
             setcbreak(fd)
             answer = stdin.read(1)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, oldSettings)
+            tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
     
     def spinning():

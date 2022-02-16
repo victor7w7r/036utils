@@ -1,9 +1,9 @@
+from subprocess import Popen, call, PIPE
 from sys import stdin, stdout, platform, version_info
-from time import sleep
+from os import system
+from termios import tcgetattr, tcsetattr, TCSADRAIN
 from tty import setcbreak
-import termios
-import subprocess as sp
-import os
+from time import sleep
 
 LANGUAGE: int=0
 
@@ -120,43 +120,43 @@ def verify() -> None:
         stdout.write('\b')
     
 def toggle() -> None:
-    EFIPART: str = sp.Popen(r"""
+    EFIPART: str = Popen(r"""
                          #!/bin/bash
                          diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
-                      """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip("\n")
+                      """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
 
-    EFI: str = sp.Popen(r"""
+    EFI: str = Popen(r"""
                         #!/bin/bash
                         EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
                         MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p")
                         echo $MOUNTROOT
-                  """, shell=True, stdout=sp.PIPE).stdout.read().decode('utf-8').rstrip("\n")
+                  """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
     
     if EFI != "":
         printer("print",2)
-        sp.call(['sudo','diskutil','unmount',EFIPART])
-        sp.call(['sudo','rm','-rf','/Volumes/EFI'])
+        call(['sudo','diskutil','unmount',EFIPART])
+        call(['sudo','rm','-rf','/Volumes/EFI'])
         utils.clear(); printer("print",4)
         
     else:
         printer("print",3)
-        sp.call(['sudo','mkdir','/Volumes/EFI'])
-        sp.call(['sudo','mount','-t', 'msdos','/dev/'+EFIPART,'/Volumes/EFI'])
-        sp.call(['open','/Volumes/EFI'])
+        call(['sudo','mkdir','/Volumes/EFI'])
+        call(['sudo','mount','-t', 'msdos','/dev/'+EFIPART,'/Volumes/EFI'])
+        call(['open','/Volumes/EFI'])
         utils.clear(); printer("print",4)
     
 class utils:
     
-    def clear() -> None: os.system('clear')
+    def clear() -> None: system('clear')
     
     def char() -> str:
         fd = stdin.fileno()
-        oldSettings = termios.tcgetattr(fd)
+        oldSettings = tcgetattr(fd)
         try:
             setcbreak(fd)
             answer = stdin.read(1)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, oldSettings)
+            tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
     
     def spinning():

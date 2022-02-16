@@ -319,6 +319,7 @@ function usblistener() {
 		if [ $UNMOUNTCOUNT -eq $COUNT ]; then
 			printer error 7; read -r -p "$RES"; menu; return 0
 		fi
+		
 		COUNT=0		
 		for PART in "${UNMOUNTS[@]}"; do
 			DEVICE="/dev/$PART"
@@ -423,7 +424,6 @@ function unmountaction() {
 	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then printer error 9; read -r -p "$RES1"
 	else dialog --msgbox "$RES2$DATAMOUNT" 7 35; fi
 }
-
 
 function poweroffaction() {
 

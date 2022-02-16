@@ -1,10 +1,10 @@
+from subprocess import call, PIPE
 from sys import stdin, stdout, platform, version_info
+from os import system, path
+from re import search
+from termios import tcgetattr, tcsetattr, TCSADRAIN
 from time import sleep
 from tty import setcbreak
-import termios
-import subprocess as sp
-import os
-import re
 from dialog import Dialog
 
 d = Dialog(dialog="dialog")
@@ -75,8 +75,8 @@ def reader(position: int) -> str:
     else: return DICTIONARY_ESP[position]
 
 def commandverify(cmd: str) -> bool:
-    return sp.call("type " + cmd, shell=True, 
-        stdout=sp.PIPE, stderr=sp.PIPE) == 0
+    return call("type " + cmd, shell=True, 
+        stdout=PIPE, stderr=PIPE) == 0
 
 def language() -> None:
     
@@ -166,7 +166,7 @@ def validator(type: str, data: str) -> None:
     
     if(type == "source"):
         if(data != ""):
-            if(os.path.exists(data)):
+            if(path.exists(data)):
                 SOURCE=data; destiaction();
                 return
             else:
@@ -176,7 +176,7 @@ def validator(type: str, data: str) -> None:
             exit(0)
     elif(type == "dest"):
         if(data != ""):
-            if(os.path.exists(data)):
+            if(path.exists(data)):
                 DEST=data; syncer(); return
             else:
                 utils.clear(); printer("error", 5, data)
@@ -200,32 +200,32 @@ def syncer() -> None:
     SOURCEREADY: str=""
     DESTREADY: str=""
     
-    if re.search(".*\/$", SOURCE): SOURCEREADY = SOURCE
+    if search(".*\/$", SOURCE): SOURCEREADY = SOURCE
     else: SOURCEREADY = SOURCE + '/'
-    if re.search(".*\/$", DEST): DESTREADY = DEST
+    if search(".*\/$", DEST): DESTREADY = DEST
     else: DESTREADY = DEST + '/'
     
     utils.clear()    
     printer("print",6)
     print(f"SOURCE:{SOURCEREADY}")
     print(f"DESTINATION:{DESTREADY}")
-    sp.call(['sudo','rsync','-axHAWXS','--numeric-ids','--info=progress2',SOURCEREADY,DESTREADY])
+    call(['sudo','rsync','-axHAWXS','--numeric-ids','--info=progress2',SOURCEREADY,DESTREADY])
     print("\n =============== OK =============== \n" )
     printer("print",7)
     exit(0)
 
 class utils:
     
-    def clear() -> None: os.system('clear')
+    def clear() -> None: system('clear')
     
     def char() -> str:
         fd = stdin.fileno()
-        oldSettings = termios.tcgetattr(fd)
+        oldSettings = tcgetattr(fd)
         try:
             setcbreak(fd)
             answer = stdin.read(1)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, oldSettings)
+            tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
     
     def spinning():
