@@ -21,26 +21,26 @@ def printer(type: str, position: int, additional: str = "") -> None:
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
   
     DICTIONARY_ENG=(
-		"Your Operating System is not GNU/Linux, exiting",
-		"In this system the binary sudo doesn't exist.",
-		"The rsync binary is not available in this system, please install",
-		"The dialog binary is not available in this system, please install",
-		"All dependencies is ok!",
-		"The directory "+ additional +" doesn't exist",
-		"=============== START RSYNC =============== \n" ,
-		"Done!\n",
+	"Your Operating System is not GNU/Linux, exiting",
+	"In this system the binary sudo doesn't exist.",
+	"The rsync binary is not available in this system, please install",
+	"The dialog binary is not available in this system, please install",
+	"All dependencies is ok!",
+	"The directory "+ additional +" doesn't exist",
+	"=============== START RSYNC =============== \n" ,
+	"Done!\n",
         "Your Python versión is less than 3.5, exiting"
     )
     
     DICTIONARY_ESP=(
         "Este sistema no es GNU/Linux, saliendo",
-		"En este sistema no existe el binario de superusuario.",
-		"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
-		"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
-		"¡Todo ok!",
-		"El directorio "+ additional +" no existe",
-		"=============== EMPEZAR RSYNC =============== \n" ,
-		"Listo!\n",
+	"En este sistema no existe el binario de superusuario.",
+	"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
+	"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
+	"¡Todo ok!",
+	"El directorio "+ additional +" no existe",
+	"=============== EMPEZAR RSYNC =============== \n" ,
+	"Listo!\n",
         "Tu versión de Python es menor que 3.5, saliendo"
     )
     
