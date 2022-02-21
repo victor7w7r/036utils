@@ -5,8 +5,6 @@ from re import search
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from time import sleep
 from tty import setcbreak
-
-from sympy import E
 from dialog import Dialog
 
 d = Dialog(dialog="dialog")
