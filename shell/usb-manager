@@ -288,6 +288,7 @@ function usblistener() {
 		COUNT=$(( COUNT + 1 ))
 	done
 	COUNT=0
+
 	for DEV in "${DIRTYDEVS[@]}"; do
 		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
 		if [ "$ABSOLUTEPARTS" != "" ]; then
@@ -434,14 +435,34 @@ function poweroffaction() {
 	PARTITIONSQUERY=$(find /dev -name "${BLOCKTEMP}[[:digit:]]" | sort -n | sed 's/^\/dev\///')
 	
 	for PARTITION in $PARTITIONSQUERY; do
-		udisksctl unmount -b "/dev/$PARTITION" &> /dev/null
+		udisksctl unmount -b "/dev/$PARTITION" &> /dev/null;
+		CODE=$?
+		if [ $CODE -ne 0 ] && [ $CODE -ne 1 ]; then
+			if [ "$LANGUAGE" -eq 1 ]; then
+				dialog --msgbox "FAIL: Error unmounting /dev/$PARTITION please check if you have the right permissions" 7 35
+				menu; return 0
+			else 
+				dialog --msgbox "ERROR: Hubo un error desmontando /dev/$PARTITION por favor revisar o mira si tienes permisos" 7 35
+				menu; return 0
+			fi
+		fi
 		for (( i=0; i<${#CHARS}; i++ )); do
 			sleep 0.08; echo -en "${CHARS:$i:1}" "\r"
 		done
 	done
 
 	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
-	udisksctl power-off -b "$1"
+	udisksctl power-off -b "$1";
+	CODE=$?
+	if [ $CODE -ne 0 ]; then
+		if [ "$LANGUAGE" -eq 1 ]; then
+			dialog --msgbox "FAIL: Power-off is not available on this device, please check or check if you have permissions" 7 35
+			menu; return 0
+		else 
+			dialog --msgbox "ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos" 7 35
+			menu; return 0
+		fi
+	fi
 	
 	if [ "$LANGUAGE" -eq 1 ]; then
 		dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35

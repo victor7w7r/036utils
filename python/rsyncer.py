@@ -1,10 +1,12 @@
-from subprocess import call, PIPE
+from subprocess import call, PIPE, check_output, CalledProcessError
 from sys import stdin, stdout, platform, version_info
 from os import system, path
 from re import search
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from time import sleep
 from tty import setcbreak
+
+from sympy import E
 from dialog import Dialog
 
 d = Dialog(dialog="dialog")
@@ -29,11 +31,13 @@ def printer(type: str, position: int, additional: str = "") -> None:
 	"The directory "+ additional +" doesn't exist",
 	"=============== START RSYNC =============== \n" ,
 	"Done!\n",
-        "Your Python versión is less than 3.5, exiting"
+    "Your Python versión is less than 3.5, exiting",
+    "You don't have permissions to write the destination or read the source",
+	"=============== FAIL =============== \n"
     )
     
     DICTIONARY_ESP=(
-        "Este sistema no es GNU/Linux, saliendo",
+    "Este sistema no es GNU/Linux, saliendo",
 	"En este sistema no existe el binario de superusuario.",
 	"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
 	"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
@@ -41,7 +45,9 @@ def printer(type: str, position: int, additional: str = "") -> None:
 	"El directorio "+ additional +" no existe",
 	"=============== EMPEZAR RSYNC =============== \n" ,
 	"Listo!\n",
-        "Tu versión de Python es menor que 3.5, saliendo"
+    "Tu versión de Python es menor que 3.5, saliendo",
+    "No tienes permisos para escribir el directorio de destino o para leer el origen",
+	"=============== FALLA =============== \n"
     )
     
     if LANGUAGE == 1:
@@ -209,10 +215,27 @@ def syncer() -> None:
     printer("print",6)
     print(f"SOURCE:{SOURCEREADY}")
     print(f"DESTINATION:{DESTREADY}")
-    call(['sudo','rsync','-axHAWXS','--numeric-ids','--info=progress2',SOURCEREADY,DESTREADY])
-    print("\n =============== OK =============== \n" )
-    printer("print",7)
-    exit(0)
+    
+    try:
+        OUTPUT = check_output("rsync -axHAWXS --numeric-ids --info=progress2 "+ SOURCEREADY + " " + DESTREADY, shell=True, stderr=PIPE)
+        print(OUTPUT.decode('utf-8'))
+    except CalledProcessError: 
+        printer("print",9)
+        utils.clear()    
+        print(f"SOURCE:{SOURCEREADY}")
+        print(f"DESTINATION:{DESTREADY}")
+        try:
+             OUTPUT = check_output("sudo rsync -axHAWXS --numeric-ids --info=progress2 "+ SOURCEREADY + " " + DESTREADY, shell=True, stderr=PIPE)
+             print(OUTPUT.decode('utf-8'))
+        except CalledProcessError:
+            printer("print",10); exit(1)
+        else:
+            print("\n =============== OK =============== \n" )
+            printer("print",7); exit(0)  
+            
+    else:
+        print("\n =============== OK =============== \n" )
+        printer("print",7); exit(0)
 
 class utils:
     

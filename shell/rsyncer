@@ -32,6 +32,8 @@ function printer() {
 		"The directory \"$ADDITIONAL\" doesn't exist"
 		"=============== START RSYNC =============== \n" 
 		"Done!\n"
+		"You don't have permissions to write the destination or read the source"
+		"=============== FAIL =============== \n"
 	)
 
 	local DICTIONARY_ESP=(
@@ -43,6 +45,8 @@ function printer() {
 		"El directorio \"$ADDITIONAL\" no existe"
 		"=============== EMPEZAR RSYNC =============== \n" 
 		"Listo!\n"
+		"No tienes permisos para escribir el directorio de destino o para leer el origen"
+		"=============== FALLA =============== \n"
 	)
 
 	if [ "$LANGUAGE" -eq 1 ]; then
@@ -299,11 +303,22 @@ function syncer {
 	printer print 6
 	echo "SOURCE: $SOURCEREADY"
 	echo -e "DESTINATION: $DESTREADY \n"
-	$SUDO rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"
 
+	if ! rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"; then
+		clear
+		echo "SOURCE: $SOURCEREADY"
+		echo -e "DESTINATION: $DESTREADY \n"
+		printer print 8
+		if ! $SUDO rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"; then
+			printer print 9; exit 1
+		fi
+		echo -e "\n =============== OK =============== \n" 
+		printer print 7; exit 0
+
+	fi
+	
 	echo -e "\n =============== OK =============== \n" 
-	printer print 7
-	exit 0
+	printer print 7; exit 0
 }
 
 core

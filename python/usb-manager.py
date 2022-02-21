@@ -1,3 +1,4 @@
+from nis import cat
 from subprocess import call, PIPE, Popen, check_output, CalledProcessError
 from sys import stdin, stdout, platform, version_info
 from os import system
@@ -226,8 +227,8 @@ def menu() -> None:
 def usblistener(selector: str) -> None:
     utils.clear(); usbverify();
     
-    COUNT: int = 0; PARTS: list = []; BLOCK: list = []; USB: list = [];
-    FLAGS: list = []; FLAGS: list = []; MOUNTS: list = []
+    COUNT: int = 0; PARTS: list = []; BLOCK: list = []
+    FLAGS: list = []; MOUNTS: list = []; USB: list = [];
     UNMOUNTS: list = []; ARGS: list = []; ARGSPOWEROFF: list = []
     MOUNTCOUNT: int = 0; UNMOUNTCOUNT: int = 0; TYPE: str = ""; 
     MODEL: str = ""; FLAGSCOUNT: int = 0; DIRTYDEVS: list = []
@@ -263,6 +264,7 @@ def usblistener(selector: str) -> None:
         if(MOUNTED != ""): UNMOUNTCOUNT += 1; MOUNTS.append(PARTITIONS)
         else: MOUNTCOUNT += 1; UNMOUNTS.append(PARTITIONS)
         
+        
     if(selector == "mount"):
         if(UNMOUNTCOUNT == COUNT): printer("error",7); input(reader(5)); menu(); return
         COUNT=0
@@ -271,12 +273,16 @@ def usblistener(selector: str) -> None:
             TYPE: str = Popen(r'''#!/bin.bash
                  lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
                  shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            TEMP = FLAGS[FLAGSCOUNT]
-            if(COUNT == TEMP): BLOCKSTAT = BLOCK[FLAGSCOUNT]; FLAGSCOUNT += 1
+            try: TEMP = FLAGS[FLAGSCOUNT]
+            except IndexError: pass
+            if(COUNT == TEMP): 
+                try: BLOCKSTAT = BLOCK[FLAGSCOUNT]
+                except IndexError: pass
+                FLAGSCOUNT += 1
             MODEL: str = Popen(r'''#!/bin.bash
                  cat /sys/class/block/'''+BLOCKSTAT+'''/device/model''',
                  shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            ARGS.append([DEVICE, MODEL + " " + TYPE])
+            ARGS.append([DEVICE, MODEL + " " + TYPE]); COUNT+=1
         response = d.menu(reader(6), 15, 50, 4, ARGS)
         if(response[0] == "ok"):
             mountaction(response[1])
@@ -290,12 +296,16 @@ def usblistener(selector: str) -> None:
             TYPE: str = Popen(r'''#!/bin.bash
                  lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
                  shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            TEMP = FLAGS[FLAGSCOUNT]
-            if(COUNT == TEMP): BLOCKSTAT = BLOCK[FLAGSCOUNT]; FLAGSCOUNT += 1
+            try: TEMP = FLAGS[FLAGSCOUNT]
+            except IndexError: pass
+            if(COUNT == TEMP): 
+                try: BLOCKSTAT = BLOCK[FLAGSCOUNT]
+                except IndexError: pass
+                FLAGSCOUNT += 1
             MODEL: str = Popen(r'''#!/bin.bash
                  cat /sys/class/block/'''+BLOCKSTAT+'''/device/model''',
                  shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            ARGS.append([DEVICE, MODEL + " " + TYPE])
+            ARGS.append([DEVICE, MODEL + " " + TYPE]); COUNT +=1
         response = d.menu(reader(9), 15, 50, 4, ARGS)
         if(response[0] == "ok"):
             unmountaction(response[1])
@@ -364,25 +374,42 @@ def poweroffaction(part: str) -> None:
                                    stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")
     
     for PARTITION in PARTITIONSQUERY:
-        check_output('udisksctl unmount -b "/dev/'+PARTITION+'" &> /dev/null', shell=True, stderr=PIPE)
-        spinner = utils.spinning()
-        for _ in range(10):
-            stdout.write(next(spinner))
-            stdout.flush(); sleep(0.1)  
-            stdout.write('\b')
+        try:
+            check_output('udisksctl unmount -b "/dev/'+PARTITION+'" &> /dev/null', shell=True, stderr=PIPE)
+        except CalledProcessError:
+            if(LANGUAGE == 1): 
+                d.msgbox("FAIL: Error unmounting /dev/"+PARTITION+" please check or check if you have the right permissions",7,35)
+                menu(); return
+            else:
+                d.msgbox("ERROR: Hubo un error desmontando /dev/"+PARTITION+" por favor revisar o mira si tienes permisos",7,35)
+                menu(); return
+        else:
+            spinner = utils.spinning()
+            for _ in range(10):
+                stdout.write(next(spinner))
+                stdout.flush(); sleep(0.1)  
+                stdout.write('\b')
             
     MODEL: str = Popen(r'''#!/bin.bash
                 cat /sys/class/block/'''+BLOCKTEMP+'''/device/model''',
                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
     
-    check_output('udisksctl power-off -b ' + part, shell=True, stderr=PIPE)
-
-    if(LANGUAGE == 1): 
-        d.msgbox("SUCCESS: Your device "+MODEL+" was succesfully power-off",7,35)
-        menu()
+    try:
+        check_output('udisksctl power-off -b ' + part, shell=True, stderr=PIPE)
+    except CalledProcessError:
+        if(LANGUAGE == 1): 
+            d.msgbox("FAIL: Power-off is not available on this device, please check or check if you have permissions",7,35)
+            menu(); return
+        else:
+            d.msgbox("ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos",7,35)
+            menu(); return
     else:
-        d.msgbox("LISTO: Tu dispositivo "+MODEL+" se ha apagado exitosamente",7,35)
-        menu()
+        if(LANGUAGE == 1): 
+            d.msgbox("SUCCESS: Your device "+MODEL+" was succesfully power-off",7,35)
+            menu()
+        else:
+            d.msgbox("LISTO: Tu dispositivo "+MODEL+" se ha apagado exitosamente",7,35)
+            menu()
         
 class utils:
     

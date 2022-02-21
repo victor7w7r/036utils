@@ -1,4 +1,4 @@
-from subprocess import call, PIPE, Popen
+from subprocess import call, PIPE, Popen, check_output, CalledProcessError
 from sys import stdin, stdout, platform, version_info
 from os import geteuid, system
 from termios import tcgetattr, tcsetattr, TCSADRAIN
@@ -30,7 +30,7 @@ def printer(type: str, position: int) -> None:
 	"=============== FAILURE =============== \n",
 	"=============== OK =============== \n",
 	"=============== OPTIMIZE FILESYSTEM =============== \n",
-	"=============== DEFRAG FILESYSTEM =============== \n",
+	"=============== DEFRAG FILESYSTEM, PLEASE WAIT =============== \n",
 	"=============== LAST VERIFY FILESYSTEM =============== \n",
         "Your Python versión is less than 3.5, exiting",
         "You need to be root, execute with sudo"
@@ -49,7 +49,7 @@ def printer(type: str, position: int) -> None:
 	"=============== FALLA =============== \n",
 	"=============== LISTO =============== \n",
 	"=============== OPTIMIZAR EL SISTEMA DE ARCHIVOS =============== \n",
-	"=============== DESFRAGMENTAR EL SISTEMA DE ARCHIVOS =============== \n",
+	"=============== DESFRAGMENTAR EL SISTEMA DE ARCHIVOS, ESPERE POR FAVOR =============== \n",
 	"=============== VERIFICAR POR ULTIMA VEZ EL SISTEMA DE ARCHIVOS =============== \n",
         "Tu versión de Python es menor que 3.5, saliendo",
         "Necesitas ser superusuario, ejecuta con sudo"
@@ -156,12 +156,10 @@ def cover() -> None:
     print(r'''`YooP` `YooP` `YooP`   `YooP` 8     `Yooo` `YooP8   8   8  `YP`  `Yooo`   `YooP`   8  `YooP` `YooP`  8 `YooP` `YooP. ''')
     print(r''':.....::.....::.....::::.....:..:::::.....::.....:::..::..::...:::.....::::.....:::..::.....::.....::..:.....::.....:''')
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
-    print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
+    print(r''':::::::::::::::::::   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify() -> None:
-    
-    if geteuid() != 0:
-        utils.clear(); printer("error",15); exit(1)
+
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
     if platform != "linux":
@@ -262,30 +260,54 @@ def defragaction(part: str) -> None:
     
     printer("print",8)
     
-    proc1 = Popen("fsck.ext4 -y -f -v " + part, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    print(proc1.stdout.read().decode("utf-8"))
-    if(proc1.returncode != 0): printer("print",9); input(reader(4)); return
-    print(" ");  printer("print",10); input(reader(4)); utils.clear()
+    try:
+        check_output("sudo cat /dev/null", shell=True, stderr=PIPE) 
+    except CalledProcessError: 
+        printer("print",9); input(reader(4)); menu(); return
+    
+    try:
+        OUTPUT = check_output("sudo fsck.ext4 -y -f -v "+ part, shell=True, stderr=PIPE)
+        print(OUTPUT.decode('utf-8'))
+    except CalledProcessError: 
+        printer("print",9); input(reader(4)); menu(); return
+    else:
+        print(" "); printer("print",10); input(reader(4)); utils.clear()
     
     printer("print",11)
     
-    proc2 = Popen("fsck.ext4 -y -f -v -D " + part, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    print(proc2.stdout.read().decode("utf-8"))
-    if(proc2.returncode != 0): printer("print",9); input(reader(4)); return
-    print(" ");  printer("print",10); input(reader(4)); utils.clear()
+    try:
+        OUTPUT = check_output("sudo fsck.ext4 -y -f -v -D "+ part, shell=True, stderr=PIPE)
+        print(OUTPUT.decode('utf-8'))
+    except CalledProcessError: 
+        printer("print",9); input(reader(4)); menu(); return
+    else:
+        print(" "); printer("print",10); input(reader(4)); utils.clear()
     
     call("mkdir /tmp/optimize 2> /dev/null", shell=True) 
-    call("mount "+part+" /tmp/optimize", shell=True) 
+    call("sudo mount "+part+" /tmp/optimize", shell=True) 
     
     printer("print",12)
     
     proc3 = Popen("e4defrag -v " + part, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    print(proc3.stdout.read().decode("utf-8"))
+    for line in iter(proc3.stdout.readline, b''):
+        print(line.rstrip())
+    proc3.stdout.close()
+    proc3.wait()
     
     print(" ");
-    call("umount "+part, shell=True); printer("print",10)
-    input(reader(4)); utils.clear()
-
+    call("sudo umount "+part, shell=True); printer("print",10); input(reader(4)); utils.clear()
+    
+    printer("print",13)
+    
+    try:
+        OUTPUT = check_output("sudo fsck.ext4 -y -f -v "+ part, shell=True, stderr=PIPE)
+        for line in OUTPUT.stdout:
+            print(line.decode('utf-8'))
+    except CalledProcessError: 
+        printer("print",9); input(reader(4)); menu(); return
+    else:
+        print(" "); printer("print",10); input(reader(4)); utils.clear(); menu();
+    
 class utils:
     
     def clear() -> None: system('clear')

@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 
-if [ "$(id -u)" -ne 0 ]; then
-	echo "ERROR: You need to be root, execute with sudo / Necesitas ser superusuario, ejecuta con sudo"
-	exit 1
-fi
-
 rm /tmp/menu.sh* 2> /dev/null
 rm /tmp/defrag.sh* 2> /dev/null
 INPUT=/tmp/menu.sh.$$
 DEFRAG=/tmp/defrag.sh.$$
 
 LANGUAGE=0
+SUDO=""
 
 function cleanup { rm $INPUT; rm $DEFRAG; exit; }
 
@@ -186,6 +182,15 @@ function verify {
 		clear; printer error 0; exit 1
 	fi
 
+	SUDO=
+		if [ "$EUID" != "0" ]; then
+			if  [ -e /usr/bin/sudo ] || [ -e /bin/sudo ]; then
+				SUDO=sudo
+			else
+				clear; printer error 1; exit 1
+			fi
+		fi
+
 	SELECTOR="e4defrag"; commandverify "$SELECTOR"; local res=$?
 	if [ $res -eq 1 ]; then clear; printer error 2; exit 1; fi
 	SELECTOR="fsck.ext4"; commandverify "$SELECTOR"; local res=$?
@@ -326,37 +331,31 @@ function defragaction() {
 
 	RES=$(reader 4)
 	clear
-	CODE=0
 
 	if [ "$1" == "" ]; then return 0; fi
+	
 	printer print 8
-	fsck.ext4 -y -f -v "$1"
-	CODE=$?
-
-	if [ $CODE -ne 0 ]; then echo " "; printer print 9; read -r -p "$RES"; return 0; fi
+	if ! $SUDO fsck.ext4 -y -f -v "$1"; then
+		echo " "; printer print 9; read -r -p "$RES"; menu; return 0
+	fi
 	echo " "; printer print 10; read -r -p "$RES"; clear
 
 	printer print 11;
-	fsck.ext4 -y -f -v -D "$1"
-	CODE=$?
-
-	if [ $CODE -ne 0 ]; then echo " "; printer print 9; read -r -p "$RES"; return 0; fi
+	if ! $SUDO fsck.ext4 -y -f -v -D "$1"; then
+		echo " "; printer print 9; read -r -p "$RES"; menu; return 0
+	fi
 	echo " "; printer print 10; read -r -p "$RES"; clear
 
-	mkdir /tmp/optimize 2> /dev/null
-	mount "$1" /tmp/optimize
+	mkdir /tmp/optimize 2> /dev/null; $SUDO mount "$1" /tmp/optimize
 
 	printer print 12;
-	e4defrag -v "$1"
-	CODE=$?
-
-	echo " "; umount "$1"; printer print 10; read -r -p "$RES"; clear
+	$SUDO e4defrag -v "$1";
+	echo " "; $SUDO umount "$1"; printer print 10; read -r -p "$RES"; clear
 
 	printer print 13;
-	fsck.ext4 -y -f -v "$1"
-	CODE=$?
-
-	if [ $CODE -ne 0 ]; then echo " "; printer print 9; read -r -p "$RES"; return 0; fi
+	if ! $SUDO fsck.ext4 -y -f -v "$1"; then
+		echo " "; printer print 9; read -r -p "$RES"; menu; return 0
+	fi
 	echo " "; printer print 10; read -r -p "$RES"; clear
 	
 }

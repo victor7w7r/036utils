@@ -29,12 +29,6 @@ TUI Utilites for GNU/Linux and macOS with Bash and Python
 $ pip install pythondialog
 ```
 
-- In some cases you may install with sudo (if the app asks you to run as a superuser)
-
-```bash
-$ sudo pip install pythondialog
-```
-
 ## Installation and usage
 
 - Clone this repository
