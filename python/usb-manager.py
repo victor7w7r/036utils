@@ -1,4 +1,3 @@
-from nis import cat
 from subprocess import call, PIPE, Popen, check_output, CalledProcessError
 from sys import stdin, stdout, platform, version_info
 from os import system
