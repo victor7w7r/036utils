@@ -114,6 +114,7 @@ function language {
 
 function cover {
 	
+	clear
 	echo '                                     `"~>v??*^;rikD&MNBQku*;`                                           '
 	echo '                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       '
 	echo '                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    '

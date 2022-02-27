@@ -113,6 +113,7 @@ def language() -> None:
     else: exit(1)
 
 def cover() -> None:
+    utils.clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
     print(r'''                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    ''')
