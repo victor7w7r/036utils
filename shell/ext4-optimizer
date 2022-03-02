@@ -76,7 +76,7 @@ function printer() {
 
 function reader() {
 
-	POSITION="${1}";
+	POSITION="${1}"
 
 	local DICTIONARY_ENG=(
 		"Choose a Option\n" 
@@ -114,8 +114,7 @@ function language {
 		
 	echo "Bienvenido / Welcome"
 	echo "Please, choose your language / Por favor selecciona tu idioma"
-	echo "1) English"
-	echo "2) Espanol"
+	echo "1) English"; echo "2) Espanol"
 	read -n 1 -r OPTION
 
 	case $OPTION in
@@ -199,11 +198,9 @@ function verify {
 	SELECTOR="dialog"; commandverify "$SELECTOR"; local res=$?
 	if [ $res -eq 1 ]; then clear; printer error 4 exit 1; fi
 
-	ext4listener first not
-	printer print 5
+	ext4listener first not; printer print 5
 
-	START=$(date +%s)
-	CHARS="/-\|"
+	START=$(date +%s); CHARS="/-\|"
 
 	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
 		for (( i=0; i<${#CHARS}; i++ )); do
@@ -217,8 +214,7 @@ function ext4listener() {
 
 	ENTER=$(reader 4)
 
-	MENUABLE="${1}";
-	ECHOPARTS="${2}";
+	MENUABLE="${1}"; ECHOPARTS="${2}"
 
 	local COUNT=0; local EXTCOUNT=0; local MOUNTCOUNT=0
 	local ABSOLUTEPARTS=""; local DIRTYDEVS=()
@@ -228,18 +224,17 @@ function ext4listener() {
 	VERIFY=$(find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///')
 
 	for DEVICE in $VERIFY; do
-
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE")
 		COUNT=$(( COUNT + 1 ))	
 	done
 	
 	COUNT=0
 
 	for DEV in "${DIRTYDEVS[@]}"; do
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d') #/dev/sda1 /dev/sda2 ...
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d')
 		if [ "$ABSOLUTEPARTS" != "" ]; then
 			if [ "$ABSOLUTEPARTS" != "$ROOT" ]; then
-				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d'| sed '/blk[[:digit:]]$/d') #sda1 sda2 ...
+				PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d'| sed '/blk[[:digit:]]$/d')
 				COUNT=$(( COUNT + 1 ))
 			fi
 		fi
@@ -256,7 +251,7 @@ function ext4listener() {
 	if [ $EXTCOUNT -eq 0 ]; then 
 		clear; printer error 6
 		if [ "$MENUABLE" = "menu" ]; then 
-		 	read -r -p "$ENTER"; return 0
+			read -r -p "$ENTER"; return 0
 		else
 			exit 1 
 		fi
@@ -274,7 +269,7 @@ function ext4listener() {
 	if [ $MOUNTCOUNT -eq $EXTCOUNT ]; then 
 		clear; printer error 7
 		if [ "$MENUABLE" = "menu" ]; then 
-		 	read -r -p "$ENTER"; return 0
+			read -r -p "$ENTER"; return 0
 		else
 			exit 1 
 		fi
@@ -286,10 +281,8 @@ function ext4listener() {
 
 function menu {
 
-	RES1=$(reader 0)
-	RES2=$(reader 1)
-	RES3=$(reader 2)
-	RES4=$(reader 5)
+	RES1=$(reader 0); RES2=$(reader 1)
+	RES3=$(reader 2); RES4=$(reader 5)
 	RES5=$(reader 6)
 
 	while true; do
@@ -314,10 +307,7 @@ function defragmenu {
 
 	local UMOUNTS=()
 	IFS=" " read -r -a UMOUNTS <<< "$(ext4listener menu print)"
-
-	RES1=$(reader 1)
-	RES2=$(reader 3)
-
+	RES1=$(reader 1); RES2=$(reader 3)
 	dialog --clear --backtitle "036 Creative Studios" --title "$RES1" \
 		--menu "$RES2" 15 50 4 "${UMOUNTS[@]}" 2>"${DEFRAG}"
 
@@ -330,35 +320,51 @@ function defragmenu {
 
 function defragaction() {
 
-	RES=$(reader 4)
-	clear
+	RES=$(reader 4); clear
 
 	if [ "$1" == "" ]; then return 0; fi
-	
-	printer print 8
-	if ! $SUDO fsck.ext4 -y -f -v "$1"; then
+
+	sudo cat < /dev/null
+	response=$?
+
+	if [[ response -eq 0 ]]; then
+		printer print 8
+		$SUDO fsck.ext4 -y -f -v "$1"
+		response=$?
+
+		if [[ response -ne 8 ]]; then
+			echo " "; printer print 10; read -r -p "$RES"; clear
+		else
+			echo " "; printer print 9; read -r -p "$RES"; menu; return 0
+		fi
+
+		printer print 11; $SUDO fsck.ext4 -y -f -v -D "$1"
+		response=$?
+
+		if [[ response -ne 8 ]]; then
+			echo " "; printer print 10; read -r -p "$RES"; clear
+		else
+			echo " "; printer print 9; read -r -p "$RES"; menu; return 0
+		fi
+
+		mkdir /tmp/optimize 2> /dev/null; $SUDO mount "$1" /tmp/optimize
+
+		printer print 12; $SUDO e4defrag -v "$1"
+		echo " "; $SUDO umount "$1"; printer print 10; read -r -p "$RES"; clear
+
+		printer print 13; $SUDO fsck.ext4 -y -f -v "$1"
+		response=$?
+
+		if [[ response -ne 8 ]]; then
+			echo " "; printer print 10; read -r -p "$RES"; clear
+		else
+			echo " "; printer print 9; read -r -p "$RES"; menu; return 0
+		fi
+
+	else
 		echo " "; printer print 9; read -r -p "$RES"; menu; return 0
 	fi
-	echo " "; printer print 10; read -r -p "$RES"; clear
 
-	printer print 11;
-	if ! $SUDO fsck.ext4 -y -f -v -D "$1"; then
-		echo " "; printer print 9; read -r -p "$RES"; menu; return 0
-	fi
-	echo " "; printer print 10; read -r -p "$RES"; clear
-
-	mkdir /tmp/optimize 2> /dev/null; $SUDO mount "$1" /tmp/optimize
-
-	printer print 12;
-	$SUDO e4defrag -v "$1";
-	echo " "; $SUDO umount "$1"; printer print 10; read -r -p "$RES"; clear
-
-	printer print 13;
-	if ! $SUDO fsck.ext4 -y -f -v "$1"; then
-		echo " "; printer print 9; read -r -p "$RES"; menu; return 0
-	fi
-	echo " "; printer print 10; read -r -p "$RES"; clear
-	
 }
 
 core

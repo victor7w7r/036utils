@@ -1,4 +1,4 @@
-from subprocess import call, PIPE, check_output, CalledProcessError
+from subprocess import call, PIPE, Popen, CalledProcessError
 from sys import stdin, stdout, platform, version_info
 from os import system, path
 from re import search
@@ -18,15 +18,15 @@ def main() -> None: utils.clear(); language(); cover(); verify()
 
 def printer(type: str, position: int, additional: str = "") -> None:
     
-    GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
-  
+    GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m'
+
     DICTIONARY_ENG=(
 	"Your Operating System is not GNU/Linux, exiting",
 	"In this system the binary sudo doesn't exist.",
 	"The rsync binary is not available in this system, please install",
 	"The dialog binary is not available in this system, please install",
 	"All dependencies is ok!",
-	"The directory "+ additional +" doesn't exist",
+	f"The directory {additional} doesn't exist",
 	"=============== START RSYNC =============== \n" ,
 	"Done!\n",
     "Your Python versión is less than 3.5, exiting",
@@ -40,7 +40,7 @@ def printer(type: str, position: int, additional: str = "") -> None:
 	"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
 	"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
 	"¡Todo ok!",
-	"El directorio "+ additional +" no existe",
+	f"El directorio {additional} no existe",
 	"=============== EMPEZAR RSYNC =============== \n" ,
 	"Listo!\n",
     "Tu versión de Python es menor que 3.5, saliendo",
@@ -49,11 +49,11 @@ def printer(type: str, position: int, additional: str = "") -> None:
     )
     
     if LANGUAGE == 1:
-         if type == "print": print(f"{DICTIONARY_ENG[position]}")
-         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
-         elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
-         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ENG[position]}")
-         else: print(f"[?] UNKNOWN: {DICTIONARY_ENG[position]}")
+        if type == "print": print(f"{DICTIONARY_ENG[position]}")
+        elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
+        elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
+        elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ENG[position]}")
+        else: print(f"[?] UNKNOWN: {DICTIONARY_ENG[position]}")
     else:
         if type == "print": print(f"{DICTIONARY_ESP[position]}")
         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ESP[position]}")
@@ -74,25 +74,19 @@ def reader(position: int) -> str:
 		"Por favor escriba su directorio de destino",
 		"Presione Enter para continuar..."
 	)
- 
+
     if LANGUAGE == 1: return DICTIONARY_ENG[position]
     else: return DICTIONARY_ESP[position]
 
 def commandverify(cmd: str) -> bool:
-    return call("type " + cmd, shell=True, 
-        stdout=PIPE, stderr=PIPE) == 0
+    return call("type " + cmd, shell=True, stdout=PIPE, stderr=PIPE) == 0
 
 def language() -> None:
-    
     global LANGUAGE
-    
     print("Bienvenido /  Welcome")
     print("Please, choose your language / Por favor selecciona tu idioma")
-    print("1) English")
-    print("2) Espanol")
-    
+    print("1) English"); print("2) Espanol")
     option: str = utils.char()
-  
     if option == "1": LANGUAGE=1
     elif option == "2": LANGUAGE=2
     else: exit(1)
@@ -145,7 +139,6 @@ def cover() -> None:
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify() -> None:
-    
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
     if platform != "linux":
@@ -154,21 +147,17 @@ def verify() -> None:
         utils.clear(); printer("error",2); exit(1)
     if not commandverify("dialog"):
         utils.clear(); printer("error",3); exit(1)
-    
     printer("print",4)    
-    
     spinner = utils.spinning()
     for _ in range(15):
         stdout.write(next(spinner))
         stdout.flush(); sleep(0.1)  
         stdout.write('\b')
-     
+
     utils.clear(); sourceaction()
     
 def validator(type: str, data: str) -> None:
-    
     global SOURCE; global DEST
-    
     if(type == "source"):
         if(data != ""):
             if(path.exists(data)):
@@ -177,8 +166,7 @@ def validator(type: str, data: str) -> None:
             else:
                 utils.clear(); printer("error", 5, data)
                 input(reader(2)); sourceaction(); return
-        else:
-            exit(0)
+        else: exit(0)
     elif(type == "dest"):
         if(data != ""):
             if(path.exists(data)):
@@ -186,10 +174,8 @@ def validator(type: str, data: str) -> None:
             else:
                 utils.clear(); printer("error", 5, data)
                 input(reader(2)); destiaction(); return
-        else:
-            sourceaction()
-    else:
-         exit(0)
+        else: sourceaction()
+    else: exit(0)
         
 def sourceaction() -> None:
     response = d.inputbox(reader(0), 8, 80)
@@ -202,36 +188,26 @@ def destiaction() -> None:
     elif(response[0] == "cancel" ): exit(0)
 
 def syncer() -> None:
-    SOURCEREADY: str=""
-    DESTREADY: str=""
-    
+    SOURCEREADY: str=""; DESTREADY: str=""
     if search(".*\/$", SOURCE): SOURCEREADY = SOURCE
     else: SOURCEREADY = SOURCE + '/'
     if search(".*\/$", DEST): DESTREADY = DEST
     else: DESTREADY = DEST + '/'
     
-    utils.clear()    
-    printer("print",6)
+    utils.clear(); printer("print",6)
     print(f"SOURCE:{SOURCEREADY}")
     print(f"DESTINATION:{DESTREADY}")
     
-    try:
-        OUTPUT = check_output("rsync -axHAWXS --numeric-ids --info=progress2 "+ SOURCEREADY + " " + DESTREADY, shell=True, stderr=PIPE)
-        print(OUTPUT.decode('utf-8'))
-    except CalledProcessError: 
-        printer("print",9)
-        utils.clear()    
+    code = utils.live_tasker(f"rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}",SOURCEREADY,DESTREADY)
+    if (code == 3 or code == 1):
+        printer("print",9); utils.clear()    
         print(f"SOURCE:{SOURCEREADY}")
         print(f"DESTINATION:{DESTREADY}")
-        try:
-             OUTPUT = check_output("sudo rsync -axHAWXS --numeric-ids --info=progress2 "+ SOURCEREADY + " " + DESTREADY, shell=True, stderr=PIPE)
-             print(OUTPUT.decode('utf-8'))
-        except CalledProcessError:
-            printer("print",10); exit(1)
+        auth = utils.live_tasker(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}",SOURCEREADY,DESTREADY)
+        if auth == 1: printer("print",10); exit(1)
         else:
             print("\n =============== OK =============== \n" )
-            printer("print",7); exit(0)  
-            
+            printer("print",7); exit(0)         
     else:
         print("\n =============== OK =============== \n" )
         printer("print",7); exit(0)
@@ -249,6 +225,20 @@ class utils:
         finally:
             tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
+    
+    def live_tasker(cmd: str, source: str, dest: str) -> int:
+        task = Popen(cmd, stdout=PIPE, stderr=PIPE, encoding='utf8', shell=True)
+        try:  
+            while task.poll() is None:
+                for line in task.stdout:
+                    utils.clear()
+                    printer("print",6)
+                    print(f"SOURCE:{source}")
+                    print(f"DESTINATION:{dest}")
+                    task.stdout.flush()
+                    print(line)
+            return task.poll()
+        except: return 1
     
     def spinning():
         while True:

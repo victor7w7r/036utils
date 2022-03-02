@@ -12,14 +12,14 @@ def main() -> None: utils.clear(); language(); cover(); verify(); toggle()
 def printer(type: str, position: int) -> None:
     
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
-  
+
     DICTIONARY_ENG=(
 	"Your Operating System is not macOS, exiting",
 	"All dependencies is ok!",
 	"EFI Folder is mounted, unmounting",
 	"EFI Folder is not mounted, mounting",
 	"Done!",
-        "Your Python versión is less than 3.5, exiting"
+    "Your Python versión is less than 3.5, exiting"
     )
     DICTIONARY_ESP=(
 	"Tu sistema operativo no es macOS, saliendo",
@@ -27,15 +27,15 @@ def printer(type: str, position: int) -> None:
 	"La carpeta EFI esta montada, desmontando",
 	"La carpeta EFI no esta montada, montando",
 	"¡Listo!",
-        "Tu versión de Python es menor que 3.5, saliendo"
+    "Tu versión de Python es menor que 3.5, saliendo"
     )
     
     if LANGUAGE == 1:
-         if type == "print": print(f"{DICTIONARY_ENG[position]}")
-         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
-         elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
-         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ENG[position]}")
-         else: print(f"[?] UNKNOWN: {DICTIONARY_ENG[position]}")
+        if type == "print": print(f"{DICTIONARY_ENG[position]}")
+        elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
+        elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
+        elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ENG[position]}")
+        else: print(f"[?] UNKNOWN: {DICTIONARY_ENG[position]}")
     else:
         if type == "print": print(f"{DICTIONARY_ESP[position]}")
         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ESP[position]}")
@@ -44,16 +44,11 @@ def printer(type: str, position: int) -> None:
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
 def language() -> None: 
-    
     global LANGUAGE
-    
     print("Bienvenido /  Welcome")
     print("Please, choose your language / Por favor selecciona tu idioma")
-    print("1) English")
-    print("2) Espanol")
-    
+    print("1) English"); print("2) Espanol")
     option: str = utils.char()
-  
     if option == "1": LANGUAGE=1
     elif option == "2": LANGUAGE=2
     else: exit(1)
@@ -108,12 +103,9 @@ def cover() -> None:
 def verify() -> None:
     if platform != "darwin":
         utils.clear(); printer("error",0); exit(1)
-
     if version_info < (3, 5):
         utils.clear(); printer("error",5); exit(1)
-        
     printer("print", 1)
-
     spinner = utils.spinning()
     for _ in range(15):
         stdout.write(next(spinner))
@@ -121,33 +113,27 @@ def verify() -> None:
         stdout.write('\b')
     
 def toggle() -> None:
-    EFIPART: str = Popen(r"""
-                         #!/bin/bash
-                         diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
-                      """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
+    EFIPART: str = Popen(r"""diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
+                    """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
 
-    EFI: str = Popen(r"""
-                        #!/bin/bash
-                        EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
-                        MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p")
-                        echo $MOUNTROOT
-                  """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
+    EFI: str = Popen(r"""EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
+                        MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p"); echo $MOUNTROOT
+                    """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
     
     if EFI != "":
         printer("print",2)
-        call(['sudo','diskutil','unmount',EFIPART])
-        call(['sudo','rm','-rf','/Volumes/EFI'])
+        call(f"sudo diskutil unmount {EFIPART}",shell=True)
+        call("sudo rm -rf /Volumes/EFI",shell=True)
         utils.clear(); printer("print",4)
         
     else:
         printer("print",3)
-        call(['sudo','mkdir','/Volumes/EFI'])
-        call(['sudo','mount','-t', 'msdos','/dev/'+EFIPART,'/Volumes/EFI'])
-        call(['open','/Volumes/EFI'])
+        call("sudo mkdir /Volumes/EFI",shell=True)
+        call(f"sudo mount -t msdos /dev/{EFIPART} /Volumes/EFI",shell=True)
+        call("open /Volumes/EFI",shell=True)
         utils.clear(); printer("print",4)
     
 class utils:
-    
     def clear() -> None: system('clear')
     
     def char() -> str:

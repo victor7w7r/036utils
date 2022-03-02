@@ -21,7 +21,7 @@ function printer() {
 
     local RED="\e[31m"; local GREEN="\e[32m"; local YELLOW="\e[33m"
     local RESET="\e[0m"; local MESSAGE_TYPE=""; local MESSAGE=""
-    MESSAGE_TYPE="${1}"; POSITION="${2}"; ADDITIONAL="${3}";
+    MESSAGE_TYPE="${1}"; POSITION="${2}"; ADDITIONAL="${3}"
 
 	local DICTIONARY_ENG=(
 		"Your Operating System is not GNU/Linux, exiting"
@@ -71,7 +71,7 @@ function printer() {
 
 function reader() {
 
-	POSITION="${1}";
+	POSITION="${1}"
 
 	local DICTIONARY_ENG=(
 		"Please write your source directory"
@@ -184,10 +184,7 @@ function verify {
 	SELECTOR="dialog"; commandverify "$SELECTOR"; local res=$?
 	if [ $res -eq 1 ]; then clear; printer error 3; exit 1; fi
 
-	printer print 4
-
-	START=$(date +%s)
-	CHARS="/-\|"
+	printer print 4; START=$(date +%s); CHARS="/-\|"
 
 	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
 		for (( i=0; i<${#CHARS}; i++ )); do
@@ -202,27 +199,25 @@ function verify {
 function validator() {
 
 	RES=$(reader 2)
-
 	if [ "$1" == "source" ]; then
 		if [ "$2" != "" ]; then
 			if [ -d "$2" ]; then
 				SOURCE="$2"; destiaction; return 0
 			else
 				clear; printer error 5 "$2"
-        		read -r -p "$RES"; sourceaction
+				read -r -p "$RES"; sourceaction
 				return 0
 			fi
 		else
 			exit 0
 		fi
-
 	elif [ "$1" == "dest" ]; then
 		if [ "$2" != "" ]; then
 			if [ -d "$2" ]; then
 				DEST="$2"; syncer; return 0
 			else
 				clear; printer error 5 "$2"
-        		read -r -p "$RES"; destiaction
+				read -r -p "$RES"; destiaction
 				return 0
 			fi
 		else
@@ -300,8 +295,7 @@ function syncer {
         DESTREADY="$DEST/"
     fi
 
-	clear
-	printer print 6
+	clear; printer print 6
 	echo "SOURCE: $SOURCEREADY"
 	echo -e "DESTINATION: $DESTREADY \n"
 
@@ -315,7 +309,6 @@ function syncer {
 		fi
 		echo -e "\n =============== OK =============== \n" 
 		printer print 7; exit 0
-
 	fi
 	
 	echo -e "\n =============== OK =============== \n" 

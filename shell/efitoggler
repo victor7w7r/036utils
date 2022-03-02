@@ -8,7 +8,7 @@ function printer() {
 
     local RED="\e[31m"; local GREEN="\e[32m"; local YELLOW="\e[33m"
     local RESET="\e[0m"; local MESSAGE_TYPE=""; local MESSAGE=""
-    MESSAGE_TYPE="${1}"; POSITION="${2}";
+    MESSAGE_TYPE="${1}"; POSITION="${2}"
 
 	local DICTIONARY_ENG=(
 		"Your Operating System is not macOS, exiting"
@@ -50,8 +50,7 @@ function language {
 		
 	echo "Bienvenido / Welcome"
 	echo "Please, choose your language / Por favor selecciona tu idioma"
-	echo "1) English"
-	echo "2) Espanol"
+	echo "1) English"; echo "2) Espanol"
 	read -n 1 -r OPTION
 
 	case $OPTION in
@@ -118,10 +117,7 @@ function verify {
 		clear; printer error 0; exit 1
 	fi
 
-	printer print 1
-
-	START=$(date +%s)
-	CHARS="/-\|"
+	printer print 1; START=$(date +%s); CHARS="/-\|"
 
 	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
 		for (( i=0; i<${#CHARS}; i++ )); do
@@ -139,7 +135,6 @@ function toggle {
     if [ "$MOUNTROOT" != "" ]; then
         printer print 2; sudo diskutil unmount "$EFIPART"
 		sudo rm -rf /Volumes/EFI; clear; printer print 4
-
     else
         printer print 3; sudo mkdir /Volumes/EFI
         sudo mount -t msdos /dev/"$EFIPART" /Volumes/EFI

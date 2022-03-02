@@ -27,7 +27,7 @@ function printer() {
 
     local RED="\e[31m"; local GREEN="\e[32m"; local YELLOW="\e[33m"
     local RESET="\e[0m"; local MESSAGE_TYPE=""; local MESSAGE=""
-    MESSAGE_TYPE="${1}"; POSITION="${2}";
+    MESSAGE_TYPE="${1}"; POSITION="${2}"
 
 	local DICTIONARY_ENG=(
 		"Your Operating System is not GNU/Linux, exiting"
@@ -40,7 +40,7 @@ function printer() {
 		"All the partitions are mounted in your system"
 		"Your attempt to get authorization is not valid (Invalid Password)"
 		"This partition is already mounted"
-	 	"There's not partitions mounted in your system"
+		"There's not partitions mounted in your system"
 		"Your partition is unmounted"
 	)
 
@@ -81,7 +81,7 @@ function printer() {
 
 function reader() {
 
-	POSITION="${1}";
+	POSITION="${1}"
 
 	local DICTIONARY_ENG=(
 		"Choose a Option\n" 
@@ -139,8 +139,7 @@ function language {
 		
 	echo "Bienvenido / Welcome"
 	echo "Please, choose your language / Por favor selecciona tu idioma"
-	echo "1) English"
-	echo "2) Espanol"
+	echo "1) English"; echo "2) Espanol"
 	read -n 1 -r OPTION
 
 	case $OPTION in
@@ -215,11 +214,8 @@ function verify {
 	if [ $res -eq 1 ]; then clear; printer error 3; exit 1; fi
 	if [ "$SERVICE" == "inactive"  ]; then clear; printer error 4; exit 1; fi
 
-	usbverify
-	printer print 5
-
-	START=$(date +%s)
-	CHARS="/-\|"
+	usbverify; printer print 5
+	START=$(date +%s); CHARS="/-\|"
 
 	while [[ $(($(date +%s) - START)) -lt 2 ]]; do
 		for (( i=0; i<${#CHARS}; i++ )); do
@@ -268,11 +264,8 @@ function menu {
 
 function usblistener() {
 
-	clear; usbverify;
-	RES=$(reader 5);
-
+	clear; usbverify; RES=$(reader 5)
 	SELECTOR="${1}"
-
 	local COUNT=0
 
 	local PARTS=(); local BLOCK=(); local FLAGS=()
@@ -282,21 +275,21 @@ function usblistener() {
 	local TYPE=0; local MODEL=0; local DEVICE=0; 
 	local FLAGSCOUNT=0; local CHOICE=0
 
-	USB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///') # usb-USB3.0_high_speed_000000123AFF-0:0 ...
+	USB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///')
 	
 	for DEVICE in $USB; do
-		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE") # ../../sda ../../sda1 ...
+		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE")
 		COUNT=$(( COUNT + 1 ))
 	done
 	COUNT=0
 
 	for DEV in "${DIRTYDEVS[@]}"; do
-		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d') #/dev/sda1 /dev/sda2 ...
+		ABSOLUTEPARTS=$(echo "$DEV" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*sd[[:alpha:]]$/d')
 		if [ "$ABSOLUTEPARTS" != "" ]; then
-			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') #sda1 sda2 ...
+			PARTS[$COUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///' | sed '/.*sd[[:alpha:]]$/d') 
 			COUNT=$(( COUNT + 1 ))
 		else
-			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///') #sda sdb
+			BLOCK[$BLOCKCOUNT]=$(echo "$DEV" | sed 's/^\.\.\/\.\.\///')
 			BLOCKCOUNT=$(( BLOCKCOUNT + 1 ))
 			FLAGS+=( "$COUNT" ) 
 		fi
@@ -304,24 +297,18 @@ function usblistener() {
 
 	for PARTITIONS in "${PARTS[@]}"; do
 		MOUNTED=$(lsblk "/dev/$PARTITIONS" | sed -ne '/\//p')
-
 		if [ "$MOUNTED" != "" ]; then
-			UNMOUNTCOUNT=$(( UNMOUNTCOUNT + 1 ))
-			MOUNTS+=("$PARTITIONS")
-			
+			UNMOUNTCOUNT=$(( UNMOUNTCOUNT + 1 )); MOUNTS+=("$PARTITIONS")
 		else
-			MOUNTCOUNT=$(( MOUNTCOUNT + 1 ))
-			UNMOUNTS+=("$PARTITIONS")
+			MOUNTCOUNT=$(( MOUNTCOUNT + 1 )); UNMOUNTS+=("$PARTITIONS")
 		fi
 	done
 
 	if [ "${SELECTOR}" == "mount" ]; then
 		RES2=$(reader 6); RES3=$(reader 7);
-			
 		if [ $UNMOUNTCOUNT -eq $COUNT ]; then
 			printer error 7; read -r -p "$RES"; menu; return 0
 		fi
-		
 		COUNT=0		
 		for PART in "${UNMOUNTS[@]}"; do
 			DEVICE="/dev/$PART"
@@ -346,7 +333,6 @@ function usblistener() {
 		esac
 
 	elif [ "${SELECTOR}" == "unmount" ]; then
-
 		RES2=$(reader 9); RES3=$(reader 10);
 		if [ $MOUNTCOUNT -eq $COUNT ]; then
 			printer error 10;  read -r -p "$RES"; menu; return 0
@@ -394,35 +380,28 @@ function usblistener() {
 			"$CHOICEOFF") poweroffaction "$CHOICEOFF";;
 			*) clear;;
 		esac
-
 	fi
 
 }
 
 function mountaction() {
 	
-	RES1=$(reader 5); RES2=$(reader 8);
-	clear
-
+	RES1=$(reader 5); RES2=$(reader 8); clear
 	if [ "$1" == "" ]; then return 0; fi
-
 	DATAMOUNT=$(udisksctl mount -b "$1" 2>&1)
-
 	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then printer error 8; read -r -p "$RES1"
+	elif [[ $DATAMOUNT =~ NotAuthorizedDismissed* ]]; then printer error 9; read -r -p "$RES1"
 	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then printer error 9; read -r -p "$RES1"
 	else dialog --msgbox "$RES2$DATAMOUNT" 7 35; fi
 }
 
 function unmountaction() {
 
-	RES1=$(reader 5); RES2=$(reader 8);
-	clear
-
+	RES1=$(reader 5); RES2=$(reader 8); clear
 	if [ "$1" == "" ]; then return 0; fi
-
 	DATAMOUNT=$(sudo udisksctl unmount -b "$1" 2>&1)
-
 	if [[ $DATAMOUNT =~ NotAuthorized* ]]; then printer error 8; read -r -p "$RES1"
+	elif [[ $DATAMOUNT =~ NotAuthorizedDismissed* ]]; then printer error 9; read -r -p "$RES1"
 	elif [[ $DATAMOUNT =~ AlreadyMounted* ]]; then printer error 9; read -r -p "$RES1"
 	else dialog --msgbox "$RES2$DATAMOUNT" 7 35; fi
 }
@@ -451,9 +430,8 @@ function poweroffaction() {
 			sleep 0.08; echo -en "${CHARS:$i:1}" "\r"
 		done
 	done
-
 	MODEL="$(cat /sys/class/block/"${BLOCKTEMP}"/device/model)"
-	udisksctl power-off -b "$1";
+	udisksctl power-off -b "$1"
 	CODE=$?
 	if [ $CODE -ne 0 ]; then
 		if [ "$LANGUAGE" -eq 1 ]; then
@@ -464,7 +442,6 @@ function poweroffaction() {
 			menu; return 0
 		fi
 	fi
-	
 	if [ "$LANGUAGE" -eq 1 ]; then
 		dialog --msgbox "SUCCESS: Your device $MODEL was succesfully power-off" 7 35
 	else 

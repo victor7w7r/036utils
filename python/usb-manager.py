@@ -14,10 +14,10 @@ LANGUAGE: int = 0
 
 def main() -> None: utils.clear(); language(); cover(); verify(); menu()
 
-def printer(type: str, position: int, additional: str = "") -> None:
+def printer(type: str, position: int) -> None:
     
-    GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
-  
+    GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m'
+
     DICTIONARY_ENG=(
 	"Your Operating System is not GNU/Linux, exiting",
 	"In this system the binary sudo doesn't exist.",
@@ -54,11 +54,11 @@ def printer(type: str, position: int, additional: str = "") -> None:
  
     
     if LANGUAGE == 1:
-         if type == "print": print(f"{DICTIONARY_ENG[position]}")
-         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
-         elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
-         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ENG[position]}")
-         else: print(f"[?] UNKNOWN: {DICTIONARY_ENG[position]}")
+        if type == "print": print(f"{DICTIONARY_ENG[position]}")
+        elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
+        elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
+        elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ENG[position]}")
+        else: print(f"[?] UNKNOWN: {DICTIONARY_ENG[position]}")
     else:
         if type == "print": print(f"{DICTIONARY_ESP[position]}")
         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ESP[position]}")
@@ -107,25 +107,21 @@ def reader(position: int) -> str:
 	"Apagar",
 	"Salir"
 	)
-   
+
     if LANGUAGE == 1: return DICTIONARY_ENG[position]
     else: return DICTIONARY_ESP[position]
 
 def commandverify(cmd: str) -> bool:
-    return call("type " + cmd, shell=True, 
-        stdout=PIPE, stderr=PIPE) == 0
+    return call("type " + cmd, shell=True, stdout=PIPE, stderr=PIPE) == 0
 
 def language() -> None:
     
     global LANGUAGE
-    
+
     print("Bienvenido /  Welcome")
     print("Please, choose your language / Por favor selecciona tu idioma")
-    print("1) English")
-    print("2) Espanol")
-    
+    print("1) English"); print("2) Espanol")
     option: str = utils.char()
-  
     if option == "1": LANGUAGE=1
     elif option == "2": LANGUAGE=2
     else: exit(1)
@@ -187,15 +183,10 @@ def verify() -> None:
         utils.clear(); printer("error",2); exit(1)
     if not commandverify("dialog"):
         utils.clear(); printer("error",3); exit(1)
-        
     SERVICE: str = Popen('systemctl is-active udisks2', shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
-    
     if(SERVICE == "inactive"):
         utils.clear(); printer("error",4); exit(1)
-        
-    usbverify()
-    printer("print",5)    
-    
+    usbverify(); printer("print",5)    
     spinner = utils.spinning()
     for _ in range(15):
         stdout.write(next(spinner))
@@ -204,7 +195,7 @@ def verify() -> None:
 
 def usbverify() -> None:
     VERIFYUSB: str = Popen(r"""find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///'
-                              """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
+                            """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
     if(VERIFYUSB == ""): utils.clear(); printer("error", 6); exit(1)
 
 def menu() -> None:
@@ -212,7 +203,6 @@ def menu() -> None:
         (reader(13),reader(1)),(reader(14),reader(2)),
         (reader(15),reader(3)),(reader(16),reader(4))
     ]
-
     response = d.menu(reader(0), 15, 60, 4, choices)
     if(response[0] == "ok" and response[1] == reader(13)):
         usblistener("mount")
@@ -225,63 +215,58 @@ def menu() -> None:
     else: utils.clear(); exit(0)
 
 def usblistener(selector: str) -> None:
-    utils.clear(); usbverify();
     
+    utils.clear(); usbverify()
     COUNT: int = 0; PARTS: list = []; BLOCK: list = []
-    FLAGS: list = []; MOUNTS: list = []; USB: list = [];
+    FLAGS: list = []; MOUNTS: list = []; USB: list = []
     UNMOUNTS: list = []; ARGS: list = []; ARGSPOWEROFF: list = []
-    MOUNTCOUNT: int = 0; UNMOUNTCOUNT: int = 0; TYPE: str = ""; 
+    MOUNTCOUNT: int = 0; UNMOUNTCOUNT: int = 0; TYPE: str = ""
     MODEL: str = ""; FLAGSCOUNT: int = 0; DIRTYDEVS: list = []
     
     USB = Popen(r"""find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///'
-                              """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip().split('\n')
-    
+                    """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip().split('\n')
     for DEVICE in USB:
-        DIRTYDEVS.append(Popen('''#!/bin/bash
-                                   readlink "/dev/disk/by-id/''' +DEVICE+'''"''', shell=True, 
-                                   stdout=PIPE).stdout.read().decode('utf-8')
-                                    .rstrip().split("\n")[0])
+        DIRTYDEVS.append(Popen(f'readlink "/dev/disk/by-id/{DEVICE}"', shell=True, 
+                            stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")[0])
         
     DIRTYDEVS = list(filter(('').__ne__, DIRTYDEVS))
     for DEV in DIRTYDEVS:
-        ABSOLUTEPARTS = Popen(r"""#!/bin/bash
-                             echo """+DEV+""" | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
-                             shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+        ABSOLUTEPARTS = Popen(f"""
+                            echo {DEV} | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
+                            shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
         
         if ABSOLUTEPARTS != "":
-            PARTS.append(Popen(r"""#!/bin/bash
-                                echo """+DEV+""" | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
-                                shell=True, stdout=PIPE).stdout.read()
-                                .decode('utf-8').rstrip().split("\n")[0]); COUNT += 1
+            PARTS.append(Popen(f"""
+                                echo {DEV} | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
+                                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")[0])
+            COUNT += 1
         else:
-            BLOCK.append(Popen(r"""#!/bin/bash
-                                echo """+DEV+""" | sed 's/^\.\.\/\.\.\///'""", 
-                                shell=True, stdout=PIPE).stdout.read()
-                                .decode('utf-8').rstrip().split("\n")[0]); FLAGS.append(COUNT)
+            BLOCK.append(Popen(f"echo {DEV} | sed 's/^\.\.\/\.\.\///'", shell=True, stdout=PIPE).stdout.read()
+                            .decode('utf-8').rstrip().split("\n")[0])
+            FLAGS.append(COUNT)
 
     for PARTITIONS in PARTS:
-        MOUNTED: str = Popen("lsblk /dev/"+PARTITIONS+" | sed -ne '/\//p'", shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+        MOUNTED: str = Popen(f"lsblk /dev/{PARTITIONS} | sed -ne '/\//p'", shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
         if(MOUNTED != ""): UNMOUNTCOUNT += 1; MOUNTS.append(PARTITIONS)
         else: MOUNTCOUNT += 1; UNMOUNTS.append(PARTITIONS)
-        
-        
+
     if(selector == "mount"):
         if(UNMOUNTCOUNT == COUNT): printer("error",7); input(reader(5)); menu(); return
         COUNT=0
         for PART in UNMOUNTS:
-            DEVICE: str = "/dev/"+PART
-            TYPE: str = Popen(r'''#!/bin.bash
-                 lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
-                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+            DEVICE: str = f"/dev/{PART}"
+            TYPE: str = Popen(r'''
+                lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
+                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
             try: TEMP = FLAGS[FLAGSCOUNT]
             except IndexError: pass
             if(COUNT == TEMP): 
                 try: BLOCKSTAT = BLOCK[FLAGSCOUNT]
                 except IndexError: pass
                 FLAGSCOUNT += 1
-            MODEL: str = Popen(r'''#!/bin.bash
-                 cat /sys/class/block/'''+BLOCKSTAT+'''/device/model''',
-                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+            MODEL: str = Popen(f'''
+                cat /sys/class/block/{BLOCKSTAT}/device/model''',
+                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
             ARGS.append([DEVICE, MODEL + " " + TYPE]); COUNT+=1
         response = d.menu(reader(6), 15, 50, 4, ARGS)
         if(response[0] == "ok"):
@@ -293,18 +278,18 @@ def usblistener(selector: str) -> None:
         COUNT=0
         for PART in MOUNTS:
             DEVICE: str = "/dev/"+PART
-            TYPE: str = Popen(r'''#!/bin.bash
-                 lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
-                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+            TYPE: str = Popen(r'''
+                lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
+                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
             try: TEMP = FLAGS[FLAGSCOUNT]
             except IndexError: pass
             if(COUNT == TEMP): 
                 try: BLOCKSTAT = BLOCK[FLAGSCOUNT]
                 except IndexError: pass
                 FLAGSCOUNT += 1
-            MODEL: str = Popen(r'''#!/bin.bash
-                 cat /sys/class/block/'''+BLOCKSTAT+'''/device/model''',
-                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+            MODEL: str = Popen(f'''
+                cat /sys/class/block/{BLOCKSTAT}/device/model''',
+                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
             ARGS.append([DEVICE, MODEL + " " + TYPE]); COUNT +=1
         response = d.menu(reader(9), 15, 50, 4, ARGS)
         if(response[0] == "ok"):
@@ -316,12 +301,10 @@ def usblistener(selector: str) -> None:
         for PART in BLOCK:
             DEVICE: str = "/dev/"+PART
             BLOCKSTAT = BLOCK[COUNT]
-            MODEL: str = Popen(r'''#!/bin.bash
-                 cat /sys/class/block/'''+BLOCKSTAT+'''/device/model''',
-                 shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            ARGSPOWEROFF.append([DEVICE, MODEL])
-            COUNT += 1
-            
+            MODEL: str = Popen(f'''
+                cat /sys/class/block/{BLOCKSTAT}/device/model''',
+                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+            ARGSPOWEROFF.append([DEVICE, MODEL]); COUNT += 1
         response = d.menu(reader(11), 15, 50, 4, ARGSPOWEROFF) 
         if(response[0] == "ok"):
             poweroffaction(response[1])
@@ -331,85 +314,83 @@ def mountaction(part: str) -> None:
 
     utils.clear()
     if (part == ""): return
-    try:
-        DATAMOUNT = check_output("udisksctl mount -b " + part, shell=True, stderr=PIPE)
-    except CalledProcessError as err: 
-        print(err.stderr.decode("utf-8"))
-        if (search("NotAuthorized*",err.stderr.decode("utf-8"))):
+    
+    capture = utils.live_tasker(f"udisksctl mount -b {part}")
+
+    if(capture[0] == 0):
+        d.msgbox(reader(8)+capture[1],7,35); menu()
+    else:
+        if (search("NotAuthorized*",capture[1])):
             utils.clear(); printer("error",8); input(reader(5)); menu()
-        if (search("NotAuthorizedDismissed*",err.stderr.decode("utf-8"))):
-            utils.clear(); printer("error",8); input(reader(5)); menu()        
-        elif (search("AlreadyMounted*",err.stderr.decode("utf-8"))):
+        elif (search("NotAuthorizedDismissed*",capture[1])):
+            utils.clear(); printer("error",8); input(reader(5)); menu()    
+        elif (search("AlreadyMounted*",capture[1])):
             utils.clear(); printer("error",9); input(reader(5)); menu()
-    else:   
-        d.msgbox(reader(8)+DATAMOUNT.decode("utf-8"),7,35); menu()
 
 def unmountaction(part: str) -> None:
     
     utils.clear()
     if (part == ""): return
-    try:
-        DATAMOUNT = check_output("udisksctl unmount -b " + part, shell=True, stderr=PIPE)
-    except CalledProcessError as err: 
-        print(err.stderr.decode("utf-8"))
-        if (search("NotAuthorized*",err.stderr.decode("utf-8"))):
+    
+    capture = utils.live_tasker(f"udisksctl unmount -b {part}")
+
+    if(capture[0] == 0):
+        d.msgbox(reader(8)+capture[1],7,35); menu()
+    else:
+        if (search("NotAuthorized*",capture[1])):
             utils.clear(); printer("error",8); input(reader(5)); menu()
-        if (search("NotAuthorizedDismissed*",err.stderr.decode("utf-8"))):
-            utils.clear(); printer("error",8); input(reader(5)); menu()        
-        elif (search("AlreadyMounted*",err.stderr.decode("utf-8"))):
+        elif (search("NotAuthorizedDismissed*",capture[1])):
+            utils.clear(); printer("error",8); input(reader(5)); menu()    
+        elif (search("AlreadyMounted*",capture[1])):
             utils.clear(); printer("error",9); input(reader(5)); menu()
-    else:   
-        d.msgbox(reader(8)+DATAMOUNT.decode("utf-8"),7,35); menu()
 
 def poweroffaction(part: str) -> None:
     utils.clear()
     if (part == ""): return
     
-    BLOCKTEMP: str = Popen(r'''#!/bin/bash
-                             echo '''+part+''' | cut -d "/" -f3''', 
-                             shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+    BLOCKTEMP: str = Popen(f'echo {part} | cut -d "/" -f3', 
+                            shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
     
-    PARTITIONSQUERY: list = Popen("""#!/bin/bash
-                                   find /dev -name \"""" +BLOCKTEMP+ """[[:digit:]]\" | sort -n | sed 's/^\/dev\///'""", shell=True, 
-                                   stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")
+    PARTITIONSQUERY: list = Popen("""find /dev -name \"""" +BLOCKTEMP+ 
+                                    """[[:digit:]]\" | sort -n | sed 's/^\/dev\///'""", shell=True, 
+                                stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")
     
+    print(PARTITIONSQUERY); input()
     for PARTITION in PARTITIONSQUERY:
-        try:
-            check_output('udisksctl unmount -b "/dev/'+PARTITION+'" &> /dev/null', shell=True, stderr=PIPE)
-        except CalledProcessError:
-            if(LANGUAGE == 1): 
-                d.msgbox("FAIL: Error unmounting /dev/"+PARTITION+" please check or check if you have the right permissions",7,35)
-                menu(); return
-            else:
-                d.msgbox("ERROR: Hubo un error desmontando /dev/"+PARTITION+" por favor revisar o mira si tienes permisos",7,35)
-                menu(); return
-        else:
+        capture: list = utils.live_tasker(f"udisksctl unmount -b {PARTITION} &> /dev/null")
+        if(capture[0] == 0):
             spinner = utils.spinning()
             for _ in range(10):
                 stdout.write(next(spinner))
                 stdout.flush(); sleep(0.1)  
                 stdout.write('\b')
+        else:
+            if(LANGUAGE == 1): 
+                d.msgbox(f"FAIL: Error unmounting /dev/{PARTITION} please check or check if you have the right permissions",7,35)
+                menu(); return
+            else:
+                d.msgbox(f"ERROR: Hubo un error desmontando /dev/{PARTITION} por favor revisar o mira si tienes permisos",7,35)
+                menu(); return
             
-    MODEL: str = Popen(r'''#!/bin.bash
-                cat /sys/class/block/'''+BLOCKTEMP+'''/device/model''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+    MODEL: str = Popen(f'cat /sys/class/block/{BLOCKTEMP}/device/model',
+                        shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
     
-    try:
-        check_output('udisksctl power-off -b ' + part, shell=True, stderr=PIPE)
-    except CalledProcessError:
+    capture: int = utils.live_tasker_poweroff(f"udisksctl power-off -b {part}")
+    
+    if(capture == 0):
+        if(capture == 1): 
+            d.msgbox(f"SUCCESS: Your device {MODEL} was succesfully power-off",7,35)
+            menu()
+        else:
+            d.msgbox(f"LISTO: Tu dispositivo {MODEL} se ha apagado exitosamente",7,35)
+            menu()
+    else:
         if(LANGUAGE == 1): 
             d.msgbox("FAIL: Power-off is not available on this device, please check or check if you have permissions",7,35)
             menu(); return
         else:
             d.msgbox("ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos",7,35)
             menu(); return
-    else:
-        if(LANGUAGE == 1): 
-            d.msgbox("SUCCESS: Your device "+MODEL+" was succesfully power-off",7,35)
-            menu()
-        else:
-            d.msgbox("LISTO: Tu dispositivo "+MODEL+" se ha apagado exitosamente",7,35)
-            menu()
         
 class utils:
     
@@ -424,6 +405,23 @@ class utils:
         finally:
             tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
+    
+    def live_tasker(cmd: str):
+        lineable: str = ""
+        task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')
+        while task.poll() is None:
+            for line in task.stdout:
+                task.stdout.flush()
+                lineable = line
+        if task.poll() == 0: return [0,lineable]
+        else: return [task.poll(),task.stderr.read().replace("\n", "")]
+        
+    def live_tasker_poweroff(cmd: str):
+        task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')
+        while task.poll() is None:
+            for _ in task.stdout:
+                task.stdout.flush()
+        return task.poll()
     
     def spinning():
         while True:
