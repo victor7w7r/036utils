@@ -127,15 +127,15 @@ def toggle() -> None:
     
     if EFI != "":
         printer("print",2)
-        call(f"sudo diskutil unmount {EFIPART}",shell=True)
-        call("sudo rm -rf /Volumes/EFI",shell=True)
+        system(f"sudo diskutil unmount {EFIPART}")
+        system("sudo rm -rf /Volumes/EFI")
         utils.clear(); printer("print",4)
         
     else:
         printer("print",3)
-        call("sudo mkdir /Volumes/EFI",shell=True)
-        call(f"sudo mount -t msdos /dev/{EFIPART} /Volumes/EFI",shell=True)
-        call("open /Volumes/EFI",shell=True)
+        system("sudo mkdir /Volumes/EFI")
+        system(f"sudo mount -t msdos /dev/{EFIPART} /Volumes/EFI")
+        system("open /Volumes/EFI")
         utils.clear(); printer("print",4)
     
 class utils:

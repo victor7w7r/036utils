@@ -251,28 +251,28 @@ def defragaction(part: str) -> None:
     
     printer("print",8)
     
-    if utils.live_tasker("sudo cat < /dev/null") == 0:
-        if utils.live_tasker(f"sudo fsck.ext4 -y -f -v {part}") != 8:
+    if call("sudo cat < /dev/null", shell=True) == 0:
+        if call(f"sudo fsck.ext4 -y -f -v {part}", shell=True) != 8:
             print(" "); printer("print",10); input(reader(4)); utils.clear()
         else: printer("print",9); input(reader(4)); menu(); return
     
         printer("print",11)
         
-        if utils.live_tasker(f"sudo fsck.ext4 -y -f -v -D {part}") != 8:
+        if call(f"sudo fsck.ext4 -y -f -v -D {part}", shell=True) != 8:
             print(" "); printer("print",10); input(reader(4)); utils.clear()
         else: printer("print",9); input(reader(4)); menu(); return
             
-        call("mkdir /tmp/optimize 2> /dev/null", shell=True) 
-        call(f"sudo mount {part} /tmp/optimize", shell=True) 
+        system("mkdir /tmp/optimize 2> /dev/null") 
+        system(f"sudo mount {part} /tmp/optimize") 
         
-        printer("print",12); utils.live_tasker(f"e4defrag -v {part}")
+        printer("print",12); system(f"sudo e4defrag -v {part}")
         print(" ")
-        call(f"sudo umount {part}", shell=True); printer("print",10)
+        system(f"sudo umount {part}"); printer("print",10)
         input(reader(4)); utils.clear()
         
         printer("print",13)
         
-        if utils.live_tasker(f"sudo fsck.ext4 -y -f -v {part}") != 8:
+        if call(f"sudo fsck.ext4 -y -f -v {part}", shell=True) != 8:
             print(" "); printer("print",10); input(reader(4)); utils.clear(); menu()
         else: printer("print",9); input(reader(4)); menu(); return
     else: printer("print",9); input(reader(4)); menu(); return
@@ -290,16 +290,6 @@ class utils:
         finally:
             tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
-    
-    def live_tasker(cmd: str) -> int:
-        task = Popen(cmd, stdout=PIPE, stderr=PIPE, encoding='utf8', shell=True)
-        try:  
-            while task.poll() is None:
-                for line in task.stdout:
-                    task.stdout.flush()
-                    print(line.replace("\n", ""))
-            return task.poll()
-        except: return 1
     
     def spinning():
         while True:

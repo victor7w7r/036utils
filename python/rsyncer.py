@@ -204,19 +204,17 @@ def syncer() -> None:
     utils.clear(); printer("print",6)
     print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
     
-    code = utils.live_tasker(f"rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}",SOURCEREADY,DESTREADY)
-    if code == 3 or code == 1:
-        printer("print",9); utils.clear()    
-        print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
-        auth = utils.live_tasker(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}",SOURCEREADY,DESTREADY)
-        if auth == 1: printer("print",10); exit(1)
-        else:
-            print("\n =============== OK =============== \n" )
-            printer("print",7); exit(0)         
-    else:
+    if call(f"rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}", shell=True) == 0:
         print("\n =============== OK =============== \n" )
         printer("print",7); exit(0)
-
+    else:
+        printer("print",9); utils.clear()    
+        print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
+        if call(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}", shell=True) == 0:
+            print("\n =============== OK =============== \n" )
+            printer("print",7); exit(0)        
+        else: printer("print",10); exit(1)
+            
 class utils:
     
     def clear() -> None: system('clear')
@@ -230,20 +228,6 @@ class utils:
         finally:
             tcsetattr(fd, TCSADRAIN, oldSettings)
         return answer
-    
-    def live_tasker(cmd: str, source: str, dest: str) -> int:
-        task = Popen(cmd, stdout=PIPE, stderr=PIPE, encoding='utf8', shell=True)
-        try:  
-            while task.poll() is None:
-                for line in task.stdout:
-                    utils.clear()
-                    printer("print",6)
-                    print(f"SOURCE:{source}")
-                    print(f"DESTINATION:{dest}")
-                    task.stdout.flush()
-                    print(line)
-            return task.poll()
-        except: return 1
     
     def spinning():
         while True:
