@@ -18,7 +18,6 @@ UNMOUNTTEMP=/tmp/unmounttemp.sh$$
 LANGUAGE=0
 
 function cleanup { rm $INPUT; rm $MOUNTTEMP; rm $POWEROFFTEMP; rm $UNMOUNTTEMP; exit; }
-
 trap cleanup; SIGHUP SIGINT SIGTERM
 
 function core { clear; language; cover; sleep 1s; verify; usbverify; menu; }
@@ -143,9 +142,7 @@ function language {
 	read -n 1 -r OPTION
 
 	case $OPTION in
-		1) LANGUAGE=1;;
-		2) LANGUAGE=2;;
-		*) exit 1;;
+		1) LANGUAGE=1;; 2) LANGUAGE=2;; *) exit 1;;
 	esac
 }
 
@@ -200,10 +197,9 @@ function cover {
 
 function verify {
 
-    OPERATING=$(uname -o)
+    OPERATING=$(uname -o); local SELECTOR=""
 	SERVICE=$(systemctl is-active udisks2)
-	local SELECTOR=""
-
+	
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		clear; printer error 0; exit 1
 	fi	
@@ -237,11 +233,10 @@ function menu {
 	RESM1=$(reader 0); RESM2=$(reader 1); RESM3=$(reader 2)
 	RESM4=$(reader 3); RESM5=$(reader 4)
 
-	RESM6=$(reader 13); RESM7=$(reader 14); RESM8=$(reader 15); 
-	RESM9=$(reader 16); 
+	RESM6=$(reader 13); RESM7=$(reader 14); RESM8=$(reader 15)
+	RESM9=$(reader 16)
 
 	while true; do
-
 		dialog --clear --backtitle "036 Creative Studios" \
 			--title "036 USB Manager" \
 			--menu "$RESM1" 15 60 4 \
@@ -249,9 +244,7 @@ function menu {
 			"$RESM7" "$RESM3" \
 			"$RESM8" "$RESM4" \
 			"$RESM9" "$RESM5" 2>"${INPUT}"
-
 		menuitem=$(<"${INPUT}")
-
 		case $menuitem in
 			"$RESM6") usblistener mount;;
 			"$RESM7") usblistener unmount;;
@@ -264,16 +257,14 @@ function menu {
 
 function usblistener() {
 
-	clear; usbverify; RES=$(reader 5)
-	SELECTOR="${1}"
-	local COUNT=0
+	clear; usbverify; RES=$(reader 5); local SELECTOR="${1}"
 
 	local PARTS=(); local BLOCK=(); local FLAGS=()
 	local MOUNTS=(); local UNMOUNTS=(); local ARGS=()
 	local ARGSPOWEROFF=(); local BLOCKCOUNT=0
 	local MOUNTCOUNT=0; local UNMOUNTCOUNT=0
-	local TYPE=0; local MODEL=0; local DEVICE=0; 
-	local FLAGSCOUNT=0; local CHOICE=0
+	local TYPE=0; local MODEL=0; local DEVICE=0
+	local FLAGSCOUNT=0; local CHOICE=0; local COUNT=0
 
 	USB=$(find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///')
 	
@@ -281,6 +272,7 @@ function usblistener() {
 		DIRTYDEVS[$COUNT]=$(readlink "/dev/disk/by-id/$DEVICE")
 		COUNT=$(( COUNT + 1 ))
 	done
+
 	COUNT=0
 
 	for DEV in "${DIRTYDEVS[@]}"; do
@@ -315,8 +307,7 @@ function usblistener() {
 			TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
 			TEMP="${FLAGS[$FLAGSCOUNT]}"
 			if [ "$COUNT" == "$TEMP" ]; then
-				BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
-				FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
+				BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"; FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
 			fi
 			MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
 			ARGS+=("$DEVICE" "$MODEL $TYPE")
@@ -343,8 +334,7 @@ function usblistener() {
 			TYPE="$(lsblk -f /dev/"$PART" | sed -ne '2p' | cut -d " " -f2)"
 			TEMP="${FLAGS[$FLAGSCOUNT]}"
 			if [ "$COUNT" == "$TEMP" ]; then
-				BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"
-				FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
+				BLOCKSTAT="${BLOCK[$FLAGSCOUNT]}"; FLAGSCOUNT=$(( FLAGSCOUNT + 1 ))
 			fi
 			MODEL="$(cat /sys/class/block/"$BLOCKSTAT"/device/model)"
 			ARGS+=("$DEVICE" "$MODEL $TYPE")

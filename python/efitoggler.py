@@ -5,7 +5,7 @@ from termios import tcgetattr, tcsetattr, TCSADRAIN
 from tty import setcbreak
 from time import sleep
 
-LANGUAGE: int=0
+LANGUAGE: int = 0
 
 def main() -> None: utils.clear(); language(); cover(); verify(); toggle()
 
@@ -44,8 +44,10 @@ def printer(type: str, position: int) -> None:
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
 def language() -> None: 
+    
     global LANGUAGE
-    print("Bienvenido /  Welcome")
+    
+    print("Bienvenido / Welcome")
     print("Please, choose your language / Por favor selecciona tu idioma")
     print("1) English"); print("2) Espanol")
     option: str = utils.char()
@@ -54,6 +56,7 @@ def language() -> None:
     else: exit(1)
 
 def cover() -> None:
+    
     utils.clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
@@ -101,6 +104,7 @@ def cover() -> None:
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify() -> None:
+    
     if platform != "darwin":
         utils.clear(); printer("error",0); exit(1)
     if version_info < (3, 5):
@@ -113,6 +117,7 @@ def verify() -> None:
         stdout.write('\b')
     
 def toggle() -> None:
+    
     EFIPART: str = Popen(r"""diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
                     """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
 

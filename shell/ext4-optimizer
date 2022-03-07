@@ -5,11 +5,9 @@ rm /tmp/defrag.sh* 2> /dev/null
 INPUT=/tmp/menu.sh.$$
 DEFRAG=/tmp/defrag.sh.$$
 
-LANGUAGE=0
-SUDO=""
+LANGUAGE=0; SUDO=""
 
 function cleanup { rm $INPUT; rm $DEFRAG; exit; }
-
 trap cleanup; SIGHUP SIGINT SIGTERM
 
 function core { clear; language; cover; sleep 1s; verify; menu; }
@@ -118,9 +116,7 @@ function language {
 	read -n 1 -r OPTION
 
 	case $OPTION in
-		1) LANGUAGE=1;;
-		2) LANGUAGE=2;;
-		*) exit 1;;
+		1) LANGUAGE=1;; 2) LANGUAGE=2;; *) exit 1;;
 	esac
 }
 
@@ -175,8 +171,7 @@ function cover {
 
 function verify {
 
-    OPERATING=$(uname -o)
-	local SELECTOR=""
+    OPERATING=$(uname -o); local SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		clear; printer error 0; exit 1
@@ -212,9 +207,7 @@ function verify {
 
 function ext4listener() {
 
-	ENTER=$(reader 4)
-
-	MENUABLE="${1}"; ECHOPARTS="${2}"
+	ENTER=$(reader 4); MENUABLE="${1}"; ECHOPARTS="${2}"
 
 	local COUNT=0; local EXTCOUNT=0; local MOUNTCOUNT=0
 	local ABSOLUTEPARTS=""; local DIRTYDEVS=()
@@ -286,15 +279,12 @@ function menu {
 	RES5=$(reader 6)
 
 	while true; do
-
 		dialog --clear --backtitle "036 Creative Studios" \
 			--title "036 ext4 Optimizer" \
 			--menu "$RES1" 15 60 4 \
 			"$RES4" "$RES2" \
 			"$RES5" "$RES3" 2>"${INPUT}"
-
 		menuitem=$(<"${INPUT}")
-
 		case $menuitem in
 			"$RES4") defragmenu;;
 			"$RES5") clear; exit 0;;
@@ -305,23 +295,20 @@ function menu {
 
 function defragmenu {
 
-	local UMOUNTS=()
+	local UMOUNTS=();	RES1=$(reader 1); RES2=$(reader 3)
 	IFS=" " read -r -a UMOUNTS <<< "$(ext4listener menu print)"
-	RES1=$(reader 1); RES2=$(reader 3)
 	dialog --clear --backtitle "036 Creative Studios" --title "$RES1" \
 		--menu "$RES2" 15 50 4 "${UMOUNTS[@]}" 2>"${DEFRAG}"
 
 	CHOICE=$(<"${DEFRAG}")
 	case $CHOICE in
-		"$CHOICE") defragaction "$CHOICE";;
-		null) clear; exit 0; ;;
+		"$CHOICE") defragaction "$CHOICE";; null) clear; exit 0;;
 	esac
 }
 
 function defragaction() {
 
 	RES=$(reader 4); clear
-
 	if [ "$1" == "" ]; then return 0; fi
 
 	sudo cat < /dev/null
@@ -338,8 +325,7 @@ function defragaction() {
 			echo " "; printer print 9; read -r -p "$RES"; menu; return 0
 		fi
 
-		printer print 11; $SUDO fsck.ext4 -y -f -v -D "$1"
-		response=$?
+		printer print 11; $SUDO fsck.ext4 -y -f -v -D "$1"; response=$?
 
 		if [[ response -ne 8 ]]; then
 			echo " "; printer print 10; read -r -p "$RES"; clear
@@ -352,8 +338,7 @@ function defragaction() {
 		printer print 12; $SUDO e4defrag -v "$1"
 		echo " "; $SUDO umount "$1"; printer print 10; read -r -p "$RES"; clear
 
-		printer print 13; $SUDO fsck.ext4 -y -f -v "$1"
-		response=$?
+		printer print 13; $SUDO fsck.ext4 -y -f -v "$1"; response=$?
 
 		if [[ response -ne 8 ]]; then
 			echo " "; printer print 10; read -r -p "$RES"; clear

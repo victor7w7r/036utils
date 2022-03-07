@@ -10,9 +10,7 @@ from dialog import Dialog
 d = Dialog(dialog="dialog")
 d.set_background_title("036 Creative Studios")
 
-SOURCE: str = ""
-DEST: str = ""
-LANGUAGE: int = 0
+SOURCE: str = ""; DEST: str = ""; LANGUAGE: int = 0
 
 def main() -> None: utils.clear(); language(); cover(); verify()
 
@@ -48,7 +46,7 @@ def printer(type: str, position: int, additional: str = "") -> None:
 	"=============== FALLA =============== \n"
     )
     
-    if LANGUAGE == 1:
+    if LANGUAGE == 1 :
         if type == "print": print(f"{DICTIONARY_ENG[position]}")
         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
         elif type == "warn": print(f"[{WARNING}*{ENDC}] WARNING: {DICTIONARY_ENG[position]}")
@@ -75,15 +73,17 @@ def reader(position: int) -> str:
 		"Presione Enter para continuar..."
 	)
 
-    if LANGUAGE == 1: return DICTIONARY_ENG[position]
+    if LANGUAGE == 1 : return DICTIONARY_ENG[position]
     else: return DICTIONARY_ESP[position]
 
 def commandverify(cmd: str) -> bool:
     return call("type " + cmd, shell=True, stdout=PIPE, stderr=PIPE) == 0
 
 def language() -> None:
+    
     global LANGUAGE
-    print("Bienvenido /  Welcome")
+    
+    print("Bienvenido / Welcome")
     print("Please, choose your language / Por favor selecciona tu idioma")
     print("1) English"); print("2) Espanol")
     option: str = utils.char()
@@ -92,6 +92,7 @@ def language() -> None:
     else: exit(1)
 
 def cover() -> None:
+    
     utils.clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
@@ -139,6 +140,7 @@ def cover() -> None:
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify() -> None:
+    
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
     if platform != "linux":
@@ -157,19 +159,21 @@ def verify() -> None:
     utils.clear(); sourceaction()
     
 def validator(type: str, data: str) -> None:
+    
     global SOURCE; global DEST
-    if(type == "source"):
-        if(data != ""):
-            if(path.exists(data)):
+    
+    if type == "source":
+        if data != "":
+            if path.exists(data):
                 SOURCE=data; destiaction();
                 return
             else:
                 utils.clear(); printer("error", 5, data)
                 input(reader(2)); sourceaction(); return
         else: exit(0)
-    elif(type == "dest"):
-        if(data != ""):
-            if(path.exists(data)):
+    elif type == "dest":
+        if data != "":
+            if path.exists(data):
                 DEST=data; syncer(); return
             else:
                 utils.clear(); printer("error", 5, data)
@@ -178,31 +182,32 @@ def validator(type: str, data: str) -> None:
     else: exit(0)
         
 def sourceaction() -> None:
+    
     response = d.inputbox(reader(0), 8, 80)
-    if(response[0] == "ok" ): validator("source",response[1])
-    elif(response[0] == "cancel" ): exit(0)
+    if response[0] == "ok": validator("source",response[1])
+    elif response[0] == "cancel": exit(0)
 
 def destiaction() -> None:
+    
     response = d.inputbox(reader(1), 8, 80)
-    if(response[0] == "ok" ): validator("dest",response[1])
-    elif(response[0] == "cancel" ): exit(0)
+    if response[0] == "ok": validator("dest",response[1])
+    elif response[0] == "cancel": exit(0)
 
 def syncer() -> None:
-    SOURCEREADY: str=""; DESTREADY: str=""
+    
+    SOURCEREADY: str=""; DESTREADY: str = ""
     if search(".*\/$", SOURCE): SOURCEREADY = SOURCE
     else: SOURCEREADY = SOURCE + '/'
     if search(".*\/$", DEST): DESTREADY = DEST
     else: DESTREADY = DEST + '/'
     
     utils.clear(); printer("print",6)
-    print(f"SOURCE:{SOURCEREADY}")
-    print(f"DESTINATION:{DESTREADY}")
+    print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
     
     code = utils.live_tasker(f"rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}",SOURCEREADY,DESTREADY)
-    if (code == 3 or code == 1):
+    if code == 3 or code == 1:
         printer("print",9); utils.clear()    
-        print(f"SOURCE:{SOURCEREADY}")
-        print(f"DESTINATION:{DESTREADY}")
+        print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
         auth = utils.live_tasker(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}",SOURCEREADY,DESTREADY)
         if auth == 1: printer("print",10); exit(1)
         else:

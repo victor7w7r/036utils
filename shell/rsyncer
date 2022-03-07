@@ -5,14 +5,11 @@ rm /tmp/dest.sh* 2> /dev/null
 SOURCETEMP=/tmp/source.sh.$$
 DESTTEMP=/tmp/dest.sh.$$
 
-SOURCE=""
-DEST=""
-SUDO=""
+SOURCE=""; DEST=""; SUDO=""
 
 LANGUAGE=0
 
 function cleanup { rm "$SOURCE"; rm "$DEST"; exit; }
-
 trap cleanup; SIGHUP SIGINT SIGTERM
 
 function core { clear; language; cover; sleep 1s; verify; }
@@ -101,14 +98,11 @@ function language {
 		
 	echo "Bienvenido / Welcome"
 	echo "Please, choose your language / Por favor selecciona tu idioma"
-	echo "1) English"
-	echo "2) Espanol"
+	echo "1) English"; echo "2) Espanol"
 	read -n 1 -r OPTION
 
 	case $OPTION in
-		1) LANGUAGE=1;;
-		2) LANGUAGE=2;;
-		*) exit 1;;
+		1) LANGUAGE=1;; 2) LANGUAGE=2;; *) exit 1;;
 	esac
 }
 
@@ -163,8 +157,7 @@ function cover {
 
 function verify {
 
-    OPERATING=$(uname -o)
-	SELECTOR=""
+    OPERATING=$(uname -o); local SELECTOR=""
 
 	if [ "$OPERATING" != "GNU/Linux" ]; then
 		clear; printer error 0; exit 1
@@ -192,8 +185,7 @@ function verify {
 		done
 	done
 
-	clear
-    sourceaction
+	clear; sourceaction
 }
 
 function validator() {
@@ -237,39 +229,32 @@ function sourceaction {
     --backtitle "036 Creative Studios" \
     --inputbox "$RES" 8 80 2>"$SOURCETEMP"
 
-    RESPONSE=$?
-    DATA=$(<$SOURCETEMP)
+    RESPONSE=$?; DATA=$(<$SOURCETEMP)
 
     case $RESPONSE in
     0) 
         validator "source" "${DATA}" ;;
     1) 
-        clear; exit 0  
-        return;;
+        clear; exit 0; return;;
     255) 
-        clear; exit 0
-        return;;
+        clear; exit 0; return;;
     esac
 
 }
 
 function destiaction {
 
-	RESPONSE=0
-	DATA=0
-
-	RES=$(reader 1)
+	RESPONSE=0; DATA=0; RES=$(reader 1)
 
 	dialog --title "036 rsyncer" \
 	--backtitle "036 Creative Studios" \
 	--inputbox "$RES" 8 80 2>"$DESTTEMP"
 
-	RESPONSE=$?
-	DATA=$(<$DESTTEMP)
+	RESPONSE=$?; DATA=$(<$DESTTEMP)
 
 	case $RESPONSE in
 	0) 
-		validator "dest" "${DATA}" ;;
+		validator "dest" "${DATA}";;
 	1) 
 		clear; sourceaction break;;
 	255) 
@@ -280,8 +265,7 @@ function destiaction {
 
 function syncer {
 
-	SOURCEREADY=""
-	DESTREADY=""
+	SOURCEREADY=""; DESTREADY=""
 
     if [[ "$SOURCE" =~ .*\/$ ]]; then
         SOURCEREADY="$SOURCE"
@@ -296,13 +280,11 @@ function syncer {
     fi
 
 	clear; printer print 6
-	echo "SOURCE: $SOURCEREADY"
-	echo -e "DESTINATION: $DESTREADY \n"
+	echo "SOURCE: $SOURCEREADY"; echo -e "DESTINATION: $DESTREADY \n"
 
 	if ! rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"; then
 		clear
-		echo "SOURCE: $SOURCEREADY"
-		echo -e "DESTINATION: $DESTREADY \n"
+		echo "SOURCE: $SOURCEREADY"; echo -e "DESTINATION: $DESTREADY \n"
 		printer print 8
 		if ! $SUDO rsync -axHAWXS --numeric-ids --info=progress2 "$SOURCEREADY" "$DESTREADY"; then
 			printer print 9; exit 1

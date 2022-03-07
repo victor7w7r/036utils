@@ -89,7 +89,7 @@ def reader(position: int) -> str:
 		"Optimizar",
 		"Salir"
 	)
- 
+
     if LANGUAGE == 1: return DICTIONARY_ENG[position]
     else: return DICTIONARY_ESP[position]
 
@@ -100,7 +100,7 @@ def language() -> None:
     
     global LANGUAGE
     
-    print("Bienvenido /  Welcome")
+    print("Bienvenido / Welcome")
     print("Please, choose your language / Por favor selecciona tu idioma")
     print("1) English"); print("2) Espanol")
     option: str = utils.char()
@@ -109,6 +109,7 @@ def language() -> None:
     else: exit(1)
 
 def cover() -> None:
+    
     utils.clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
@@ -184,20 +185,19 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str, str]:
     
     ROOT: str = Popen(r"""df -h | sed -ne '/\/$/p' | cut -d" " -f1
                         """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').replace("\n", "")
-    
     VERIFY: str = Popen(r"""find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'
                         """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').split("\n")
 
     for DEVICE in VERIFY:
         DIRTYDEVS.append(Popen(f'readlink "/dev/disk/by-id/{DEVICE}"', shell=True, stdout=PIPE)
                         .stdout.read().decode('utf-8').rstrip().split("\n")[0])
+        
     DIRTYDEVS = list(filter(('').__ne__, DIRTYDEVS))
 
     for DEV in DIRTYDEVS:
         ABSOLUTEPARTS = Popen(f"""
                             echo {DEV} | sed 's/^\.\.\/\.\.\//\/dev\//' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'""", 
                             shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-        
         if ABSOLUTEPARTS != "":
             if ABSOLUTEPARTS != ROOT:
                 PARTS.append(Popen(f"echo {DEV} | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'", 
@@ -206,28 +206,29 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str, str]:
 
     for PART in PARTS:
         TYPE: str = Popen(f'''lsblk -f /dev/{PART} | sed -ne '2p' | cut -d " " -f2''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-        if(TYPE == "ext4"): EXTCOUNT += 1; EXTPARTS.append(PART)     
+                    shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+        if TYPE == "ext4": EXTCOUNT += 1; EXTPARTS.append(PART)     
     
     if (EXTCOUNT == 0):
         utils.clear(); printer("error",6)
-        if(menuable == "menu"): input(reader(4)); return
+        if menuable == "menu" : input(reader(4)); return
         else: exit(1)
         
     for PARTITIONSDEF in EXTPARTS:
-        MOUNTED: str = Popen(f"lsblk /dev/{PARTITIONSDEF} | sed -ne '/\//p'", shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-        if(MOUNTED != ""): MOUNTCOUNT += 1
-        else: 
-            UMOUNTS.append([f"/dev/{PARTITIONSDEF}","ext4"])
+        MOUNTED: str = Popen(f"lsblk /dev/{PARTITIONSDEF} | sed -ne '/\//p'", 
+                            shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
+        if MOUNTED != "": MOUNTCOUNT += 1
+        else: UMOUNTS.append([f"/dev/{PARTITIONSDEF}","ext4"])
         
-    if(MOUNTCOUNT == EXTCOUNT):
+    if MOUNTCOUNT == EXTCOUNT :
         utils.clear(); printer("error",7)
         if(menuable == "menu"): input(reader(4)); return
         else: exit(1)
         
-    if(echoparts == "print" ): return UMOUNTS;
+    if echoparts == "print": return UMOUNTS
         
 def menu() -> None:
+    
     choices = [(reader(5),reader(1)),(reader(6),reader(2))]
     response = d.menu(reader(0), 15, 60, 4, choices)
     if(response[0] == "ok" and response[1] == reader(5)):
@@ -235,6 +236,7 @@ def menu() -> None:
     else: exit(0)
 
 def defragmenu() -> None:
+    
     utils.clear()
     choices = ext4listener("menu","print")
     response = d.menu(reader(0), 15, 50, 4, choices)
@@ -243,39 +245,37 @@ def defragmenu() -> None:
     else: exit(0)
 
 def defragaction(part: str) -> None:
+    
     utils.clear()
-    if(part == ""): return
+    if part == "": return
     
     printer("print",8)
     
     if utils.live_tasker("sudo cat < /dev/null") == 0:
         if utils.live_tasker(f"sudo fsck.ext4 -y -f -v {part}") != 8:
             print(" "); printer("print",10); input(reader(4)); utils.clear()
-        else:
-            printer("print",9); input(reader(4)); menu(); return
-            
+        else: printer("print",9); input(reader(4)); menu(); return
+    
         printer("print",11)
         
         if utils.live_tasker(f"sudo fsck.ext4 -y -f -v -D {part}") != 8:
             print(" "); printer("print",10); input(reader(4)); utils.clear()
-        else:
-            printer("print",9); input(reader(4)); menu(); return
+        else: printer("print",9); input(reader(4)); menu(); return
             
         call("mkdir /tmp/optimize 2> /dev/null", shell=True) 
         call(f"sudo mount {part} /tmp/optimize", shell=True) 
         
         printer("print",12); utils.live_tasker(f"e4defrag -v {part}")
         print(" ")
-        call(f"sudo umount {part}", shell=True); printer("print",10); input(reader(4)); utils.clear()
+        call(f"sudo umount {part}", shell=True); printer("print",10)
+        input(reader(4)); utils.clear()
         
         printer("print",13)
         
         if utils.live_tasker(f"sudo fsck.ext4 -y -f -v {part}") != 8:
             print(" "); printer("print",10); input(reader(4)); utils.clear(); menu()
-        else:
-            printer("print",9); input(reader(4)); menu(); return
-    else:
-        printer("print",9); input(reader(4)); menu(); return
+        else: printer("print",9); input(reader(4)); menu(); return
+    else: printer("print",9); input(reader(4)); menu(); return
     
 class utils:
     
