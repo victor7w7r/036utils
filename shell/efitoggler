@@ -135,7 +135,7 @@ function toggle {
     if [ "$MOUNTROOT" != "" ]; then
 		printer print 2
 		if ! sudo cat < /dev/null; then
-			clear; printer error 6; exit 1
+			clear; printer error 5; exit 1
 		else
 			sudo diskutil unmount "$EFIPART"
 			sudo rm -rf /Volumes/EFI; clear; printer print 4
@@ -143,7 +143,7 @@ function toggle {
     else
 		printer print 3
 		if ! sudo cat < /dev/null; then
-			clear; printer error 6; exit 1
+			clear; printer error 5; exit 1
 		else
 			sudo mkdir /Volumes/EFI
 			sudo mount -t msdos /dev/"$EFIPART" /Volumes/EFI
