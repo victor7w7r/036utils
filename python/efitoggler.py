@@ -20,6 +20,7 @@ def printer(type: str, position: int) -> None:
 	"EFI Folder is not mounted, mounting",
 	"Done!",
     "Your Python versión is less than 3.5, exiting"
+    "Sudo auth fails"
     )
     DICTIONARY_ESP=(
 	"Tu sistema operativo no es macOS, saliendo",
@@ -28,6 +29,7 @@ def printer(type: str, position: int) -> None:
 	"La carpeta EFI no esta montada, montando",
 	"¡Listo!",
     "Tu versión de Python es menor que 3.5, saliendo"
+    "Autenticación con sudo falló"
     )
     
     if LANGUAGE == 1:
@@ -127,16 +129,20 @@ def toggle() -> None:
     
     if EFI != "":
         printer("print",2)
-        system(f"sudo diskutil unmount {EFIPART}")
-        system("sudo rm -rf /Volumes/EFI")
-        utils.clear(); printer("print",4)
+        if call("sudo cat < /dev/null", shell=True) == 0:
+            system(f"sudo diskutil unmount {EFIPART}")
+            system("sudo rm -rf /Volumes/EFI")
+            utils.clear(); printer("print",4)
+        else: utils.clear(); printer("error",6); exit(1)
         
     else:
-        printer("print",3)
-        system("sudo mkdir /Volumes/EFI")
-        system(f"sudo mount -t msdos /dev/{EFIPART} /Volumes/EFI")
-        system("open /Volumes/EFI")
-        utils.clear(); printer("print",4)
+        if call("sudo cat < /dev/null", shell=True) == 0:
+            printer("print",3)
+            system("sudo mkdir /Volumes/EFI")
+            system(f"sudo mount -t msdos /dev/{EFIPART} /Volumes/EFI")
+            system("open /Volumes/EFI")
+            utils.clear(); printer("print",4)
+        else: utils.clear(); printer("error",6); exit(1)
     
 class utils:
     def clear() -> None: system('clear')

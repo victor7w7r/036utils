@@ -16,6 +16,7 @@ function printer() {
 		"EFI Folder is mounted, unmounting"
 		"EFI Folder is not mounted, mounting"
 		"Done!"
+		"Sudo auth fails"
 	)
 
 	local DICTIONARY_ESP=(
@@ -24,6 +25,7 @@ function printer() {
 		"La carpeta EFI esta montada, desmontando"
 		"La carpeta EFI no esta montada, montando"
 		"¡Listo!"
+		"Autenticación con sudo falló"
 	)	
 
 	if [ "$LANGUAGE" -eq 1 ]; then
@@ -131,12 +133,20 @@ function toggle {
     MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p")
 
     if [ "$MOUNTROOT" != "" ]; then
-        printer print 2; sudo diskutil unmount "$EFIPART"
-		sudo rm -rf /Volumes/EFI; clear; printer print 4
+		if ! sudo cat < /dev/null; then
+			clear; printer error 6; exit 1
+		else
+			printer print 2; sudo diskutil unmount "$EFIPART"
+			sudo rm -rf /Volumes/EFI; clear; printer print 4
+		fi
     else
-        printer print 3; sudo mkdir /Volumes/EFI
-        sudo mount -t msdos /dev/"$EFIPART" /Volumes/EFI
-        open /Volumes/EFI; clear; printer print 4
+		if ! sudo cat < /dev/null; then
+			clear; printer error 6; exit 1
+		else
+			printer print 3; sudo mkdir /Volumes/EFI
+			sudo mount -t msdos /dev/"$EFIPART" /Volumes/EFI
+			open /Volumes/EFI; clear; printer print 4
+		fi
     fi
 }
 
