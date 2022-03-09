@@ -23,11 +23,10 @@ TUI Utilites for GNU/Linux and macOS with Bash and Python
 ## Also Python?
 
 - I recommend to use python scripts, works at 100% similar than bash scripts, the performance in python is better
+- Static typing is enabled by default, please run your scripts with python3 only
 - Only one module is required, please install pythondialog locally
-- Static typing is enabled by default, please install mypy if you don't have installed yet
 
 ```bash
-$ pip install mypy
 $ pip install pythondialog
 ```
 
