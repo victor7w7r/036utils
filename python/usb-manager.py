@@ -355,8 +355,7 @@ def poweroffaction(part: str) -> None:
     PARTITIONSQUERY: list = Popen("""find /dev -name \"""" +BLOCKTEMP+ 
                                     """[[:digit:]]\" | sort -n | sed 's/^\/dev\///'""", shell=True, 
                                 stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")
-    
-    print(PARTITIONSQUERY); input()
+   
     for PARTITION in PARTITIONSQUERY:
         capture: list = utils.live_tasker(f"udisksctl unmount -b {PARTITION} &> /dev/null")
         if capture[0] == 0:
