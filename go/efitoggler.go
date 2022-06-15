@@ -6,19 +6,15 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
 func core() {
-	utils.Clear()
-	language()
-	cover()
-	verify()
-	toggler()
+	utils.Clear(); language(); cover(); verify(); toggler()
 }
 
 var LANGUAGE = 0
@@ -92,8 +88,7 @@ func language() {
 	} else if option == 2 {
 		LANGUAGE = 2
 	} else {
-		fmt.Print("\n")
-		os.Exit(1)
+		fmt.Print("\n"); os.Exit(1)
 	}
 }
 
@@ -155,9 +150,7 @@ func verify() {
 	}
 	printer("print", 1)
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
-	s.Start()
-	time.Sleep(time.Second)
-	s.Stop()
+	s.Start(); time.Sleep(time.Second); s.Stop()
 }
 
 func toggler() {
@@ -182,7 +175,7 @@ func toggler() {
 		outChck, errChck := checkDev.Output()
 		if errChck == nil {
 			fmt.Print(outChck)
-		 	exec.Command("bash", "-c", fmt.Sprintf("sudo diskutil unmount %s",EFIPART)).Run()
+			exec.Command("bash", "-c", fmt.Sprintf("sudo diskutil unmount %s",EFIPART)).Run()
 			exec.Command("bash", "-c", "sudo rm -rf /Volumes/EFI").Run()
 			utils.Clear()
 			printer("print", 4)
