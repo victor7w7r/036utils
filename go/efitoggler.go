@@ -7,13 +7,18 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+	"strings"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
 func core() {
-	utils.Clear(); language(); cover(); verify(); toggler()
+	utils.Clear()
+	language()
+	cover()
+	verify()
+	toggler()
 }
 
 var LANGUAGE = 0
@@ -87,7 +92,8 @@ func language() {
 	} else if option == 2 {
 		LANGUAGE = 2
 	} else {
-		fmt.Print("\n"); os.Exit(1)
+		fmt.Print("\n")
+		os.Exit(1)
 	}
 }
 
@@ -141,51 +147,71 @@ func cover() {
 
 func verify() {
 	platform := runtime.GOOS
-	if platform != "windows" {
-		utils.Clear(); printer("error", 0); fmt.Print("\n"); os.Exit(1)
+	if platform != "darwin" {
+		utils.Clear()
+		printer("error", 0)
+		fmt.Print("\n")
+		os.Exit(1)
 	}
 	printer("print", 1)
-	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond) 
-	s.Start()                                                  
-	time.Sleep(time.Second)                                
+	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+	s.Start()
+	time.Sleep(time.Second)
 	s.Stop()
 }
 
 func toggler() {
-	sout1, err1 := exec.Command("diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'").Output()
+
+	sout1, err1 := exec.Command("bash", "-c", 
+		"diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'").Output()
 	if err1 != nil {fmt.Println(err1); os.Exit(1)}
 
-	sout2, err2 := exec.Command(`EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
-		MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p"); echo $MOUNTROOT`).Output()
-	if err2 != nil {fmt.Println(err1); os.Exit(1)}
+	sout2, err2 := exec.Command("bash", "-c", 
+		"EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p') MOUNTROOT=$(df -h | sed -ne \"/$EFIPART/p\"); echo $MOUNTROOT").Output()
+	if err2 != nil {fmt.Println(err2); os.Exit(1)}
 
-	EFIPART, EFI := string(sout1), string(sout2) 
+	EFIPART, EFI := string(sout1), string(sout2)
+
+	EFIPART = strings.TrimSuffix(EFIPART, "\n") 
+	EFI = strings.TrimSuffix(EFI, "\n") 
 
 	if EFI != "" {
 		printer("print", 2)
-		checkDev := exec.Command("sudo cat < /dev/null")
-		err := checkDev.Run()
-		if err == nil {
-			exec.Command("sudo diskutil unmount", EFIPART)
-			exec.Command("sudo rm -rf /Volumes/EFI")
-			utils.Clear(); printer("print", 4)
+		checkDev := exec.Command("bash", "-c", "sudo cat < /dev/null")
+		checkDev.Stdin = os.Stdin
+		outChck, errChck := checkDev.Output()
+		if errChck == nil {
+			fmt.Print(outChck)
+		 	exec.Command("bash", "-c", fmt.Sprintf("sudo diskutil unmount %s",EFIPART)).Run()
+			exec.Command("bash", "-c", "sudo rm -rf /Volumes/EFI").Run()
+			utils.Clear()
+			printer("print", 4)
 		} else {
-			utils.Clear(); printer("print", 6); fmt.Print("\n"); os.Exit(1)
+			utils.Clear()
+			printer("print", 6)
+			fmt.Printf("\n")
+			os.Exit(1)
 		}
-
 	} else {
 		printer("print", 3)
-		checkDev := exec.Command("sudo cat < /dev/null")
-		err := checkDev.Run()
-		if err == nil {
-			exec.Command("sudo mkdir /Volumes/EFI")
-			exec.Command("sudo mount -t msdos", "/dev/{EFIPART}", "/Volumes/EFI")
-			exec.Command("open /Volumes/EFI")
-			utils.Clear(); printer("print", 4)
+		checkDev := exec.Command("bash", "-c", "sudo cat < /dev/null")
+		checkDev.Stdin = os.Stdin
+		outChck, errChck := checkDev.Output()
+		if errChck == nil {
+			fmt.Print(outChck)
+			exec.Command("bash", "-c", "sudo mkdir /Volumes/EFI").Run()
+			exec.Command("bash", "-c", fmt.Sprintf("sudo mount -t msdos /dev/%s /Volumes/EFI", EFIPART)).Run()
+			exec.Command("bash", "-c", "open /Volumes/EFI").Run()
+			utils.Clear()
+			printer("print", 4)
 		} else {
-			utils.Clear(); printer("print", 6); fmt.Print("\n"); os.Exit(1)
+			utils.Clear()
+			printer("print", 6)
+			fmt.Print("\n")
+			os.Exit(1)
 		}
 	}
+
 }
 
 func main() { core() }
