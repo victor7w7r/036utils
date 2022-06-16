@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -14,29 +13,39 @@ import (
 )
 
 func core() {
-	utils.Clear(); language(); cover(); verify(); toggler()
+	utils.Clear(); language(); cover();
 }
 
-var LANGUAGE = 0
+var LANGUAGE int = 0
+var SOURCE string = ""
+var DEST string = ""
 
-func printer(typeQuery string, position int) {
+func printer(typeQuery string, position int, additional ...string) {
 
-	DICTIONARY_ENG := [7]string{
-		"Your Operating System is not macOS, exiting",
+	DICTIONARY_ENG := [10]string{
+		"Your Operating System is not GNU/Linux, exiting",
+		"In this system the binary sudo doesn't exist.",
+		"The rsync binary is not available in this system, please install",
+		"The dialog binary is not available in this system, please install",
 		"All dependencies is ok!",
-		"EFI Folder is mounted, unmounting",
-		"EFI Folder is not mounted, mounting",
-		"Done!",
-		"Sudo auth fails",
+		fmt.Sprintf("The directory %s doesn't exist", additional),
+		"=============== START RSYNC =============== \n" ,
+		"Done!\n",
+		"You don't have permissions to write the destination or read the source",
+		"=============== FAIL =============== \n",
 	}
 
-	DICTIONARY_ESP := [7]string{
-		"Tu sistema operativo no es macOS, saliendo",
+	DICTIONARY_ESP := [10]string{
+		"Este sistema no es GNU/Linux, saliendo",
+		"En este sistema no existe el binario de superusuario.",
+		"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
+		"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
 		"¡Todo ok!",
-		"La carpeta EFI esta montada, desmontando",
-		"La carpeta EFI no esta montada, montando",
-		"¡Listo!",
-		"Autenticación con sudo falló",
+		fmt.Sprintf("El directorio %s no existe", additional),
+		"=============== EMPEZAR RSYNC =============== \n" ,
+		"Listo!\n",
+		"No tienes permisos para escribir el directorio de destino o para leer el origen",
+		"=============== FALLA =============== \n",
 	}
 
 	green := color.New(color.FgGreen)
@@ -73,6 +82,38 @@ func printer(typeQuery string, position int) {
 		}
 	}
 }
+
+func reader(position int) string {
+
+	DICTIONARY_ENG:= [3]string {
+		"Please write your source directory",
+		"Please write your destination directory to copy",
+		"Press Enter to continue...",
+	}
+
+	DICTIONARY_ESP:= [3]string {
+		"Por favor escriba su directorio de origen",
+		"Por favor escriba su directorio de destino",
+		"Presione Enter para continuar...",
+	}
+
+	if(LANGUAGE == 1) {
+		return DICTIONARY_ENG[position]
+	} else {
+		return DICTIONARY_ESP[position]	
+	}
+}
+
+func commandverify(cmd string) bool {
+	check := exec.Command("bash", "-c", fmt.Sprintf("type %s",cmd))
+	_, err := check.Output();
+
+	if(err == nil) {
+		return true
+	} else {
+		return false
+	}
+} 
 
 func language() {
 
@@ -142,69 +183,77 @@ func cover() {
 
 func verify() {
 	platform := runtime.GOOS
-	if platform != "darwin" {
-		utils.Clear()
-		printer("error", 0)
-		fmt.Print("\n")
-		os.Exit(1)
+	if platform != "linux" {
+		utils.Clear(); printer("error", 0)
+		fmt.Print("\n"); os.Exit(1)
 	}
-	printer("print", 1)
+	if(!commandverify("rsync")) {
+		utils.Clear(); printer("error", 2)
+		fmt.Print("\n"); os.Exit(1)
+	}
+	if(!commandverify("dialog")) {
+		utils.Clear(); printer("error", 3)
+		fmt.Print("\n"); os.Exit(1)
+	}
+	printer("print",4)
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()
+
+	utils.Clear();
 }
 
-func toggler() {
+func validator(typeData string, data string) {
 
-	sout1, err1 := exec.Command("bash", "-c", 
-		"diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'").Output()
-	if err1 != nil {fmt.Println(err1); os.Exit(1)}
+	if typeData == "source" {
 
-	sout2, err2 := exec.Command("bash", "-c", 
-		"EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p') MOUNTROOT=$(df -h | sed -ne \"/$EFIPART/p\"); echo $MOUNTROOT").Output()
-	if err2 != nil {fmt.Println(err2); os.Exit(1)}
-
-	EFIPART, EFI := string(sout1), string(sout2)
-
-	EFIPART = strings.TrimSuffix(EFIPART, "\n") 
-	EFI = strings.TrimSuffix(EFI, "\n") 
-
-	if EFI != "" {
-		printer("print", 2)
-		checkDev := exec.Command("bash", "-c", "sudo cat < /dev/null")
-		checkDev.Stdin = os.Stdin
-		outChck, errChck := checkDev.Output()
-		if errChck == nil {
-			fmt.Print(outChck)
-			exec.Command("bash", "-c", fmt.Sprintf("sudo diskutil unmount %s",EFIPART)).Run()
-			exec.Command("bash", "-c", "sudo rm -rf /Volumes/EFI").Run()
-			utils.Clear()
-			printer("print", 4)
+		if data != "" {
+			_, err := os.Stat(data)
+			if err == nil {
+				SOURCE=data;  destiaction();
+				return
+			} else {
+				utils.Clear(); printer("error", 5, data)
+				fmt.Println(reader(2)); fmt.Scanln()
+				sourceaction(); return
+			}
 		} else {
-			utils.Clear()
-			printer("print", 6)
-			fmt.Printf("\n")
-			os.Exit(1)
+			fmt.Print("\n"); os.Exit(0)
+		}
+
+	} else if typeData == "dest" {
+		
+		if data != "" {
+			_, err := os.Stat(data)
+			if err == nil {
+				DEST=data;  syncer();
+				return
+			} else {
+				utils.Clear(); printer("error", 6, data)
+				fmt.Println(reader(2)); fmt.Scanln()
+				sourceaction(); return
+			}
+		} else {
+			utils.Clear(); printer("error", 5, data)
+			fmt.Println(reader(2)); fmt.Scanln()
+			sourceaction(); return
 		}
 	} else {
-		printer("print", 3)
-		checkDev := exec.Command("bash", "-c", "sudo cat < /dev/null")
-		checkDev.Stdin = os.Stdin
-		outChck, errChck := checkDev.Output()
-		if errChck == nil {
-			fmt.Print(outChck)
-			exec.Command("bash", "-c", "sudo mkdir /Volumes/EFI").Run()
-			exec.Command("bash", "-c", fmt.Sprintf("sudo mount -t msdos /dev/%s /Volumes/EFI", EFIPART)).Run()
-			exec.Command("bash", "-c", "open /Volumes/EFI").Run()
-			utils.Clear()
-			printer("print", 4)
-		} else {
-			utils.Clear()
-			printer("print", 6)
-			fmt.Print("\n")
-			os.Exit(1)
-		}
+		fmt.Print("\n"); os.Exit(0)
 	}
 
 }
+
+func sourceaction() {
+
+}
+
+func destiaction() {
+
+}
+
+func syncer() {
+
+}
+
 
 func main() { core() }
