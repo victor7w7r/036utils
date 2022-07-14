@@ -1,4 +1,4 @@
-import 'dart:io' show Platform, Process, exit;
+import 'dart:io' show Platform, Process, exit, stdout;
 
 import 'package:colorize/colorize.dart';
 import 'package:interact/interact.dart';
@@ -30,30 +30,34 @@ void printer(String typeQuery, int position) {
 		"Autenticación con sudo falló",
   ];
 
+  final info = Colorize("[+] ").green();
+  final warn = Colorize("[*] ").cyan();
+  final error = Colorize("[*] ").red();
+
   switch(typeQuery) {
     case "print":
       print(dictionaryEng[position]);
       break;
     case "info":
-      color("[+] ", front: Styles.GREEN);
+      stdout.write(info);
       print("INFO: ${
-          _language == 1
-            ? dictionaryEng[position]
-            : dictionaryEsp[position]}");
+        _language == 1
+          ? dictionaryEng[position]
+          : dictionaryEsp[position]}");
       break;
     case "warn":
-      color("[*] ", front: Styles.CYAN);
+      stdout.write(warn);
       print("WARNING: ${
-          _language == 1
-            ? dictionaryEng[position]
-            : dictionaryEsp[position]}");
+        _language == 1
+          ? dictionaryEng[position]
+          : dictionaryEsp[position]}");
       break;
     case "error":
-      color("[*] ", front: Styles.RED);
+      stdout.write(error);
       print("ERROR: ${
-          _language == 1
-            ? dictionaryEng[position]
-            : dictionaryEsp[position]}");
+        _language == 1
+          ? dictionaryEng[position]
+          : dictionaryEsp[position]}");
       break;
   }
 }
@@ -95,12 +99,33 @@ Future<void> toggler() async {
   final efi = (result2.stdout as String).trim();
 
   if(efi != "") {
-
+    printer("print", 2);
+    final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);
+    if(checkDev.exitCode != 0) {
+      await Process.run("bash", ["-c", "sudo diskutil unmount $efipart"]);
+      await Process.run("bash", ["-c", "sudo rm -rf /Volumes/EFI"]);
+      clear();
+      printer("print", 4);
+    } else {
+      clear();
+      printer("print", 5);
+      exit(1);
+    }
   } else {
-    
+    printer("print", 3);
+    final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);
+    if(checkDev.exitCode != 0) {
+      await Process.run("bash", ["-c", "sudo mkdir /Volumes/EFI"]);
+      await Process.run("bash", ["-c", "sudo mount -t msdos /dev/$efipart /Volumes/EFI"]);
+      await Process.run("bash", ["-c", "open /Volumes/EFI"]);
+      clear();
+      printer("print", 4);
+    } else {
+      clear();
+      printer("print", 5);
+      exit(1);
+    }
   }
-
-
 }
 
 void main() { core(); }

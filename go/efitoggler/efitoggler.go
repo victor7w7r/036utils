@@ -109,9 +109,9 @@ func verify() {
 
 func toggler() {
 
-	sout1, _ := exec.Command("bash", "-c", 
+	sout1, err1 := exec.Command("bash", "-c", 
 		"diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'").Output()
-	if err1 != nil {os.Exit(1)}
+	if err1 != nil {fmt.Println(err1); os.Exit(1)}
 
 	sout2, err2 := exec.Command("bash", "-c", 
 		"EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p') MOUNTROOT=$(df -h | sed -ne \"/$EFIPART/p\"); echo $MOUNTROOT").Output()
