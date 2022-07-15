@@ -36,7 +36,9 @@ void printer(String typeQuery, int position) {
 
   switch(typeQuery) {
     case "print":
-      print(dictionaryEng[position]);
+      print(_language == 1
+          ? dictionaryEng[position]
+          : dictionaryEsp[position]);
       break;
     case "info":
       stdout.write(info);
@@ -81,18 +83,24 @@ void verify() {
     exit(1);
   }
   printer("print", 1);
-  spin();
+  spin(() {
+    print("");
+    toggler();
+  });
 }
 
 Future<void> toggler() async {
+
   final result1 = await Process.run("bash",[
     "-c", "diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'"
   ]);
+
   if(result1.exitCode != 0) exit(1);
 
   final result2 = await Process.run("bash",[
     "-c","EFIPART=\$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p') MOUNTROOT=\$(df -h | sed -ne \"/\$EFIPART/p\"); echo \$MOUNTROOT"
   ]);
+
   if(result2.exitCode != 0) exit(1);
 
   final efipart = (result1.stdout as String).trim();
@@ -101,20 +109,20 @@ Future<void> toggler() async {
   if(efi != "") {
     printer("print", 2);
     final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);
-    if(checkDev.exitCode != 0) {
+    if(checkDev.exitCode == 0) {
       await Process.run("bash", ["-c", "sudo diskutil unmount $efipart"]);
       await Process.run("bash", ["-c", "sudo rm -rf /Volumes/EFI"]);
       clear();
       printer("print", 4);
     } else {
       clear();
-      printer("print", 5);
+      printer("error", 5);
       exit(1);
     }
   } else {
     printer("print", 3);
     final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);
-    if(checkDev.exitCode != 0) {
+    if(checkDev.exitCode == 0) {
       await Process.run("bash", ["-c", "sudo mkdir /Volumes/EFI"]);
       await Process.run("bash", ["-c", "sudo mount -t msdos /dev/$efipart /Volumes/EFI"]);
       await Process.run("bash", ["-c", "open /Volumes/EFI"]);
@@ -122,7 +130,7 @@ Future<void> toggler() async {
       printer("print", 4);
     } else {
       clear();
-      printer("print", 5);
+      printer("error", 5);
       exit(1);
     }
   }
