@@ -1,7 +1,11 @@
 package lib
 
-func cover() {
-	utils.Clear()
+import (
+	"fmt"
+)
+
+func Cover() {
+	Clear()
 	fmt.Println("                                    `\"~>v??*^;rikD&MNBQku*;`                                           ")
 	fmt.Println("                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ")
 	fmt.Println("                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    ")

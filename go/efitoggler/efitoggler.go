@@ -9,13 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
 func core() {
-	lib.Clear(); language(); lib.cover(); verify(); toggler()
+	lib.Clear(); language(); lib.Cover(); verify(); toggler()
 }
 
 var LANGUAGE = 0
@@ -82,7 +81,7 @@ func language() {
 	fmt.Println("1) English")
 	fmt.Println("2) Espanol")
 
-	option := utils.Char()
+	option := lib.Char()
 
 	if option == 1 {
 		LANGUAGE = 1
@@ -97,7 +96,7 @@ func language() {
 func verify() {
 	platform := runtime.GOOS
 	if platform != "darwin" {
-		utils.Clear()
+		lib.Clear()
 		printer("error", 0)
 		fmt.Print("\n")
 		os.Exit(1)
@@ -131,10 +130,10 @@ func toggler() {
 			_ = outChck
 			exec.Command("bash", "-c", fmt.Sprintf("sudo diskutil unmount %s",EFIPART)).Run()
 			exec.Command("bash", "-c", "sudo rm -rf /Volumes/EFI").Run()
-			utils.Clear()
+			lib.Clear()
 			printer("print", 4)
 		} else {
-			utils.Clear()
+			lib.Clear()
 			printer("print", 6)
 			fmt.Printf("\n")
 			os.Exit(1)
@@ -149,10 +148,10 @@ func toggler() {
 			exec.Command("bash", "-c", "sudo mkdir /Volumes/EFI").Run()
 			exec.Command("bash", "-c", fmt.Sprintf("sudo mount -t msdos /dev/%s /Volumes/EFI", EFIPART)).Run()
 			exec.Command("bash", "-c", "open /Volumes/EFI").Run()
-			utils.Clear()
+			lib.Clear()
 			printer("print", 4)
 		} else {
-			utils.Clear()
+			lib.Clear()
 			printer("print", 6)
 			fmt.Print("\n")
 			os.Exit(1)
