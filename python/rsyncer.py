@@ -9,6 +9,7 @@ try:
     inquirer = __import__('inquirer')
 except ImportError:
     main(['install', 'inquirer'])
+    inquirer = __import__('inquirer')
 
 SOURCE: str = ""; DEST: str = ""; LANGUAGE: int = 0
 
