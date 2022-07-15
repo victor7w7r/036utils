@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
@@ -75,20 +76,17 @@ func printer(typeQuery string, position int) {
 }
 
 func language() {
+	option := 0
+	promptLang := &survey.Select{
+		Message: "Bienvenido / Welcome \n Choose your language / Selecciona tu idioma",
+		Options: []string{"English", "Espanol"},
+	}
+	survey.AskOne(promptLang, &option)
 
-	fmt.Println("Bienvenido / Welcome")
-	fmt.Println("Please, choose your language / Por favor selecciona tu idioma")
-	fmt.Println("1) English")
-	fmt.Println("2) Espanol")
-
-	option := lib.Char()
-
-	if option == 1 {
+	if option == 0 {
 		LANGUAGE = 1
-	} else if option == 2 {
-		LANGUAGE = 2
 	} else {
-		fmt.Print("\n"); os.Exit(1)
+		LANGUAGE = 2
 	}
 }
 
@@ -108,18 +106,18 @@ func verify() {
 
 func toggler() {
 
-	sout1, err1 := exec.Command("bash", "-c", 
+	sout1, err1 := exec.Command("bash", "-c",
 		"diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'").Output()
 	if err1 != nil {fmt.Println(err1); os.Exit(1)}
 
-	sout2, err2 := exec.Command("bash", "-c", 
+	sout2, err2 := exec.Command("bash", "-c",
 		"EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p') MOUNTROOT=$(df -h | sed -ne \"/$EFIPART/p\"); echo $MOUNTROOT").Output()
 	if err2 != nil {fmt.Println(err2); os.Exit(1)}
 
 	EFIPART, EFI := string(sout1), string(sout2)
 
-	EFIPART = strings.TrimSuffix(EFIPART, "\n") 
-	EFI = strings.TrimSuffix(EFI, "\n") 
+	EFIPART = strings.TrimSuffix(EFIPART, "\n")
+	EFI = strings.TrimSuffix(EFI, "\n")
 
 	if EFI != "" {
 		printer("print", 2)
