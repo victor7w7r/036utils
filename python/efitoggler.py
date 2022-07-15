@@ -5,9 +5,9 @@ from time import sleep
 from pip import main
 
 try:
-    inquirer = __import__('PyInquirer')
+    inquirer = __import__('inquirer')
 except ImportError:
-    main(['install', 'PyInquirer'])
+    main(['install', 'inquirer'])
 
 LANGUAGE: int = 0
 
@@ -53,16 +53,15 @@ def language() -> None:
 
     global LANGUAGE
 
-    questions = [
-        {
-            'type': 'list',
-            'name': 'language',
-            'message': 'Please, choose your language / Por favor selecciona tu idioma',
-            'choices': ['English', 'Espanol']
-        }
+    print('Welcome / Bienvenido')
+
+    q = [
+        inquirer.List('language',
+            message='Please, choose your language / Por favor selecciona tu idioma',
+            choices=['English', 'Espanol'])
     ]
 
-    data = inquirer.prompt(questions)
+    data = inquirer.prompt(q)
     if data['language'] == 'English': LANGUAGE = 1
     else: LANGUAGE = 2
 

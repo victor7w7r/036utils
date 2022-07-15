@@ -1,51 +1,51 @@
-from subprocess import call, PIPE, Popen, CalledProcessError
-from sys import stdin, stdout, platform, version_info
+from subprocess import call, PIPE
+from sys import stdout, platform, version_info
 from os import system, path
 from re import search
-from termios import tcgetattr, tcsetattr, TCSADRAIN
 from time import sleep
-from tty import setcbreak
-from dialog import Dialog
+from pip import main
 
-d = Dialog(dialog="dialog")
-d.set_background_title("036 Creative Studios")
+try:
+    inquirer = __import__('inquirer')
+except ImportError:
+    main(['install', 'inquirer'])
 
 SOURCE: str = ""; DEST: str = ""; LANGUAGE: int = 0
 
-def main() -> None: utils.clear(); language(); cover(); verify()
+def core() -> None: utils.clear(); language(); cover(); verify()
 
 def printer(type: str, position: int, additional: str = "") -> None:
-    
+
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m'
 
     DICTIONARY_ENG=(
-	"Your Operating System is not GNU/Linux, exiting",
-	"In this system the binary sudo doesn't exist.",
-	"The rsync binary is not available in this system, please install",
-	"The dialog binary is not available in this system, please install",
-	"All dependencies is ok!",
-	f"The directory {additional} doesn't exist",
-	"=============== START RSYNC =============== \n" ,
-	"Done!\n",
-    "Your Python versión is less than 3.5, exiting",
-    "You don't have permissions to write the destination or read the source",
-	"=============== FAIL =============== \n"
+        "Your Operating System is not GNU/Linux, exiting",
+        "In this system the binary sudo doesn't exist.",
+        "The rsync binary is not available in this system, please install",
+        "The dialog binary is not available in this system, please install",
+        "All dependencies is ok!",
+        f"The directory {additional} doesn't exist",
+        "=============== START RSYNC =============== \n" ,
+        "Done!\n",
+        "Your Python versión is less than 3.5, exiting",
+        "You don't have permissions to write the destination or read the source",
+        "=============== FAIL =============== \n"
     )
-    
+
     DICTIONARY_ESP=(
-    "Este sistema no es GNU/Linux, saliendo",
-	"En este sistema no existe el binario de superusuario.",
-	"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
-	"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
-	"¡Todo ok!",
-	f"El directorio {additional} no existe",
-	"=============== EMPEZAR RSYNC =============== \n" ,
-	"Listo!\n",
-    "Tu versión de Python es menor que 3.5, saliendo",
-    "No tienes permisos para escribir el directorio de destino o para leer el origen",
-	"=============== FALLA =============== \n"
+        "Este sistema no es GNU/Linux, saliendo",
+        "En este sistema no existe el binario de superusuario.",
+        "El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
+        "EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
+        "¡Todo ok!",
+        f"El directorio {additional} no existe",
+        "=============== EMPEZAR RSYNC =============== \n" ,
+        "Listo!\n",
+        "Tu versión de Python es menor que 3.5, saliendo",
+        "No tienes permisos para escribir el directorio de destino o para leer el origen",
+        "=============== FALLA =============== \n"
     )
-    
+
     if LANGUAGE == 1 :
         if type == "print": print(f"{DICTIONARY_ENG[position]}")
         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
@@ -60,7 +60,7 @@ def printer(type: str, position: int, additional: str = "") -> None:
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
 def reader(position: int) -> str:
-    
+
     DICTIONARY_ENG=(
 		"Please write your source directory",
 		"Please write your destination directory to copy",
@@ -80,19 +80,23 @@ def commandverify(cmd: str) -> bool:
     return call("type " + cmd, shell=True, stdout=PIPE, stderr=PIPE) == 0
 
 def language() -> None:
-    
+
     global LANGUAGE
-    
-    print("Bienvenido / Welcome")
-    print("Please, choose your language / Por favor selecciona tu idioma")
-    print("1) English"); print("2) Espanol")
-    option: str = utils.char()
-    if option == "1": LANGUAGE=1
-    elif option == "2": LANGUAGE=2
-    else: exit(1)
+
+    print('Welcome / Bienvenido')
+
+    q = [
+        inquirer.List('language',
+            message='Please, choose your language / Por favor selecciona tu idioma',
+            choices=['English', 'Espanol'])
+    ]
+
+    data = inquirer.prompt(q)
+    if data['language'] == 'English': LANGUAGE = 1
+    else: LANGUAGE = 2
 
 def cover() -> None:
-    
+
     utils.clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
@@ -140,7 +144,7 @@ def cover() -> None:
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify() -> None:
-    
+
     if version_info < (3, 5):
         utils.clear(); printer("error",8); exit(1)
     if platform != "linux":
@@ -149,19 +153,19 @@ def verify() -> None:
         utils.clear(); printer("error",2); exit(1)
     if not commandverify("dialog"):
         utils.clear(); printer("error",3); exit(1)
-    printer("print",4)    
+    printer("print",4)
     spinner = utils.spinning()
     for _ in range(15):
         stdout.write(next(spinner))
-        stdout.flush(); sleep(0.1)  
+        stdout.flush(); sleep(0.1)
         stdout.write('\b')
 
     utils.clear(); sourceaction()
-    
+
 def validator(type: str, data: str) -> None:
-    
+
     global SOURCE; global DEST
-    
+
     if type == "source":
         if data != "":
             if path.exists(data):
@@ -180,59 +184,48 @@ def validator(type: str, data: str) -> None:
                 input(reader(2)); destiaction(); return
         else: sourceaction()
     else: exit(0)
-        
+
 def sourceaction() -> None:
-    
-    response = d.inputbox(reader(0), 8, 80)
-    if response[0] == "ok": validator("source",response[1])
-    elif response[0] == "cancel": exit(0)
+
+    q = [inquirer.Text('source', message=reader(0))]
+    data = inquirer.prompt(q)
+    validator("source", data['source'])
 
 def destiaction() -> None:
-    
-    response = d.inputbox(reader(1), 8, 80)
-    if response[0] == "ok": validator("dest",response[1])
-    elif response[0] == "cancel": exit(0)
+
+    q = [inquirer.Text('dest', message=reader(1))]
+    data = inquirer.prompt(q)
+    validator("dest", data['dest'])
 
 def syncer() -> None:
-    
+
     SOURCEREADY: str=""; DESTREADY: str = ""
     if search(".*\/$", SOURCE): SOURCEREADY = SOURCE
     else: SOURCEREADY = SOURCE + '/'
     if search(".*\/$", DEST): DESTREADY = DEST
     else: DESTREADY = DEST + '/'
-    
+
     utils.clear(); printer("print",6)
     print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
-    
+
     if call(f"rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}", shell=True) == 0:
         print("\n =============== OK =============== \n" )
         printer("print",7); exit(0)
     else:
-        printer("print",9); utils.clear()    
+        printer("print",9); utils.clear()
         print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
         if call(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}", shell=True) == 0:
             print("\n =============== OK =============== \n" )
-            printer("print",7); exit(0)        
+            printer("print",7); exit(0)
         else: printer("print",10); exit(1)
-            
+
 class utils:
-    
+
     def clear() -> None: system('clear')
-    
-    def char() -> str:
-        fd = stdin.fileno()
-        oldSettings = tcgetattr(fd)
-        try:
-            setcbreak(fd)
-            answer = stdin.read(1)
-        finally:
-            tcsetattr(fd, TCSADRAIN, oldSettings)
-        return answer
-    
+
     def spinning():
         while True:
             for cursor in '|/-\\':
                 yield cursor
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": core()
