@@ -1,6 +1,6 @@
 import 'dart:io' show Platform, Process, exit, stdout;
 
-import 'package:colorize/colorize.dart';
+import 'package:colorize/colorize.dart' show Colorize;
 import 'package:interact/interact.dart';
 
 import 'package:efitoggler/index.dart';

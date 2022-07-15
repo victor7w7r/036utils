@@ -1,41 +1,39 @@
-import pip
 from subprocess import Popen, call, PIPE
-from sys import stdin, stdout, platform, version_info
+from sys import stdout, platform, version_info
 from os import system
-from termios import tcgetattr, tcsetattr, TCSADRAIN
-from tty import setcbreak
 from time import sleep
+from pip import main
 
 try:
     inquirer = __import__('PyInquirer')
 except ImportError:
-    pip.main(['install', 'PyInquirer'])
+    main(['install', 'PyInquirer'])
 
 LANGUAGE: int = 0
 
-def main() -> None: utils.clear(); language(); cover(); verify(); toggle()
+def core() -> None: utils.clear(); language(); cover(); verify(); toggle()
 
 def printer(type: str, position: int) -> None:
 
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
 
     DICTIONARY_ENG=(
-	"Your Operating System is not macOS, exiting",
-	"All dependencies is ok!",
-	"EFI Folder is mounted, unmounting",
-	"EFI Folder is not mounted, mounting",
-	"Done!",
-    "Your Python versión is less than 3.5, exiting",
-    "Sudo auth fails"
+        "Your Operating System is not macOS, exiting",
+        "All dependencies is ok!",
+        "EFI Folder is mounted, unmounting",
+        "EFI Folder is not mounted, mounting",
+        "Done!",
+        "Your Python versión is less than 3.5, exiting",
+        "Sudo auth fails"
     )
     DICTIONARY_ESP=(
-	"Tu sistema operativo no es macOS, saliendo",
-	"¡Todo ok!",
-	"La carpeta EFI esta montada, desmontando",
-	"La carpeta EFI no esta montada, montando",
-	"¡Listo!",
-    "Tu versión de Python es menor que 3.5, saliendo",
-    "Autenticación con sudo falló"
+        "Tu sistema operativo no es macOS, saliendo",
+        "¡Todo ok!",
+        "La carpeta EFI esta montada, desmontando",
+        "La carpeta EFI no esta montada, montando",
+        "¡Listo!",
+        "Tu versión de Python es menor que 3.5, saliendo",
+        "Autenticación con sudo falló"
     )
 
     if LANGUAGE == 1:
@@ -163,4 +161,4 @@ class utils:
             for cursor in '|/-\\':
                 yield cursor
 
-if __name__ == "__main__": main()
+if __name__ == "__main__": core()

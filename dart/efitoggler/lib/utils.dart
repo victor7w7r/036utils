@@ -1,5 +1,5 @@
 import 'dart:async' show Timer;
-import 'dart:io';
+import 'dart:io' show Process, stdout;
 
 void clear() {
   print(Process.runSync("clear", [], runInShell: true).stdout);
