@@ -1,3 +1,4 @@
+import pip
 from subprocess import Popen, call, PIPE
 from sys import stdin, stdout, platform, version_info
 from os import system
@@ -5,12 +6,17 @@ from termios import tcgetattr, tcsetattr, TCSADRAIN
 from tty import setcbreak
 from time import sleep
 
+try:
+    inquirer = __import__('PyInquirer')
+except ImportError:
+    pip.main(['install', 'PyInquirer'])
+
 LANGUAGE: int = 0
 
 def main() -> None: utils.clear(); language(); cover(); verify(); toggle()
 
 def printer(type: str, position: int) -> None:
-    
+
     GREEN = '\033[92m';  WARNING = '\033[93m'; FAIL = '\033[91m';  ENDC = '\033[0m';
 
     DICTIONARY_ENG=(
@@ -31,7 +37,7 @@ def printer(type: str, position: int) -> None:
     "Tu versión de Python es menor que 3.5, saliendo",
     "Autenticación con sudo falló"
     )
-    
+
     if LANGUAGE == 1:
         if type == "print": print(f"{DICTIONARY_ENG[position]}")
         elif type == "info": print(f"[{GREEN}+{ENDC}] INFO: {DICTIONARY_ENG[position]}")
@@ -45,20 +51,25 @@ def printer(type: str, position: int) -> None:
         elif type == "error": print(f"[{FAIL}!{ENDC}] ERROR: {DICTIONARY_ESP[position]}")
         else: print(f"[?] UNKNOWN: {DICTIONARY_ESP[position]}")
 
-def language() -> None: 
-    
+def language() -> None:
+
     global LANGUAGE
-    
-    print("Bienvenido / Welcome")
-    print("Please, choose your language / Por favor selecciona tu idioma")
-    print("1) English"); print("2) Espanol")
-    option: str = utils.char()
-    if option == "1": LANGUAGE=1
-    elif option == "2": LANGUAGE=2
-    else: exit(1)
+
+    questions = [
+        {
+            'type': 'list',
+            'name': 'language',
+            'message': 'Please, choose your language / Por favor selecciona tu idioma',
+            'choices': ['English', 'Espanol']
+        }
+    ]
+
+    data = inquirer.prompt(questions)
+    if data['language'] == 'English': LANGUAGE = 1
+    else: LANGUAGE = 2
 
 def cover() -> None:
-    
+
     utils.clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
@@ -106,7 +117,7 @@ def cover() -> None:
     print(r''':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::''')
 
 def verify() -> None:
-    
+
     if platform != "darwin":
         utils.clear(); printer("error",0); exit(1)
     if version_info < (3, 5):
@@ -117,16 +128,16 @@ def verify() -> None:
         stdout.write(next(spinner))
         stdout.flush(); sleep(0.1)
         stdout.write('\b')
-    
+
 def toggle() -> None:
-    
+
     EFIPART: str = Popen(r"""diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p'
                     """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
 
     EFI: str = Popen(r"""EFIPART=$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\(d.*\).*/\1/p')
                         MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p"); echo $MOUNTROOT
                     """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip("\n")
-    
+
     if EFI != "":
         printer("print",2)
         if call("sudo cat < /dev/null", shell=True) == 0:
@@ -134,7 +145,7 @@ def toggle() -> None:
             system("sudo rm -rf /Volumes/EFI")
             utils.clear(); printer("print",4)
         else: utils.clear(); printer("error",6); exit(1)
-        
+
     else:
         printer("print",3)
         if call("sudo cat < /dev/null", shell=True) == 0:
@@ -143,24 +154,13 @@ def toggle() -> None:
             system("open /Volumes/EFI")
             utils.clear(); printer("print",4)
         else: utils.clear(); printer("error",6); exit(1)
-    
+
 class utils:
     def clear() -> None: system('clear')
-    
-    def char() -> str:
-        fd = stdin.fileno()
-        oldSettings = tcgetattr(fd)
-        try:
-            setcbreak(fd)
-            answer = stdin.read(1)
-        finally:
-            tcsetattr(fd, TCSADRAIN, oldSettings)
-        return answer
-    
+
     def spinning():
         while True:
             for cursor in '|/-\\':
                 yield cursor
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()
