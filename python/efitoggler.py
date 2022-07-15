@@ -8,6 +8,7 @@ try:
     inquirer = __import__('inquirer')
 except ImportError:
     main(['install', 'inquirer'])
+    inquirer = __import__('inquirer')
 
 LANGUAGE: int = 0
 
