@@ -87,13 +87,13 @@ func printer(typeQuery string, position int, additional ...string) {
 
 func reader(position int) string {
 
-	DICTIONARY_ENG:= [3]string {
+	DICTIONARY_ENG := [3]string {
 		"Please write your source directory",
 		"Please write your destination directory to copy",
 		"Press Enter to continue...",
 	}
 
-	DICTIONARY_ESP:= [3]string {
+	DICTIONARY_ESP := [3]string {
 		"Por favor escriba su directorio de origen",
 		"Por favor escriba su directorio de destino",
 		"Presione Enter para continuar...",
@@ -157,41 +157,37 @@ func verify() {
 func validator(typeData string, data string) {
 
 	if typeData == "source" {
-
 		if data != "" {
 			_, err := os.Stat(data)
 			if err == nil {
-				SOURCE=data;  destiaction();
+				SOURCE=data; lib.Clear(); destiaction()
 				return
 			} else {
 				lib.Clear(); printer("error", 5, data)
-				fmt.Println(reader(2)); fmt.Scanln()
-				sourceaction(); return
+				fmt.Println(""); fmt.Println(reader(2))
+				fmt.Scanln(); lib.Clear(); sourceaction()
+				return
 			}
 		} else {
 			fmt.Print("\n"); os.Exit(0)
 		}
-
 	} else if typeData == "dest" {
 		if data != "" {
 			_, err := os.Stat(data)
 			if err == nil {
-				DEST=data;  syncer();
-				return
+				DEST=data; syncer(); return
 			} else {
-				lib.Clear(); printer("error", 6, data)
-				fmt.Println(reader(2)); fmt.Scanln()
-				sourceaction(); return
+				lib.Clear(); printer("error", 5, data)
+				fmt.Println(""); fmt.Println(reader(2))
+				fmt.Scanln(); lib.Clear(); destiaction()
+				return
 			}
 		} else {
-			lib.Clear(); printer("error", 5, data)
-			fmt.Println(reader(2)); fmt.Scanln()
 			sourceaction(); return
 		}
 	} else {
 		fmt.Print("\n"); os.Exit(0)
 	}
-
 }
 
 func sourceaction() {
@@ -222,22 +218,23 @@ func syncer() {
 	} else {
 		DESTREADY = DEST + "/"
 	}
-	lib.Clear(); printer("print", 6)
-
-	fmt.Printf("SOURCE:{%s}", SOURCEREADY)
-	fmt.Printf("DESTINATION:{%s}", DESTREADY)
-	syncApt := exec.Command("rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY)
+	lib.Clear(); printer("print", 6); fmt.Println("")
+	fmt.Printf("SOURCE:{%s} \n", SOURCEREADY)
+	fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
+	fmt.Println("")
+	syncApt := exec.Command("rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY, DESTREADY)
 	_, err := syncApt.Output();
-	if err != nil {
+	if err == nil {
 		fmt.Print("\n =============== OK =============== \n")
 		printer("print",7); os.Exit(0)
 	} else {
-		lib.Clear(); printer("print", 9)
-		fmt.Printf("SOURCE:{%s}", SOURCEREADY)
-		fmt.Printf("DESTINATION:{%s}", DESTREADY)
-		syncAptTwo := exec.Command("sudo","rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY)
+		lib.Clear(); printer("print", 8); fmt.Println("")
+		fmt.Printf("SOURCE:{%s} \n" , SOURCEREADY)
+		fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
+		fmt.Println("")
+		syncAptTwo := exec.Command("sudo","rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY, DESTREADY)
 		_, err := syncAptTwo.Output();
-		if err != nil {
+		if err == nil {
 			fmt.Print("\n =============== OK =============== \n")
 			printer("print",7); os.Exit(0)
 		} else {

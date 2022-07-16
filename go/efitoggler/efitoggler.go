@@ -133,7 +133,7 @@ func toggler() {
 		} else {
 			lib.Clear()
 			printer("print", 6)
-			fmt.Printf("\n")
+			fmt.Println("")
 			os.Exit(1)
 		}
 	} else {
@@ -151,7 +151,7 @@ func toggler() {
 		} else {
 			lib.Clear()
 			printer("print", 6)
-			fmt.Print("\n")
+			fmt.Println("")
 			os.Exit(1)
 		}
 	}

@@ -170,19 +170,20 @@ def validator(type: str, data: str) -> None:
     if type == "source":
         if data != "":
             if path.exists(data):
-                SOURCE=data; destiaction();
+                SOURCE=data; utils.clear(); destiaction()
                 return
             else:
                 utils.clear(); printer("error", 5, data)
-                input(reader(2)); sourceaction(); return
+                input(reader(2)); utils.clear(); sourceaction()
         else: exit(0)
     elif type == "dest":
         if data != "":
             if path.exists(data):
-                DEST=data; syncer(); return
+                DEST=data; utils.clear(); syncer(); return
             else:
                 utils.clear(); printer("error", 5, data)
-                input(reader(2)); destiaction(); return
+                input(reader(2)); utils.clear(); destiaction()
+                return
         else: sourceaction()
     else: exit(0)
 
@@ -213,7 +214,7 @@ def syncer() -> None:
         print("\n =============== OK =============== \n" )
         printer("print",7); exit(0)
     else:
-        utils.clear();  printer("print",9)
+        utils.clear(); printer("print",9)
         print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
         if call(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}", shell=True) == 0:
             print("\n =============== OK =============== \n" )
