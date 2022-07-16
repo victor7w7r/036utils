@@ -143,10 +143,6 @@ func verify() {
 		lib.Clear(); printer("error", 2)
 		fmt.Print("\n"); os.Exit(1)
 	}
-	if(!commandverify("dialog")) {
-		lib.Clear(); printer("error", 3)
-		fmt.Print("\n"); os.Exit(1)
-	}
 	printer("print",4)
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()

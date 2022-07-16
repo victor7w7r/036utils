@@ -77,15 +77,12 @@ void language() {
 
 void verify() {
   if(!Platform.isMacOS) {
-    clear();
-    printer("error", 0);
-    print("\n");
-    exit(1);
+    clear(); printer("error", 0);
+    print("\n"); exit(1);
   }
   printer("print", 1);
   spin(() {
-    print("");
-    toggler();
+    print(""); toggler();
   });
 }
 
@@ -108,16 +105,13 @@ Future<void> toggler() async {
 
   if(efi != "") {
     printer("print", 2);
-    final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);
-    if(checkDev.exitCode == 0) {
+
+  final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);    if(checkDev.exitCode == 0) {
       await Process.run("bash", ["-c", "sudo diskutil unmount $efipart"]);
       await Process.run("bash", ["-c", "sudo rm -rf /Volumes/EFI"]);
-      clear();
-      printer("print", 4);
+      clear(); printer("print", 4);
     } else {
-      clear();
-      printer("error", 5);
-      exit(1);
+      clear(); printer("error", 5); exit(1);
     }
   } else {
     printer("print", 3);
@@ -126,12 +120,9 @@ Future<void> toggler() async {
       await Process.run("bash", ["-c", "sudo mkdir /Volumes/EFI"]);
       await Process.run("bash", ["-c", "sudo mount -t msdos /dev/$efipart /Volumes/EFI"]);
       await Process.run("bash", ["-c", "open /Volumes/EFI"]);
-      clear();
-      printer("print", 4);
+      clear(); printer("print", 4);
     } else {
-      clear();
-      printer("error", 5);
-      exit(1);
+      clear(); printer("error", 5); exit(1);
     }
   }
 }

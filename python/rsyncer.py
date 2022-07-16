@@ -152,8 +152,6 @@ def verify() -> None:
         utils.clear(); printer("error",0); exit(1)
     if not commandverify("rsync"):
         utils.clear(); printer("error",2); exit(1)
-    if not commandverify("dialog"):
-        utils.clear(); printer("error",3); exit(1)
     printer("print",4)
     spinner = utils.spinning()
     for _ in range(15):
