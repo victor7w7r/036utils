@@ -41,8 +41,6 @@ def verify() -> None:
         utils.clear(); printer("error",2, LANGUAGE); exit(1)
     if not commandverify("fsck.ext4"):
         utils.clear(); printer("error",3, LANGUAGE); exit(1)
-    if not commandverify("dialog"):
-        utils.clear(); printer("error",4, LANGUAGE); exit(1)
     ext4listener(); printer("print",5, LANGUAGE)
     spinner = utils.spinning()
     for _ in range(15):
