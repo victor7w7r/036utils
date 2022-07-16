@@ -213,7 +213,7 @@ def syncer() -> None:
         print("\n =============== OK =============== \n" )
         printer("print",7); exit(0)
     else:
-        printer("print",9); utils.clear()
+        utils.clear();  printer("print",9)
         print(f"SOURCE:{SOURCEREADY}"); print(f"DESTINATION:{DESTREADY}")
         if call(f"sudo rsync -axHAWXS --numeric-ids --info=progress2 {SOURCEREADY} {DESTREADY}", shell=True) == 0:
             print("\n =============== OK =============== \n" )

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"time"
 
@@ -101,7 +102,7 @@ func reader(position int) string {
 	if(LANGUAGE == 1) {
 		return DICTIONARY_ENG[position]
 	} else {
-		return DICTIONARY_ESP[position]	
+		return DICTIONARY_ESP[position]
 	}
 }
 
@@ -208,8 +209,41 @@ func destiaction() {
 }
 
 func syncer() {
-	
-}
+	SOURCEREADY := ""; DESTREADY :=""
+	matchSource, _ := regexp.MatchString(".*\\/$", SOURCE)
+	matchDest, _ := regexp.MatchString(".*\\/$", DEST)
+	if(matchSource) {
+		SOURCEREADY = SOURCE
+	} else {
+		SOURCEREADY = SOURCE + "/"
+	}
+	if(matchDest) {
+		DESTREADY = DEST
+	} else {
+		DESTREADY = DEST + "/"
+	}
+	lib.Clear(); printer("print", 6)
 
+	fmt.Printf("SOURCE:{%s}", SOURCEREADY)
+	fmt.Printf("DESTINATION:{%s}", DESTREADY)
+	syncApt := exec.Command("rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY)
+	_, err := syncApt.Output();
+	if err != nil {
+		fmt.Print("\n =============== OK =============== \n")
+		printer("print",7); os.Exit(0)
+	} else {
+		lib.Clear(); printer("print", 9)
+		fmt.Printf("SOURCE:{%s}", SOURCEREADY)
+		fmt.Printf("DESTINATION:{%s}", DESTREADY)
+		syncAptTwo := exec.Command("sudo","rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY)
+		_, err := syncAptTwo.Output();
+		if err != nil {
+			fmt.Print("\n =============== OK =============== \n")
+			printer("print",7); os.Exit(0)
+		} else {
+			printer("print",10); os.Exit(1)
+		}
+	}
+}
 
 func main() { core() }
