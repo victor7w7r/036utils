@@ -1,7 +1,7 @@
 package main
 
 import (
-	"036utils/lib"
+	"ext4-optimizer/lib"
 
 	"github.com/AlecAivazis/survey/v2"
 )
