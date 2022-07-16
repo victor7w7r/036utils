@@ -146,7 +146,7 @@ Future<void> validator(String typeData, String data) async {
         return;
       } else {
         clear(); printer("error", 5, data);
-        print("\n"); print(reader(2));
+        print(reader(2));
         stdin.readLineSync();
         clear(); sourceaction();
         return;
@@ -155,12 +155,12 @@ Future<void> validator(String typeData, String data) async {
       print(""); exit(0);
     }
   } else if(typeData == "dest") {
-    if(data.isEmpty) {
+    if(data.isNotEmpty) {
       if(path) {
         _dest = data; clear(); syncer();
       } else {
         clear(); printer("error", 5, data);
-        print("\n"); print(reader(2));
+        print(reader(2));
         stdin.readLineSync();
         clear(); destiaction();
         return;
@@ -179,11 +179,11 @@ void sourceaction() {
 }
 
 void destiaction() {
-  final data = Input(prompt: reader(0)).interact();
-  validator("source", data);
+  final data = Input(prompt: reader(1)).interact();
+  validator("dest", data);
 }
 
-Future<void> syncer() async {
+void syncer() {
   String sourceReady = "";
   String destReady = "";
 
@@ -204,28 +204,29 @@ Future<void> syncer() async {
   print("SOURCE:{$sourceReady}");
 	print("DESTINATION:{$destReady}");
 	print("");
-  final syncApt = await Process.run("rsync",[
+  Process.run("rsync",[
     "-axHAWXS", "--numeric-ids", "--info=progress2", sourceReady, destReady
-  ]);
-
-  if(syncApt.exitCode == 0) {
-    print("\n =============== OK =============== \n");
-    printer("print", 7); exit(0);
-  } else {
-    clear(); printer("error", 8); print("");
-    print("SOURCE:{$sourceReady}");
-    print("DESTINATION:{$destReady}");
-    print("");
-    final syncAptTwo = await Process.run("sudo",["rsync",
-      "-axHAWXS", "--numeric-ids", "--info=progress2", sourceReady, destReady
-    ]);
-    if(syncAptTwo.exitCode == 0) {
+  ]).then((syncApt) {
+    if(syncApt.exitCode == 0) {
       print("\n =============== OK =============== \n");
       printer("print", 7); exit(0);
     } else {
-      printer("printer", 10); exit(1);
+      clear(); printer("print", 8); print("");
+      print("SOURCE:{$sourceReady}");
+      print("DESTINATION:{$destReady}");
+      print("");
+      Process.run("sudo",["rsync",
+        "-axHAWXS", "--numeric-ids", "--info=progress2", sourceReady, destReady
+      ]).then((syncAptTwo) {
+        if(syncAptTwo.exitCode == 0) {
+          print("\n =============== OK =============== \n");
+          printer("print", 7); exit(0);
+        } else {
+          printer("printer", 10); exit(1);
+        }
+      });
     }
-  }
+  });
 }
 
 void main() { core(); }
