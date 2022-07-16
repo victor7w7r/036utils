@@ -85,9 +85,9 @@ $ pipenv run pyinstaller --onefile efitoggler.py
 $ ./dist/efitoggler
 
 # Dart
-$ cd 036utils/src/dart/efitoggler
-$ dart compile exe efitoggler.dart -o bin/efitoggler
-$ ./bin/efitoggler
+$ cd 036utils/src/dart/efitoggler/bin
+$ dart compile exe efitoggler.dart -o efitoggler
+$ ./efitoggler
 
 # Go
 $ cd 036utils/src/go/efitoggler
