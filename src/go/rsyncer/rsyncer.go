@@ -11,7 +11,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
-	"github.com/fatih/color"
 )
 
 func core() {
@@ -21,101 +20,6 @@ func core() {
 var LANGUAGE int = 0
 var SOURCE string = ""
 var DEST string = ""
-
-func printer(typeQuery string, position int, additional ...string) {
-
-	DICTIONARY_ENG := [10]string{
-		"Your Operating System is not GNU/Linux, exiting",
-		"In this system the binary sudo doesn't exist.",
-		"The rsync binary is not available in this system, please install",
-		"The dialog binary is not available in this system, please install",
-		"All dependencies is ok!",
-		fmt.Sprintf("The directory %s doesn't exist", additional),
-		"=============== START RSYNC =============== \n" ,
-		"Done!\n",
-		"You don't have permissions to write the destination or read the source",
-		"=============== FAIL =============== \n",
-	}
-
-	DICTIONARY_ESP := [10]string{
-		"Este sistema no es GNU/Linux, saliendo",
-		"En este sistema no existe el binario de superusuario.",
-		"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
-		"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
-		"¡Todo ok!",
-		fmt.Sprintf("El directorio %s no existe", additional),
-		"=============== EMPEZAR RSYNC =============== \n" ,
-		"Listo!\n",
-		"No tienes permisos para escribir el directorio de destino o para leer el origen",
-		"=============== FALLA =============== \n",
-	}
-
-	green := color.New(color.FgGreen)
-	cyan := color.New(color.FgCyan)
-	red := color.New(color.FgRed)
-
-	if LANGUAGE == 1 {
-		switch {
-		case typeQuery == "print":
-			fmt.Println(DICTIONARY_ENG[position])
-		case typeQuery == "info":
-			green.Print("[+] ")
-			fmt.Printf("INFO: %s", DICTIONARY_ENG[position])
-		case typeQuery == "warn":
-			cyan.Print("[*] ")
-			fmt.Printf("WARNING: %s", DICTIONARY_ENG[position])
-		case typeQuery == "error":
-			red.Print("[!] ")
-			fmt.Printf("ERROR: %s", DICTIONARY_ENG[position])
-		}
-	} else {
-		switch {
-		case typeQuery == "print":
-			fmt.Println(DICTIONARY_ESP[position])
-		case typeQuery == "info":
-			green.Print("[+] ")
-			fmt.Printf("INFO: %s", DICTIONARY_ESP[position])
-		case typeQuery == "warn":
-			cyan.Print("[*] ")
-			fmt.Printf("WARNING: %s", DICTIONARY_ESP[position])
-		case typeQuery == "error":
-			red.Print("[!] ")
-			fmt.Printf("ERROR: %s", DICTIONARY_ESP[position])
-		}
-	}
-}
-
-func reader(position int) string {
-
-	DICTIONARY_ENG := [3]string {
-		"Please write your source directory",
-		"Please write your destination directory to copy",
-		"Press Enter to continue...",
-	}
-
-	DICTIONARY_ESP := [3]string {
-		"Por favor escriba su directorio de origen",
-		"Por favor escriba su directorio de destino",
-		"Presione Enter para continuar...",
-	}
-
-	if(LANGUAGE == 1) {
-		return DICTIONARY_ENG[position]
-	} else {
-		return DICTIONARY_ESP[position]
-	}
-}
-
-func commandverify(cmd string) bool {
-	check := exec.Command("bash", "-c", fmt.Sprintf("type %s",cmd))
-	_, err := check.Output();
-
-	if(err == nil) {
-		return true
-	} else {
-		return false
-	}
-}
 
 func language() {
 
@@ -136,14 +40,14 @@ func language() {
 func verify() {
 	platform := runtime.GOOS
 	if platform != "linux" {
-		lib.Clear(); printer("error", 0)
+		lib.Clear(); lib.Printer("error", 0, LANGUAGE)
 		fmt.Print("\n"); os.Exit(1)
 	}
-	if(!commandverify("rsync")) {
-		lib.Clear(); printer("error", 2)
+	if(!lib.Commandverify("rsync")) {
+		lib.Clear(); lib.Printer("error", 2, LANGUAGE)
 		fmt.Print("\n"); os.Exit(1)
 	}
-	printer("print",4)
+	lib.Printer("print",4, LANGUAGE)
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()
 
@@ -159,8 +63,8 @@ func validator(typeData string, data string) {
 				SOURCE=data; lib.Clear(); destiaction()
 				return
 			} else {
-				lib.Clear(); printer("error", 5, data)
-				fmt.Println(""); fmt.Println(reader(2))
+				lib.Clear(); lib.Printer("error", 5, LANGUAGE, data)
+				fmt.Println(""); fmt.Println(lib.Reader(2, LANGUAGE))
 				fmt.Scanln(); lib.Clear(); sourceaction()
 				return
 			}
@@ -173,8 +77,8 @@ func validator(typeData string, data string) {
 			if err == nil {
 				DEST=data; syncer(); return
 			} else {
-				lib.Clear(); printer("error", 5, data)
-				fmt.Println(""); fmt.Println(reader(2))
+				lib.Clear(); lib.Printer("error", 5, LANGUAGE, data)
+				fmt.Println(""); fmt.Println(lib.Reader(2, LANGUAGE))
 				fmt.Scanln(); lib.Clear(); destiaction()
 				return
 			}
@@ -188,14 +92,14 @@ func validator(typeData string, data string) {
 
 func sourceaction() {
 	data := ""
-	prompt := &survey.Input{Message: reader(0),}
+	prompt := &survey.Input{Message: lib.Reader(0, LANGUAGE),}
 	survey.AskOne(prompt, &data)
 	validator("source", data)
 }
 
 func destiaction() {
 	data := ""
-	prompt := &survey.Input{Message: reader(1),}
+	prompt := &survey.Input{Message: lib.Reader(1, LANGUAGE),}
 	survey.AskOne(prompt, &data)
 	validator("dest", data)
 }
@@ -214,7 +118,7 @@ func syncer() {
 	} else {
 		DESTREADY = DEST + "/"
 	}
-	lib.Clear(); printer("print", 6); fmt.Println("")
+	lib.Clear(); lib.Printer("print", 6, LANGUAGE); fmt.Println("")
 	fmt.Printf("SOURCE:{%s} \n", SOURCEREADY)
 	fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
 	fmt.Println("")
@@ -222,9 +126,9 @@ func syncer() {
 	_, err := syncApt.Output();
 	if err == nil {
 		fmt.Print("\n =============== OK =============== \n")
-		printer("print",7); os.Exit(0)
+		lib.Printer("print",7, LANGUAGE); os.Exit(0)
 	} else {
-		lib.Clear(); printer("print", 8); fmt.Println("")
+		lib.Clear(); lib.Printer("print", 8, LANGUAGE); fmt.Println("")
 		fmt.Printf("SOURCE:{%s} \n" , SOURCEREADY)
 		fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
 		fmt.Println("")
@@ -232,9 +136,9 @@ func syncer() {
 		_, err := syncAptTwo.Output();
 		if err == nil {
 			fmt.Print("\n =============== OK =============== \n")
-			printer("print",7); os.Exit(0)
+			lib.Printer("print",7, LANGUAGE); os.Exit(0)
 		} else {
-			printer("print",10); os.Exit(1)
+			lib.Printer("print",10, LANGUAGE); os.Exit(1)
 		}
 	}
 }
