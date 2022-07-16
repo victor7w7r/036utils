@@ -1,11 +1,14 @@
-module 036utils
+module efitoggler
 
 go 1.18
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.5 // indirect
-	github.com/briandowns/spinner v1.18.1 // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/AlecAivazis/survey/v2 v2.3.5
+	github.com/briandowns/spinner v1.18.1
+	github.com/fatih/color v1.13.0
+)
+
+require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
