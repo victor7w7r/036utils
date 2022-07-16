@@ -4,13 +4,11 @@ from time import sleep
 from pip import main
 from os import system
 
-from lib import printer, utils, cover
+from lib.cover import cover
+from lib.printer import printer
+from lib.utils import utils
 
-try:
-    inquirer = __import__('inquirer')
-except ImportError:
-    main(['install', 'inquirer'])
-    inquirer = __import__('inquirer')
+import inquirer
 
 LANGUAGE: int = 0
 

@@ -1,4 +1,4 @@
-import utils
+from lib.utils import utils
 
 def cover() -> None:
     utils.clear()
