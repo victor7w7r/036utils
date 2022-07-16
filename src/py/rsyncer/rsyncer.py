@@ -6,11 +6,11 @@ from time import sleep
 
 import inquirer
 
+from lib.commandverify import commandverify
 from lib.cover import cover
 from lib.printer import printer
 from lib.reader import reader
 from lib.utils import utils
-from lib.commandverify import commandverify
 
 SOURCE: str = ""; DEST: str = ""; LANGUAGE: int = 0
 

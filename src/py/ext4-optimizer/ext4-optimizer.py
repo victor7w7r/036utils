@@ -2,15 +2,14 @@ from subprocess import call, PIPE, Popen
 from sys import stdout, platform, version_info
 from os import system
 from time import sleep
-from pip import main
 
-from lib import printer, reader, commandverify, utils, cover
+import inquirer
 
-try:
-    inquirer = __import__('inquirer')
-except ImportError:
-    main(['install', 'inquirer'])
-    inquirer = __import__('inquirer')
+from lib.commandverify import commandverify
+from lib.cover import cover
+from lib.printer import printer
+from lib.reader import reader
+from lib.utils import utils
 
 LANGUAGE: int = 0
 
@@ -86,7 +85,7 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str]:
         if TYPE == "ext4": EXTCOUNT += 1; EXTPARTS.append(PART)
 
     if (EXTCOUNT == 0):
-        utils.clear(); printer("error",6)
+        utils.clear(); printer("error",6,LANGUAGE)
         if menuable == "menu" : input(reader(4)); return
         else: exit(1)
 
@@ -97,7 +96,7 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str]:
         else: UMOUNTS.append(f"/dev/{PARTITIONSDEF}")
 
     if MOUNTCOUNT == EXTCOUNT :
-        utils.clear(); printer("error",7)
+        utils.clear(); printer("error",7,LANGUAGE)
         if(menuable == "menu"): input(reader(4, LANGUAGE)); return
         else: exit(1)
 
