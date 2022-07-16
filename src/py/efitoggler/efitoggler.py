@@ -1,14 +1,13 @@
 from subprocess import Popen, call, PIPE
 from sys import stdout, platform, version_info
 from time import sleep
-from pip import main
 from os import system
+
+import inquirer
 
 from lib.cover import cover
 from lib.printer import printer
 from lib.utils import utils
-
-import inquirer
 
 LANGUAGE: int = 0
 

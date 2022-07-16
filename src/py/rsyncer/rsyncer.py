@@ -3,15 +3,14 @@ from sys import stdout, platform, version_info
 from os import path
 from re import search
 from time import sleep
-from pip import main
 
-from lib import printer, reader, utils, cover, commandverify
+import inquirer
 
-try:
-    inquirer = __import__('inquirer')
-except ImportError:
-    main(['install', 'inquirer'])
-    inquirer = __import__('inquirer')
+from lib.cover import cover
+from lib.printer import printer
+from lib.reader import reader
+from lib.utils import utils
+from lib.commandverify import commandverify
 
 SOURCE: str = ""; DEST: str = ""; LANGUAGE: int = 0
 

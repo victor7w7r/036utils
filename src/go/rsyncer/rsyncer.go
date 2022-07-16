@@ -1,11 +1,11 @@
 package main
 
 import (
-	"036utils/lib"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
+	"rsyncer/lib"
 	"runtime"
 	"time"
 
