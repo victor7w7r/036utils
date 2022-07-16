@@ -15,7 +15,7 @@ import (
 )
 
 func core() {
-	lib.Clear(); language(); lib.Cover();
+	lib.Clear(); language(); lib.Cover(); verify()
 }
 
 var LANGUAGE int = 0
@@ -151,7 +151,7 @@ func verify() {
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()
 
-	lib.Clear();
+	lib.Clear(); sourceaction();
 }
 
 func validator(typeData string, data string) {
