@@ -8,11 +8,10 @@ import (
 
 func Printer(typeQuery string, position int, languaje int, additional ...string) {
 
-	DICTIONARY_ENG := [10]string{
+	DICTIONARY_ENG := [9]string{
 		"Your Operating System is not GNU/Linux, exiting",
 		"In this system the binary sudo doesn't exist.",
 		"The rsync binary is not available in this system, please install",
-		"The dialog binary is not available in this system, please install",
 		"All dependencies is ok!",
 		fmt.Sprintf("The directory %s doesn't exist", additional),
 		"=============== START RSYNC =============== \n" ,
@@ -21,11 +20,10 @@ func Printer(typeQuery string, position int, languaje int, additional ...string)
 		"=============== FAIL =============== \n",
 	}
 
-	DICTIONARY_ESP := [10]string{
+	DICTIONARY_ESP := [9]string{
 		"Este sistema no es GNU/Linux, saliendo",
 		"En este sistema no existe el binario de superusuario.",
 		"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
-		"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
 		"¡Todo ok!",
 		fmt.Sprintf("El directorio %s no existe", additional),
 		"=============== EMPEZAR RSYNC =============== \n" ,

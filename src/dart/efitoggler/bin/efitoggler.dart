@@ -1,4 +1,6 @@
-import 'dart:io' show Platform, Process, exit;
+import 'dart:io' show Platform, exit;
+
+import 'package:process_run/shell_run.dart';
 
 import 'package:interact/interact.dart';
 
@@ -32,15 +34,17 @@ void verify() {
   });
 }
 
-Future<void> toggler() async {
+void toggler() async {
 
-  final result1 = await Process.run("bash",[
+  final shell = Shell(throwOnError: false);
+
+  final result1 = await shell.runExecutableArguments("bash", [
     "-c", "diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'"
   ]);
 
   if(result1.exitCode != 0) exit(1);
 
-  final result2 = await Process.run("bash",[
+  final result2 = await shell.runExecutableArguments("bash",[
     "-c","EFIPART=\$(diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p') MOUNTROOT=\$(df -h | sed -ne \"/\$EFIPART/p\"); echo \$MOUNTROOT"
   ]);
 
@@ -52,20 +56,21 @@ Future<void> toggler() async {
   if(efi != "") {
     printer("print", 2, _language);
 
-  final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);    if(checkDev.exitCode == 0) {
-      await Process.run("bash", ["-c", "sudo diskutil unmount $efipart"]);
-      await Process.run("bash", ["-c", "sudo rm -rf /Volumes/EFI"]);
+  final checkDev = await shell.runExecutableArguments("bash", ["-c", "sudo cat < /dev/null"]);
+    if(checkDev.exitCode == 0) {
+      await shell.runExecutableArguments("bash", ["-c", "sudo diskutil unmount $efipart"]);
+      await shell.runExecutableArguments("bash", ["-c", "sudo rm -rf /Volumes/EFI"]);
       clear(); printer("print", 4, _language);
     } else {
       clear(); printer("error", 5, _language); exit(1);
     }
   } else {
     printer("print", 3, _language);
-    final checkDev = await Process.run("bash", ["-c", "sudo cat < /dev/null"]);
+    final checkDev = await shell.runExecutableArguments("bash", ["-c", "sudo cat < /dev/null"]);
     if(checkDev.exitCode == 0) {
-      await Process.run("bash", ["-c", "sudo mkdir /Volumes/EFI"]);
-      await Process.run("bash", ["-c", "sudo mount -t msdos /dev/$efipart /Volumes/EFI"]);
-      await Process.run("bash", ["-c", "open /Volumes/EFI"]);
+      await shell.runExecutableArguments("bash", ["-c", "sudo mkdir /Volumes/EFI"]);
+      await shell.runExecutableArguments("bash", ["-c", "sudo mount -t msdos /dev/$efipart /Volumes/EFI"]);
+      await shell.runExecutableArguments("bash", ["-c", "open /Volumes/EFI"]);
       clear(); printer("print", 4, _language);
     } else {
       clear(); printer("error", 5, _language); exit(1);

@@ -1,4 +1,6 @@
-import 'dart:io' show Directory, Platform, Process, exit, stdin;
+import 'dart:io' show Directory, Platform, exit, stdin;
+
+import 'package:process_run/shell_run.dart';
 
 import 'package:interact/interact.dart';
 
@@ -23,7 +25,7 @@ void language() {
   selection == 0 ? _language = 1 : _language = 2;
 }
 
-Future<void> verify() async {
+void verify() async {
   if(!Platform.isLinux) {
     clear();
     printer("error", _language, 0);
@@ -37,14 +39,14 @@ Future<void> verify() async {
     print("\n");
     exit(1);
   }
-  printer("print", _language, 4);
+  printer("print", _language, 3);
   spin(() {
     clear();
     sourceaction();
   });
 }
 
-Future<void> validator(String typeData, String data) async {
+void validator(String typeData, String data) async {
 
   bool path = await Directory(data).exists();
 
@@ -54,7 +56,7 @@ Future<void> validator(String typeData, String data) async {
         _source = data; clear(); destiaction();
         return;
       } else {
-        clear(); printer("error", 5, _language, data);
+        clear(); printer("error", 4, _language, data);
         print(reader(_language, 2));
         stdin.readLineSync();
         clear(); sourceaction();
@@ -68,7 +70,7 @@ Future<void> validator(String typeData, String data) async {
       if(path) {
         _dest = data; clear(); syncer();
       } else {
-        clear(); printer("error", 5, _language, data);
+        clear(); printer("error", 4, _language, data);
         print(reader(_language, 2));
         stdin.readLineSync();
         clear(); destiaction();
@@ -93,6 +95,9 @@ void destiaction() {
 }
 
 void syncer() {
+
+  final shell = Shell(throwOnError: false);
+
   String sourceReady = "";
   String destReady = "";
 
@@ -109,29 +114,29 @@ void syncer() {
     destReady = "$_dest/";
   }
 
-  clear(); printer("print", _language, 6); print("");
+  clear(); printer("print", 5, _language); print("");
   print("SOURCE:{$sourceReady}");
 	print("DESTINATION:{$destReady}");
 	print("");
-  Process.run("rsync",[
+  shell.runExecutableArguments("rsync",[
     "-axHAWXS", "--numeric-ids", "--info=progress2", sourceReady, destReady
   ]).then((syncApt) {
     if(syncApt.exitCode == 0) {
       print("\n =============== OK =============== \n");
-      printer("print", _language, 7); exit(0);
+      printer("print", 6, _language); exit(0);
     } else {
-      clear(); printer("print", _language, 8); print("");
+      clear(); printer("print", 7, _language); print("");
       print("SOURCE:{$sourceReady}");
       print("DESTINATION:{$destReady}");
       print("");
-      Process.run("sudo",["rsync",
+      shell.runExecutableArguments("sudo",["rsync",
         "-axHAWXS", "--numeric-ids", "--info=progress2", sourceReady, destReady
       ]).then((syncAptTwo) {
         if(syncAptTwo.exitCode == 0) {
           print("\n =============== OK =============== \n");
-          printer("print", _language, 7); exit(0);
+          printer("print", _language, 6); exit(0);
         } else {
-          printer("print", _language, 10); exit(1);
+          printer("print", _language, 8); exit(1);
         }
       });
     }

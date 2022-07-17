@@ -48,7 +48,6 @@ func verify() {
 }
 
 func toggler() {
-
 	sout1, err1 := exec.Command("bash", "-c",
 		"diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'").Output()
 	if err1 != nil {fmt.Println(err1); os.Exit(1)}
@@ -66,9 +65,8 @@ func toggler() {
 		lib.Printer("print", 2, LANGUAGE)
 		checkDev := exec.Command("bash", "-c", "sudo cat < /dev/null")
 		checkDev.Stdin = os.Stdin
-		outChck, errChck := checkDev.Output()
+		_, errChck := checkDev.Output()
 		if errChck == nil {
-			_ = outChck
 			exec.Command("bash", "-c", fmt.Sprintf("sudo diskutil unmount %s",EFIPART)).Run()
 			exec.Command("bash", "-c", "sudo rm -rf /Volumes/EFI").Run()
 			lib.Clear()
@@ -83,9 +81,8 @@ func toggler() {
 		lib.Printer("print", 3, LANGUAGE)
 		checkDev := exec.Command("bash", "-c", "sudo cat < /dev/null")
 		checkDev.Stdin = os.Stdin
-		outChck, errChck := checkDev.Output()
+		_, errChck := checkDev.Output()
 		if errChck == nil {
-			_ = outChck
 			exec.Command("bash", "-c", "sudo mkdir /Volumes/EFI").Run()
 			exec.Command("bash", "-c", fmt.Sprintf("sudo mount -t msdos /dev/%s /Volumes/EFI", EFIPART)).Run()
 			exec.Command("bash", "-c", "open /Volumes/EFI").Run()

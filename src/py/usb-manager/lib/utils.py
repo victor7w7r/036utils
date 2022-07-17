@@ -1,7 +1,42 @@
-from lib.utils import utils
+from subprocess import call, PIPE, Popen
+from os import system
+
+from printer import printer
+
+def clear() -> None: system('clear')
+
+def commandverify(cmd: str) -> bool:
+    return call("type " + cmd, shell=True, stdout=PIPE, stderr=PIPE) == 0
+
+def usbverify() -> None:
+    VERIFYUSB: str = Popen(r"""find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///'
+                            """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
+    if VERIFYUSB == "": clear(); printer("error", 6); exit(1)
+
+def spinning():
+    while True:
+        for cursor in '|/-\\':
+            yield cursor
+
+def live_tasker(cmd: str):
+        lineable: str = ""
+        task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')
+        while task.poll() is None:
+            for line in task.stdout:
+                task.stdout.flush()
+                lineable = line
+        if task.poll() == 0: return [0,lineable]
+        else: return [task.poll(),task.stderr.read().replace("\n", "")]
+
+def live_tasker_poweroff(cmd: str):
+    task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')
+    while task.poll() is None:
+        for _ in task.stdout:
+            task.stdout.flush()
+    return task.poll()
 
 def cover() -> None:
-    utils.clear()
+    clear()
     print(r'''                                     `"~>v??*^;rikD&MNBQku*;`                                           ''')
     print(r'''                                `!{wQNWWWWWWWWWWWWWWWNWWWWWWNdi^`                                       ''')
     print(r'''                              .v9NWWWWNRFmWWWWWWWWWWWWga?vs0pNWWWMw!                                    ''')

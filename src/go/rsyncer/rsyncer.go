@@ -63,7 +63,7 @@ func validator(typeData string, data string) {
 				SOURCE=data; lib.Clear(); destiaction()
 				return
 			} else {
-				lib.Clear(); lib.Printer("error", 5, LANGUAGE, data)
+				lib.Clear(); lib.Printer("error", 4, LANGUAGE, data)
 				fmt.Println(""); fmt.Println(lib.Reader(2, LANGUAGE))
 				fmt.Scanln(); lib.Clear(); sourceaction()
 				return
@@ -77,7 +77,7 @@ func validator(typeData string, data string) {
 			if err == nil {
 				DEST=data; syncer(); return
 			} else {
-				lib.Clear(); lib.Printer("error", 5, LANGUAGE, data)
+				lib.Clear(); lib.Printer("error", 4, LANGUAGE, data)
 				fmt.Println(""); fmt.Println(lib.Reader(2, LANGUAGE))
 				fmt.Scanln(); lib.Clear(); destiaction()
 				return
@@ -118,7 +118,7 @@ func syncer() {
 	} else {
 		DESTREADY = DEST + "/"
 	}
-	lib.Clear(); lib.Printer("print", 6, LANGUAGE); fmt.Println("")
+	lib.Clear(); lib.Printer("print", 5, LANGUAGE); fmt.Println("")
 	fmt.Printf("SOURCE:{%s} \n", SOURCEREADY)
 	fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
 	fmt.Println("")
@@ -126,7 +126,7 @@ func syncer() {
 	_, err := syncApt.Output();
 	if err == nil {
 		fmt.Print("\n =============== OK =============== \n")
-		lib.Printer("print",7, LANGUAGE); os.Exit(0)
+		lib.Printer("print", 7, LANGUAGE); os.Exit(0)
 	} else {
 		lib.Clear(); lib.Printer("print", 8, LANGUAGE); fmt.Println("")
 		fmt.Printf("SOURCE:{%s} \n" , SOURCEREADY)
@@ -138,7 +138,7 @@ func syncer() {
 			fmt.Print("\n =============== OK =============== \n")
 			lib.Printer("print",7, LANGUAGE); os.Exit(0)
 		} else {
-			lib.Printer("print",10, LANGUAGE); os.Exit(1)
+			lib.Printer("print",8, LANGUAGE); os.Exit(1)
 		}
 	}
 }

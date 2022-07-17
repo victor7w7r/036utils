@@ -7,7 +7,6 @@ void printer(String typeQuery, int position, int language, [String additional=""
 		"Your Operating System is not GNU/Linux, exiting",
 		"In this system the binary sudo doesn't exist.",
 		"The rsync binary is not available in this system, please install",
-		"The dialog binary is not available in this system, please install",
 		"All dependencies is ok!",
     "The directory $additional doesn't exist"
 		"=============== START RSYNC =============== \n" ,
@@ -20,7 +19,6 @@ void printer(String typeQuery, int position, int language, [String additional=""
     "Este sistema no es GNU/Linux, saliendo",
 		"En este sistema no existe el binario de superusuario.",
 		"El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo",
-		"EL ejecutable de dialog, no se encuentra en el sistema, por favor instalalo",
 		"¡Todo ok!",
 		"El directorio $additional no existe",
 		"=============== EMPEZAR RSYNC =============== \n" ,
