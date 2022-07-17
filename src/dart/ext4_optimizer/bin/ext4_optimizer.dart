@@ -71,6 +71,7 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = ""])
       if(absoluteParts != root) {
         final partProcess = await Process.run("bash",["-c","echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"]);
         parts.add((partProcess.stdout as String).split("\n")[0]);
+        count += 1;
       }
     }
   }
