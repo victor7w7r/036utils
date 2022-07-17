@@ -36,11 +36,13 @@ Future<void> verify() async {
     clear(); printer("error", 3, _language);
     print(""); exit(1);
   }
-  ext4listener(); printer("print", 5, _language);
-  spin(() {
+  printer("print", 5, _language);
+  ext4listener();
+  /*spin(() {
     clear();
+    //ext4listener();
     menu();
-  });
+  });*/
 }
 
 Future<List<String>> ext4listener([String menuable = "", String echoparts = ""]) async {
@@ -50,8 +52,10 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = ""])
   List<String> parts = []; List<String> dirtyDevs = [];
   List<String> umounts = [];
 
-  final rootProcess = await Process.run("bash",["-c",r"df -h | sed -ne '/\/$/p' | cut -d" " -f1"]);
-  final root = (rootProcess.stdout as String).split("\n");
+  final rootProcess = await Process.run("bash",["-c",r"df -h | sed -ne '/\/$/p' | cut -d " " -f1"]);
+  print(rootProcess.exitCode);
+  stdin.readByteSync();
+  final root = (rootProcess.stdout as String);
 
   final verifyProcess = await Process.run("bash",["-c",r"find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'"]);
   final verify = (verifyProcess.stdout as String).split("\n");
@@ -66,7 +70,6 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = ""])
   for (final dev in dirtyDevs) {
     final absPartsProcess = await Process.run("bash",["-c","echo $dev | sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"]);
     absoluteParts = (absPartsProcess.stdout as String).trim();
-
     if(absoluteParts != "") {
       if(absoluteParts != root) {
         final partProcess = await Process.run("bash",["-c","echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"]);

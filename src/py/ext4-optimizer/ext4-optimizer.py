@@ -56,7 +56,7 @@ def ext4listener(menuable: str = "", echoparts: str = "") -> list[str]:
     EXTPARTS: list = []; PARTS: list = []
     UMOUNTS: list[str, str] = []
 
-    ROOT: str = Popen(r"""df -h | sed -ne '/\/$/p' | cut -d" " -f1
+    ROOT: str = Popen(r"""df -h | sed -ne '/\/$/p' | cut -d " " -f1
                         """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').replace("\n", "")
     VERIFY: str = Popen(r"""find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'
                         """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').split("\n")
