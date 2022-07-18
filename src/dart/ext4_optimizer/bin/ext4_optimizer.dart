@@ -40,13 +40,11 @@ void verify() async {
   }
   printer("print", 4, _language);
   ext4listener();
-  /*spin(() {
+  spin(() {
     clear();
-    //ext4listener();
     menu();
-  });*/
+  });
 }
-
 
 void menu() {
   final selection = Select(
@@ -73,24 +71,26 @@ void defragmenu() async {
 
 void defragction(String part) async {
 
-  final shell = Shell();
+  final shellNoVerb = Shell(throwOnError: false, verbose: false);
+  final shell = Shell(throwOnError: false, verbose: true);
 
   clear(); if (part == "") return;
   printer("print", 7, _language);
 
-  final sudoRequest = await shell.runExecutableArguments("bash",["-c","sudo cat < /dev/null"]);
+  final sudoRequest = await shellNoVerb.runExecutableArguments("bash",["-c","sudo cat < /dev/null"]);
   if(sudoRequest.exitCode == 0) {
 
     final repairRequest = await shell.runExecutableArguments("bash",["-c","sudo fsck.ext4 -y -f -v $part"]);
     if(repairRequest.exitCode != 8) {
       printer("print", 9, _language);
       print(reader(4, _language));
+      stdin.readLineSync();
       clear();
     } else {
       printer("print", 8, _language);
       print(reader(4, _language));
       stdin.readLineSync();
-      menu(); return;
+      clear(); menu(); return;
     }
 
     printer("print", 10, _language);
@@ -99,23 +99,25 @@ void defragction(String part) async {
     if(optimizeRequest.exitCode != 8) {
       printer("print", 9, _language);
       print(reader(4, _language));
+      stdin.readLineSync();
       clear();
     } else {
       printer("print", 8, _language);
       print(reader(4, _language));
       stdin.readLineSync();
-      menu(); return;
+      clear(); menu(); return;
     }
 
-    await shell.runExecutableArguments("bash",["-c","mkdir /tmp/optimize 2> /dev/null"]);
-    await shell.runExecutableArguments("bash",["-c","sudo mount $part /tmp/optimize"]);
+    await shellNoVerb.runExecutableArguments("bash",["-c","mkdir /tmp/optimize 2> /dev/null"]);
+    await shellNoVerb.runExecutableArguments("bash",["-c","sudo mount $part /tmp/optimize"]);
 
     printer("print", 11, _language);
     await shell.runExecutableArguments("bash",["-c","sudo e4defrag -v $part"]);
     print("");
-    await shell.runExecutableArguments("bash",["-c","sudo umount $part"]);
+    await shellNoVerb.runExecutableArguments("bash",["-c","sudo umount $part"]);
     printer("print", 9, _language);
     print(reader(4, _language));
+    stdin.readLineSync();
     clear();
 
     printer("print", 12, _language);
@@ -124,20 +126,21 @@ void defragction(String part) async {
     if(repairRequestFinal.exitCode != 8) {
       printer("print", 9, _language);
       print(reader(4, _language));
-      clear();
+      stdin.readLineSync();
+      clear(); menu(); return;
     } else {
       printer("print", 8, _language);
       print(reader(4, _language));
       stdin.readLineSync();
-      menu(); return;
+      clear(); menu(); return;
     }
 
   } else {
     clear(); printer("print", 8, _language);
     print(reader(4, _language));
     stdin.readLineSync();
-    menu(); return;
+    clear(); menu(); return;
   }
 }
 
-void main() {core(); }
+void main() { core(); }

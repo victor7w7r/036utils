@@ -8,13 +8,13 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
 
   final shell = Shell(throwOnError: false, verbose: false);
 
-  int count = 0; int extCount = 0; int mountCount = 0;
+  int extCount = 0; int mountCount = 0;
   String absoluteParts = ""; List<String> extParts = [];
   List<String> parts = []; List<String> dirtyDevs = [];
   List<String> umounts = [];
 
   final rootProcess = await shell.run("bash -c \"df -h | sed -ne '/\\/\$/p' | cut -d ' ' -f1\"");
-  final root = (rootProcess[0].stdout as String);
+  final root = (rootProcess[0].stdout as String).trim();
 
   final verifyProcess = await shell.run("bash -c \"find /dev/disk/by-id/ | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'\"");
   final verify = (verifyProcess[0].stdout as String).split("\n");
@@ -33,7 +33,6 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
       if(absoluteParts != root) {
         final partProcess = await shell.run("bash -c \"echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'\"");
         parts.add((partProcess[0].stdout as String).split("\n")[0]);
-        count += 1;
       }
     }
   }
@@ -41,10 +40,13 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
   for(final part in parts) {
     final typeProcess = await shell.run("bash -c \"lsblk -f /dev/$part | sed -ne '2p' | cut -d ' ' -f2\"");
     final type = (typeProcess[0].stdout as String).trim();
-    if(type == "ext4") extCount +=1; extParts.add(part);
+    if(type == "ext4") {
+      extCount +=1;
+      extParts.add(part);
+    }
   }
 
-  if(extCount == 0 ){
+  if(extCount == 0){
     clear(); printer("error", 5, language);
     if(menuable == "menu") {
       print(reader(4, language));
@@ -55,7 +57,7 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
   }
 
   for(final partitionsdef in extParts) {
-      final mountedProcess = await shell.run("bash -c \"lsblk /dev/{PARTITIONSDEF} | sed -ne '/\\//p'\"");
+      final mountedProcess = await shell.run("bash -c \"lsblk /dev/$partitionsdef | sed -ne '/\\//p'\"");
       final mounted = (mountedProcess[0].stdout as String).trim();
       mounted != "" ? mountCount +=1 : umounts.add("/dev/$partitionsdef");
   }

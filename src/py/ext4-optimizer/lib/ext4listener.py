@@ -6,7 +6,7 @@ from lib.reader import reader
 
 def ext4listener(language: int, menuable: str = "", echoparts: str = "") -> list[str]:
 
-    COUNT: int = 0; EXTCOUNT: int = 0; MOUNTCOUNT: int = 0
+    EXTCOUNT: int = 0; MOUNTCOUNT: int = 0
     ABSOLUTEPARTS: str = ""; DIRTYDEVS: list = []
     EXTPARTS: list = []; PARTS: list = []
     UMOUNTS: list[str, str] = []
@@ -30,7 +30,7 @@ def ext4listener(language: int, menuable: str = "", echoparts: str = "") -> list
             if ABSOLUTEPARTS != ROOT:
                 PARTS.append(Popen(f"echo {DEV} | sed 's/^\.\.\/\.\.\///' | sed '/.*[[:alpha:]]$/d' | sed '/blk[[:digit:]]$/d'",
                     shell=True, stdout=PIPE).stdout.read()
-                    .decode('utf-8').rstrip().split("\n")[0]); COUNT += 1
+                    .decode('utf-8').rstrip().split("\n")[0])
 
     for PART in PARTS:
         TYPE: str = Popen(f'''lsblk -f /dev/{PART} | sed -ne '2p' | cut -d " " -f2''',
