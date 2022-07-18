@@ -28,18 +28,18 @@ void language() {
 void verify() async {
   if(!Platform.isLinux) {
     clear();
-    printer("error", _language, 0);
+    printer("error", 0, _language);
     print("\n");
     exit(1);
   }
   final commandVef = await commandverify("rsync");
   if(!commandVef) {
     clear();
-    printer("error", _language, 2);
+    printer("error", 2, _language);
     print("\n");
     exit(1);
   }
-  printer("print", _language, 3);
+  printer("print", 3, _language);
   spin(() {
     clear();
     sourceaction();
@@ -57,7 +57,7 @@ void validator(String typeData, String data) async {
         return;
       } else {
         clear(); printer("error", 4, _language, data);
-        print(reader(_language, 2));
+        print(reader(2, _language));
         stdin.readLineSync();
         clear(); sourceaction();
         return;
@@ -71,7 +71,7 @@ void validator(String typeData, String data) async {
         _dest = data; clear(); syncer();
       } else {
         clear(); printer("error", 4, _language, data);
-        print(reader(_language, 2));
+        print(reader(2, _language));
         stdin.readLineSync();
         clear(); destiaction();
         return;
@@ -85,18 +85,18 @@ void validator(String typeData, String data) async {
 }
 
 void sourceaction() {
-  final data = Input(prompt: reader(_language, 0)).interact();
+  final data = Input(prompt: reader(0, _language)).interact();
   validator("source", data);
 }
 
 void destiaction() {
-  final data = Input(prompt: reader(_language, 1)).interact();
+  final data = Input(prompt: reader(1, _language)).interact();
   validator("dest", data);
 }
 
 void syncer() {
 
-  final shell = Shell(throwOnError: false);
+  final shell = Shell(throwOnError: false, verbose: false);
 
   String sourceReady = "";
   String destReady = "";

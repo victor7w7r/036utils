@@ -47,7 +47,7 @@ func verify() {
 		lib.Clear(); lib.Printer("error", 2, LANGUAGE)
 		fmt.Print("\n"); os.Exit(1)
 	}
-	lib.Printer("print",4, LANGUAGE)
+	lib.Printer("print",3, LANGUAGE)
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()
 
@@ -126,9 +126,9 @@ func syncer() {
 	_, err := syncApt.Output();
 	if err == nil {
 		fmt.Print("\n =============== OK =============== \n")
-		lib.Printer("print", 7, LANGUAGE); os.Exit(0)
+		lib.Printer("print", 6, LANGUAGE); os.Exit(0)
 	} else {
-		lib.Clear(); lib.Printer("print", 8, LANGUAGE); fmt.Println("")
+		lib.Clear(); lib.Printer("print", 7, LANGUAGE); fmt.Println("")
 		fmt.Printf("SOURCE:{%s} \n" , SOURCEREADY)
 		fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
 		fmt.Println("")
@@ -136,7 +136,7 @@ func syncer() {
 		_, err := syncAptTwo.Output();
 		if err == nil {
 			fmt.Print("\n =============== OK =============== \n")
-			lib.Printer("print",7, LANGUAGE); os.Exit(0)
+			lib.Printer("print",6, LANGUAGE); os.Exit(0)
 		} else {
 			lib.Printer("print",8, LANGUAGE); os.Exit(1)
 		}
