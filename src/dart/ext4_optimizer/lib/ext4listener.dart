@@ -6,17 +6,15 @@ import 'package:ext4_optimizer/index.dart';
 
 Future<List<String>> ext4listener([String menuable = "", String echoparts = "", int language = 0]) async {
 
-  final shell = Shell();
+  final shell = Shell(throwOnError: false, verbose: false);
 
   int count = 0; int extCount = 0; int mountCount = 0;
   String absoluteParts = ""; List<String> extParts = [];
   List<String> parts = []; List<String> dirtyDevs = [];
   List<String> umounts = [];
 
-  final rootProcess = await shell.runExecutableArguments("bash",["-c",r"df -h | sed -ne '/\/$/p' | cut -d " " -f1"]);
-  print(rootProcess.exitCode);
-  stdin.readByteSync();
-  final root = (rootProcess.stdout as String);
+  final rootProcess = await shell.run("bash -c \"df -h | sed -ne '/\\/\$/p' | cut -d ' ' -f1\"");
+  final root = (rootProcess[0].stdout as String);
 
   final verifyProcess = await shell.runExecutableArguments("bash",["-c",r"find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'"]);
   final verify = (verifyProcess.stdout as String).split("\n");
