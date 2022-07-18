@@ -36,7 +36,7 @@ void verify() {
 
 void toggler() async {
 
-  final shell = Shell(throwOnError: false);
+  final shell = Shell(throwOnError: false, verbose: false);
 
   final result1 = await shell.runExecutableArguments("bash", [
     "-c", "diskutil list | sed -ne '/EFI/p' | sed -ne 's/.*\\(d.*\\).*/\\1/p'"
