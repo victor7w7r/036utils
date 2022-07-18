@@ -4,9 +4,7 @@ import (
 	"ext4-optimizer/lib"
 	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -57,25 +55,6 @@ func verify() {
 	lib.Clear()
 }
 
-func ext4listener(menuable string, echoparts string) []string {
-
-	COUNT, EXTCOUNT, MOUNTCOUNT := 0,0,0
-	ABSOLUTEPART, DIRTYDEVS := "", make([]string, 100)
-	EXPARTS, PARTS := make([]string, 100),make([]string, 100)
-	UMOUNTS := make([][]string, 100)
-
-	SROOT, _ := exec.Command("bash", "-c", "df -h | sed -ne '/\\/$/p' | cut -d\" \" -f1").Output()
-	SVERIFY, _ := exec.Command("bash", "-c", "find /dev/disk/by-id/ | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///").Output()
-
-	ROOT := strings.Split(string(SROOT), "\n")
-	VERIFY := strings.Split(string(SVERIFY), "\n")
-
-	for _, DEVICE := range VERIFY {
-		DIRTYDEVS
-	}
-
-	return make([]string, 2)
-}
 
 
 func main() { core() }
