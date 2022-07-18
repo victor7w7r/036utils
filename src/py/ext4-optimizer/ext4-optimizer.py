@@ -60,12 +60,17 @@ def menu() -> None:
 
 def defragmenu() -> None:
 
+    CHOICES = ext4listener(LANGUAGE, "menu", "print")
+    CHOICES.append(reader(6, LANGUAGE))
+
     q = [inquirer.List('menu',
         message=reader(0, LANGUAGE),
-        choices=ext4listener(LANGUAGE, "menu", "print")
+        choices=CHOICES
     )]
+
     answers = inquirer.prompt(q)
-    clear(); defragaction(answers['menu'])
+    if answers['menu'] == reader(6, LANGUAGE): clear(); menu()
+    else: clear(); defragaction(answers['menu'])
 
 def defragaction(part: str) -> None:
 

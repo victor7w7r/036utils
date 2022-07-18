@@ -51,6 +51,7 @@ def verify() -> None:
 
 def menu() -> None:
 
+    clear()
     q = [inquirer.List('menu',
         message=reader(0, LANGUAGE),
         choices=[
@@ -104,23 +105,16 @@ def usblistener(selector: str) -> None:
         else: MOUNTCOUNT += 1; UNMOUNTS.append(PARTITIONS)
 
     if selector == "mount":
-        if UNMOUNTCOUNT == COUNT: printer("error",7); input(reader(5)); menu(); return
+        if UNMOUNTCOUNT == COUNT: printer("error",7, LANGUAGE); input(reader(5, LANGUAGE)); menu(); return
         COUNT=0
         for PART in UNMOUNTS:
             DEVICE: str = f"/dev/{PART}"
-            TYPE: str = Popen(r'''
-                lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
             try: TEMP = FLAGS[FLAGSCOUNT]
             except IndexError: pass
-            if COUNT == TEMP :
-                try: BLOCKSTAT = BLOCK[FLAGSCOUNT]
-                except IndexError: pass
-                FLAGSCOUNT += 1
-            MODEL: str = Popen(f'''
-                cat /sys/class/block/{BLOCKSTAT}/device/model''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            ARGS.append([DEVICE, MODEL + " " + TYPE]); COUNT+=1
+            if COUNT == TEMP: FLAGSCOUNT += 1
+            ARGS.append(DEVICE); COUNT+=1
+
+        ARGS.append(reader(16, LANGUAGE))
 
         q = [inquirer.List('menu',
             message=reader(6, LANGUAGE),
@@ -128,26 +122,20 @@ def usblistener(selector: str) -> None:
         )]
 
         answers = inquirer.prompt(q)
-        clear(); mountaction(answers['menu'])
+        if answers['menu'] == reader(16, LANGUAGE): clear(); menu()
+        else: clear(); mountaction(answers['menu'])
 
     elif selector == "unmount":
-        if MOUNTCOUNT == COUNT: printer("error",10); input(reader(5)); menu(); return
+        if MOUNTCOUNT == COUNT: printer("error",10, LANGUAGE); input(reader(5, LANGUAGE)); menu(); return
         COUNT=0
         for PART in MOUNTS:
             DEVICE: str = "/dev/"+PART
-            TYPE: str = Popen(r'''
-                lsblk -f /dev/'''+PART+''' | sed -ne '2p' | cut -d " " -f2''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
             try: TEMP = FLAGS[FLAGSCOUNT]
             except IndexError: pass
-            if COUNT == TEMP:
-                try: BLOCKSTAT = BLOCK[FLAGSCOUNT]
-                except IndexError: pass
-                FLAGSCOUNT += 1
-            MODEL: str = Popen(f'''
-                cat /sys/class/block/{BLOCKSTAT}/device/model''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            ARGS.append([DEVICE, MODEL + " " + TYPE]); COUNT +=1
+            if COUNT == TEMP: FLAGSCOUNT += 1
+            ARGS.append(DEVICE); COUNT +=1
+
+        ARGS.append(reader(16, LANGUAGE))
 
         q = [inquirer.List('menu',
             message=reader(9, LANGUAGE),
@@ -155,24 +143,26 @@ def usblistener(selector: str) -> None:
         )]
 
         answers = inquirer.prompt(q)
-        clear(); unmountaction(answers['menu'])
+        if answers['menu'] == reader(16, LANGUAGE): clear(); menu()
+        else: clear(); unmountaction(answers['menu'])
 
     elif(selector == "off"):
+        if MOUNTCOUNT == COUNT: printer("error",10, LANGUAGE); input(reader(5, LANGUAGE)); menu(); return
         COUNT=0
         for PART in BLOCK:
             DEVICE: str = "/dev/"+PART
-            BLOCKSTAT = BLOCK[COUNT]
-            MODEL: str = Popen(f'''
-                cat /sys/class/block/{BLOCKSTAT}/device/model''',
-                shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip()
-            ARGSPOWEROFF.append([DEVICE, MODEL]); COUNT += 1
+            ARGSPOWEROFF.append(DEVICE); COUNT += 1
+
+        ARGSPOWEROFF.append(reader(16, LANGUAGE))
+
         q = [inquirer.List('menu',
             message=reader(11, LANGUAGE),
-            choices=ARGS
+            choices=ARGSPOWEROFF
         )]
 
         answers = inquirer.prompt(q)
-        clear(); poweroffaction(answers['menu'])
+        if answers['menu'] == reader(16, LANGUAGE): clear(); menu()
+        else: clear(); poweroffaction(answers['menu'])
 
 def mountaction(part: str) -> None:
 
@@ -182,15 +172,15 @@ def mountaction(part: str) -> None:
     capture = live_tasker(f"udisksctl mount -b {part}")
 
     if capture[0] == 0:
-        system(f"whiptail --title '{reader(8)}' --msgbox '{reader(8)+capture[1]}' 7 35")
+        system(f"whiptail --title '{reader(8, LANGUAGE)}' --msgbox '{reader(8, LANGUAGE)+capture[1]}' 7 35")
         menu()
     else:
         if search("NotAuthorized*",capture[1]):
-            clear(); printer("error",8); input(reader(5)); menu()
+            clear(); printer("error",8, LANGUAGE); input(reader(5, LANGUAGE)); menu()
         elif search("NotAuthorizedDismissed*",capture[1]):
-            clear(); printer("error",8); input(reader(5)); menu()
+            clear(); printer("error",8, LANGUAGE); input(reader(5, LANGUAGE)); menu()
         elif search("AlreadyMounted*",capture[1]):
-            clear(); printer("error",9); input(reader(5)); menu()
+            clear(); printer("error",9, LANGUAGE); input(reader(5, LANGUAGE)); menu()
 
 def unmountaction(part: str) -> None:
 
@@ -200,15 +190,15 @@ def unmountaction(part: str) -> None:
     capture = live_tasker(f"udisksctl unmount -b {part}")
 
     if capture[0] == 0:
-        system(f"whiptail --title '{reader(8)}' --msgbox '{reader(8)+capture[1]}' 7 35")
+        system(f"whiptail --title '{reader(8, LANGUAGE)}' --msgbox '{reader(8, LANGUAGE)+capture[1]}' 7 35")
         menu()
     else:
         if search("NotAuthorized*",capture[1]):
-            clear(); printer("error",8); input(reader(5)); menu()
+            clear(); printer("error",8, LANGUAGE); input(reader(5, LANGUAGE)); menu()
         elif search("NotAuthorizedDismissed*",capture[1]):
-            clear(); printer("error",8); input(reader(5)); menu()
+            clear(); printer("error",8, LANGUAGE); input(reader(5, LANGUAGE)); menu()
         elif search("AlreadyMounted*",capture[1]):
-            clear(); printer("error",9); input(reader(5)); menu()
+            clear(); printer("error",9, LANGUAGE); input(reader(5, LANGUAGE)); menu()
 
 def poweroffaction(part: str) -> None:
 
@@ -224,6 +214,7 @@ def poweroffaction(part: str) -> None:
 
     for PARTITION in PARTITIONSQUERY:
         capture: list = live_tasker(f"udisksctl unmount -b {PARTITION} &> /dev/null")
+        print(capture); input()
         if capture[0] == 0:
             spinner = spinning()
             for _ in range(10):
@@ -232,10 +223,10 @@ def poweroffaction(part: str) -> None:
                 stdout.write('\b')
         else:
             if LANGUAGE == 1:
-                system(f"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/{PARTITION} please check or check if you have the right permissions' 7 35")
+                system(f"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/{PARTITION} please check or check if you have the right permissions' 7 95")
                 menu(); return
             else:
-                system(f"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/{PARTITION} por favor revisar o mira si tienes permisos' 7 35")
+                system(f"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/{PARTITION} por favor revisar o mira si tienes permisos' 7 95")
                 menu(); return
 
     MODEL: str = Popen(f'cat /sys/class/block/{BLOCKTEMP}/device/model',
@@ -245,17 +236,17 @@ def poweroffaction(part: str) -> None:
 
     if capture == 0:
         if LANGUAGE == 1:
-            system(f"whiptail --title 'SUCCESS' --msgbox 'SUCCESS: Your device {MODEL} was succesfully power-off' 7 35")
+            system(f"whiptail --title 'SUCCESS' --msgbox 'SUCCESS: Your device {MODEL} was succesfully power-off' 7 95")
             menu()
         else:
-            system(f"whiptail --title 'LISTO' --msgbox 'LISTO: Tu dispositivo {MODEL} se ha apagado exitosamente' 7 35")
+            system(f"whiptail --title 'LISTO' --msgbox 'LISTO: Tu dispositivo {MODEL} se ha apagado exitosamente' 7 95")
             menu()
     else:
         if LANGUAGE == 1:
-            system(f"whiptail --title 'FAIL' --msgbox 'FAIL: Power-off is not available on this device, please check or check if you have permissions' 7 35")
+            system(f"whiptail --title 'FAIL' --msgbox 'FAIL: Power-off is not available on this device, please check or check if you have permissions' 7 95")
             menu(); return
         else:
-            system(f"whiptail --title 'ERROR' --msgbox 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos' 7 35")
+            system(f"whiptail --title 'ERROR' --msgbox 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos' 7 95")
             menu(); return
 
 if __name__ == "__main__": core()
