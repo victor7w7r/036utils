@@ -48,15 +48,15 @@ $ brew -S dart-sdk go python3 pipenv #macOS
 
 ```bash
 # Python
-$ cd 036utils/src/py/efitoggler
+$ cd 036utils/src/efitoggler/py
 $ pipenv sync
 
 # Dart
-$ cd 036utils/src/dart/efitoggler
+$ cd 036utils/src/efitoggler/dart
 $ dart pub get
 
 # Go
-$ cd 036utils/src/go/efitoggler
+$ cd 036utils/src/efitoggler/go
 $ go get -v
 ```
 
@@ -64,15 +64,15 @@ $ go get -v
 
 ```bash
 # Python
-$ cd 036utils/src/py/efitoggler
+$ cd 036utils/src/efitoggler/py
 $ pipenv run python efitoggler.py
 
 # Dart
-$ cd 036utils/src/dart/efitoggler/bin
+$ cd 036utils/src/efitoggler/dart/bin
 $ dart efitoggler.dart
 
 # Go
-$ cd 036utils/src/go/efitoggler
+$ cd 036utils/src/efitoggler/go
 $ go run efitoggler.go
 ```
 
@@ -80,17 +80,17 @@ $ go run efitoggler.go
 
 ```bash
 # Python
-$ cd 036utils/src/py/efitoggler
+$ cd 036utils/src/efitoggler/py
 $ pipenv run pyinstaller --onefile efitoggler.py
 $ ./dist/efitoggler
 
 # Dart
-$ cd 036utils/src/dart/efitoggler/bin
+$ cd 036utils/src/efitoggler/dart/bin
 $ dart compile exe efitoggler.dart -o efitoggler
 $ ./efitoggler
 
 # Go
-$ cd 036utils/src/go/efitoggler
+$ cd 036utils/src/efitoggler/go
 $ go build
 $ ./efitoggler
 ```
