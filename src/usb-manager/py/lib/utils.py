@@ -1,7 +1,7 @@
 from subprocess import call, PIPE, Popen
 from os import system
 
-from lib.printer import printer
+from printer import printer
 
 def clear() -> None: system('clear')
 
@@ -19,14 +19,14 @@ def spinning():
             yield cursor
 
 def live_tasker(cmd: str):
-    lineable: str = ""
-    task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')
-    while task.poll() is None:
-        for line in task.stdout:
-            task.stdout.flush()
-            lineable = line
-    if task.poll() == 0: return [0,lineable]
-    else: return [task.poll(),task.stderr.read().replace("\n", "")]
+        lineable: str = ""
+        task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')
+        while task.poll() is None:
+            for line in task.stdout:
+                task.stdout.flush()
+                lineable = line
+        if task.poll() == 0: return [0,lineable]
+        else: return [task.poll(),task.stderr.read().replace("\n", "")]
 
 def live_tasker_poweroff(cmd: str):
     task = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf8')

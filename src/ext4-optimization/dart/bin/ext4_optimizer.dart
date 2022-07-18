@@ -61,17 +61,12 @@ void menu() {
 
 void defragmenu() async {
   List<String> optionable = await ext4listener("menu","print");
-  optionable.add(reader(6, _language));
   final selection = Select(
     prompt: reader(0, _language),
     options: optionable
   ).interact();
   clear();
-  if(optionable[selection] == reader(6, _language)) {
-    clear(); menu();
-  } else {
-    defragction(optionable[selection]);
-  }
+  defragction(optionable[selection]);
 }
 
 void defragction(String part) async {
