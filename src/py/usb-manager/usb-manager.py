@@ -42,7 +42,7 @@ def verify() -> None:
     SERVICE: str = Popen('systemctl is-active udisks2', shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
     if SERVICE == "inactive":
         clear(); printer("error",4, LANGUAGE); exit(1)
-    usbverify(); printer("print",5, LANGUAGE)
+    usbverify(LANGUAGE); printer("print",5, LANGUAGE)
     spinner = spinning()
     for _ in range(15):
         stdout.write(next(spinner))
@@ -70,7 +70,7 @@ def menu() -> None:
 
 def usblistener(selector: str) -> None:
 
-    clear(); usbverify()
+    clear(); usbverify(LANGUAGE)
     COUNT: int = 0; PARTS: list = []; BLOCK: list = []
     FLAGS: list = []; MOUNTS: list = []; USB: list = []
     UNMOUNTS: list = []; ARGS: list = []; ARGSPOWEROFF: list = []
