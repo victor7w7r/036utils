@@ -9,7 +9,7 @@ import 'package:usb_manager/index.dart';
 int _language = 0;
 
 void core() {
-  clear(); language(); cover(); verify(); menu();
+  clear(); language(); cover(); verify();
 }
 
 void language() {
@@ -26,7 +26,7 @@ void language() {
 void usbverify() async {
 
   final shell = Shell(throwOnError: false, verbose: false);
-  final verifyUsbProcess = await shell.run("bash -c \"find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'");
+  final verifyUsbProcess = await shell.run("bash -c \"find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'\"");
   final verifyUsb = (verifyUsbProcess[0].stdout as String).trim();
 
   if(verifyUsb == "") {
@@ -39,7 +39,7 @@ void usbverify() async {
 void verify() async {
   if(!Platform.isLinux) {
     clear(); printer("error", 0, _language);
-      exit(1);
+    exit(1);
   }
   final commandVef1 = await commandverify("whiptail");
   if(!commandVef1) {
