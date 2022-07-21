@@ -6,7 +6,7 @@ from time import sleep
 
 import inquirer
 
-from lib.utils import clear, spinning, cover, commandverify, usbverify, live_tasker, live_tasker_poweroff
+from lib.utils import clear, spinning, cover, commandverify, live_tasker, live_tasker_poweroff
 from lib.printer import printer
 from lib.reader import reader
 
@@ -29,6 +29,12 @@ def language() -> None:
     if data['language'] == 'English': LANGUAGE = 1
     else: LANGUAGE = 2
 
+def usbverify() -> None:
+    VERIFYUSB: str = Popen(r"""find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///'
+                            """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
+    if VERIFYUSB == "": clear(); printer("error", 6, LANGUAGE); exit(1)
+
+
 def verify() -> None:
 
     if version_info < (3, 5):
@@ -42,7 +48,7 @@ def verify() -> None:
     SERVICE: str = Popen('systemctl is-active udisks2', shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
     if SERVICE == "inactive":
         clear(); printer("error",4, LANGUAGE); exit(1)
-    usbverify(LANGUAGE); printer("print",5, LANGUAGE)
+    usbverify(); printer("print",5, LANGUAGE)
     spinner = spinning()
     for _ in range(15):
         stdout.write(next(spinner))
@@ -70,7 +76,7 @@ def menu() -> None:
 
 def usblistener(selector: str) -> None:
 
-    clear(); usbverify(LANGUAGE)
+    clear(); usbverify()
     COUNT: int = 0; PARTS: list = []; BLOCK: list = []
     FLAGS: list = []; MOUNTS: list = []; USB: list = []
     UNMOUNTS: list = []; ARGS: list = []; ARGSPOWEROFF: list = []

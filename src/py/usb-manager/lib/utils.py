@@ -8,11 +8,6 @@ def clear() -> None: system('clear')
 def commandverify(cmd: str) -> bool:
     return call("type " + cmd, shell=True, stdout=PIPE, stderr=PIPE) == 0
 
-def usbverify(language: int) -> None:
-    VERIFYUSB: str = Popen(r"""find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\/dev\/disk\/by-id\///'
-                            """, shell=True, stdout=PIPE).stdout.read().decode('utf-8').rstrip('\n')
-    if VERIFYUSB == "": clear(); printer("error", 6, language); exit(1)
-
 def spinning():
     while True:
         for cursor in '|/-\\':

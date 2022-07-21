@@ -23,20 +23,33 @@ void language() {
   selection == 0 ? _language = 1 : _language = 2;
 }
 
+void usbverify() async {
+
+  final shell = Shell(throwOnError: false, verbose: false);
+  final verifyUsbProcess = await shell.run("bash -c \"find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'");
+  final verifyUsb = (verifyUsbProcess[0].stdout as String).trim();
+
+  if(verifyUsb == "") {
+    clear();
+    printer("error", 6, _language);
+    exit(1);
+  }
+}
+
 void verify() async {
   if(!Platform.isLinux) {
     clear(); printer("error", 0, _language);
-    print(""); exit(1);
+      exit(1);
   }
   final commandVef1 = await commandverify("whiptail");
   if(!commandVef1) {
     clear(); printer("error", 3, _language);
-    print(""); exit(1);
+      exit(1);
   }
   final commandVef2 = await commandverify("udisksctl");
   if(!commandVef2) {
     clear(); printer("error", 2, _language);
-    print(""); exit(1);
+      exit(1);
   }
 
   final shell = Shell(throwOnError: false, verbose: false);
@@ -48,7 +61,7 @@ void verify() async {
     print(""); exit(1);
   }
 
-  usbverify(_language);
+  usbverify();
   printer("print", 5, _language);
 
   spin(() {
@@ -85,7 +98,7 @@ void menu() {
 
 void usblistener(String selector) async {
 
-  clear(); usbverify(_language);
+  clear(); usbverify();
 
   final shell = Shell(throwOnError: false, verbose: false);
 

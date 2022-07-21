@@ -1,9 +1,5 @@
 import 'dart:async' show Timer;
-import 'dart:io' show Process, exit, stdout;
-
-import 'package:process_run/shell_run.dart';
-
-import 'printer.dart';
+import 'dart:io' show Process, stdout;
 
 void clear() {
   print(Process.runSync("clear", [], runInShell: true).stdout);
@@ -16,21 +12,6 @@ Future<bool> commandverify(String command) async {
     } else {
       return false;
     }
-}
-
-void usbverify(int language) async {
-
-  final shell = Shell(throwOnError: false, verbose: false);
-
-  final verifyUsbProcess = await shell.run("bash -c \"find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'");
-  final verifyUsb = (verifyUsbProcess[0].stdout as String).trim();
-
-  if(verifyUsb == "") {
-    clear();
-    printer("error", 6, language);
-    print("");
-    exit(1);
-  }
 }
 
 void spin(Function ready) {
