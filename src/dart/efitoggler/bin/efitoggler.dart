@@ -29,9 +29,7 @@ void verify() {
     print("\n"); exit(1);
   }
   printer("print", 1, _language);
-  spin(() {
-    print(""); toggler();
-  });
+  spin(() => toggler());
 }
 
 void toggler() async {

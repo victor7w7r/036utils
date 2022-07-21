@@ -63,7 +63,7 @@ void validator(String typeData, String data) async {
         return;
       }
     } else {
-      print(""); exit(0);
+      clear(); exit(0);
     }
   } else if(typeData == "dest") {
     if(data.isNotEmpty) {
@@ -80,7 +80,7 @@ void validator(String typeData, String data) async {
       sourceaction(); return;
     }
   } else {
-      print(""); exit(0);
+    clear(); exit(0);
   }
 }
 
@@ -114,7 +114,7 @@ void syncer() {
     destReady = "$_dest/";
   }
 
-  clear(); printer("print", 5, _language); print("");
+  clear(); printer("print", 5, _language);
   print("SOURCE:{$sourceReady}");
 	print("DESTINATION:{$destReady}");
 	print("");
@@ -125,7 +125,7 @@ void syncer() {
       print("\n =============== OK =============== \n");
       printer("print", 6, _language); exit(0);
     } else {
-      clear(); printer("print", 7, _language); print("");
+      clear(); printer("print", 7, _language);
       print("SOURCE:{$sourceReady}");
       print("DESTINATION:{$destReady}");
       print("");

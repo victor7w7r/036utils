@@ -58,7 +58,7 @@ void verify() async {
 
   if(service == "inactive"){
     clear(); printer("error", 4, _language);
-    print(""); exit(1);
+    exit(1);
   }
 
   usbverify();

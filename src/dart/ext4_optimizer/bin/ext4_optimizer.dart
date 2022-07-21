@@ -25,18 +25,15 @@ void language() {
 
 void verify() async {
   if(!Platform.isLinux) {
-    clear(); printer("error", 0, _language);
-    print(""); exit(1);
+    clear(); printer("error", 0, _language); exit(1);
   }
   final commandVef1 = await commandverify("e4defrag");
   if(!commandVef1) {
-    clear(); printer("error", 2, _language);
-    print(""); exit(1);
+    clear(); printer("error", 2, _language); exit(1);
   }
   final commandVef2 = await commandverify("fsck.ext4");
   if(!commandVef2) {
-    clear(); printer("error", 3, _language);
-    print(""); exit(1);
+    clear(); printer("error", 3, _language); exit(1);
   }
   printer("print", 4, _language);
   ext4listener();
