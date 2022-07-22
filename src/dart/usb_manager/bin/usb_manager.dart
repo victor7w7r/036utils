@@ -1,4 +1,4 @@
-import 'dart:io' show Platform, exit, stdin;
+import 'dart:io' show Platform, Process, exit, stdin, stdout;
 
 import 'package:process_run/shell_run.dart';
 
@@ -8,8 +8,13 @@ import 'package:usb_manager/index.dart';
 
 int _language = 0;
 
-void core() {
-  clear(); language(); cover(); verify();
+void core() async {
+
+    final shell = Shell(throwOnError: false, verbose: false);
+
+    final data = await shell.runExecutableArguments("whiptail", ["--title 'a'", "--msgbox 'b'" ,"7", "35"]);
+
+    clear(); language(); cover(); verify();
 }
 
 void language() {
@@ -108,7 +113,7 @@ void usblistener(String selector) async {
   int mountCount = 0; int unmountCount = 0;
   int flagsCount = 0; List<String> dirtyDevs = [];
 
-  final usbProcess = await shell.run("bash -c \"find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'");
+  final usbProcess = await shell.run("bash -c \"find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'\"");
   usb = (usbProcess[0].stdout as String).split("\n");
 
   for (final device in usb) {
@@ -122,12 +127,13 @@ void usblistener(String selector) async {
     final absPartsProcess = await shell.run("bash -c \"echo $dev | sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'\"");
     String absoluteParts = (absPartsProcess[0].stdout as String).trim();
     if(absoluteParts != "") {
-      final partsProcess = await shell.run("bash -c \"echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'");
+      final partsProcess = await shell.run("bash -c \"echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'\"");
       parts.add((partsProcess[0].stdout as String).split('\n')[0]);
       count++;
     } else {
-      final blockProcess = await shell.run("bash -c \"echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'");
+      final blockProcess = await shell.run("bash -c \"echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///'\"");
       block.add((blockProcess[0].stdout as String).split('\n')[0]);
+      flags.add(count);
     }
   }
 
@@ -146,13 +152,14 @@ void usblistener(String selector) async {
   if(selector == "mount") {
     if(unmountCount == count) {
       clear(); printer("error", 7, _language);
-      print(reader(5, _language)); menu(); clear();
+      print(reader(5, _language));
+      stdin.readLineSync(); clear(); menu();
       return;
     }
 
     count = 0;
 
-    for(final part in mounts) {
+    for(final part in unmounts) {
       final device = "/dev/$part";
       final temp = flags[flagsCount];
       if(count == temp) flagsCount++;
@@ -177,7 +184,8 @@ void usblistener(String selector) async {
 
     if(mountCount == count) {
       clear(); printer("error", 10, _language);
-      print(reader(5, _language)); menu(); clear();
+      print(reader(5, _language));
+      stdin.readLineSync(); clear(); menu();
       return;
     }
 
@@ -208,7 +216,8 @@ void usblistener(String selector) async {
 
     if(mountCount == count) {
       clear(); printer("error", 10, _language);
-      print(reader(5, _language)); menu(); clear();
+      print(reader(5, _language));
+      stdin.readLineSync(); clear(); menu();
       return;
     }
 
@@ -243,27 +252,28 @@ void mountAction(String part) async {
   clear();
   if(part == "") return;
 
-  final mountActionProcess = await shell.run("bash -c \"udisksctl mount -b $part \"");
+  final mountActionProcess = await shell.run("bash -c \"udisksctl mount -b $part\"");
   if(mountActionProcess[0].exitCode == 0) {
-    await shell.run("bash -c \"whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${mountActionProcess[1].stdout}' 7 35\"");
+    final dialog = await Process.run("bash", ["-c", "whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${mountActionProcess[0].stdout}' 7 35"]);
+    clear();
     menu();
   } else {
     final reg1 = RegExp(r'NotAuthorized*');
     final reg2 = RegExp(r'NotAuthorizedDismissed*');
     final reg3 = RegExp(r'AlreadyMounted*');
-    if(reg1.hasMatch(mountActionProcess[1].stdout)) {
+    if(reg1.hasMatch(mountActionProcess[0].stdout)) {
       clear();
       printer("error", 8, _language);
       print(reader(5, _language));
       stdin.readLineSync();
       clear(); menu();
-    } else if(reg2.hasMatch(mountActionProcess[1].stdout)) {
+    } else if(reg2.hasMatch(mountActionProcess[0].stdout)) {
       clear();
       printer("error", 8, _language);
       print(reader(5, _language));
       stdin.readLineSync();
       clear(); menu();
-    } else if(reg3.hasMatch(mountActionProcess[1].stdout)) {
+    } else if(reg3.hasMatch(mountActionProcess[0].stdout)) {
       clear();
       printer("error", 9, _language);
       print(reader(5, _language));
@@ -282,25 +292,26 @@ void unMountAction(String part) async {
 
   final unMountActionProcess = await shell.run("bash -c \"udisksctl unmount -b $part \"");
   if(unMountActionProcess[0].exitCode == 0) {
-    await shell.run("bash -c \"whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${unMountActionProcess[1].stdout}' 7 35\"");
+    await shell.run("bash -c \"whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${unMountActionProcess[0].stdout}' 7 35\"");
+    clear();
     menu();
   } else {
     final reg1 = RegExp(r'NotAuthorized*');
     final reg2 = RegExp(r'NotAuthorizedDismissed*');
     final reg3 = RegExp(r'AlreadyMounted*');
-    if(reg1.hasMatch(unMountActionProcess[1].stdout)) {
+    if(reg1.hasMatch(unMountActionProcess[0].stdout)) {
       clear();
       printer("error", 8, _language);
       print(reader(5, _language));
       stdin.readLineSync();
       clear(); menu();
-    } else if(reg2.hasMatch(unMountActionProcess[1].stdout)) {
+    } else if(reg2.hasMatch(unMountActionProcess[0].stdout)) {
       clear();
       printer("error", 8, _language);
       print(reader(5, _language));
       stdin.readLineSync();
       clear(); menu();
-    } else if(reg3.hasMatch(unMountActionProcess[1].stdout)) {
+    } else if(reg3.hasMatch(unMountActionProcess[0].stdout)) {
       clear();
       printer("error", 9, _language);
       print(reader(5, _language));
@@ -313,7 +324,6 @@ void unMountAction(String part) async {
 void powerOffAction(String part) async {
 
   final shell = Shell(throwOnError: false, verbose: false);
-
   clear();
   if(part == "") return;
 
@@ -325,18 +335,19 @@ void powerOffAction(String part) async {
 
   for(final partition in partitions) {
     final unMountActionProcess = await shell.run("bash -c \"udisksctl unmount -b $part \"");
-    print(unMountActionProcess); stdin.readLineSync();
     if(unMountActionProcess[0].exitCode == 0) {
       spin((){return;});
     } else {
       if(_language == 1) {
-          await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/$partition please check or check if you have the right permissions' 7 95\"");
-          menu();
-          return;
+        await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/$partition please check or check if you have the right permissions' 7 95\"");
+        clear();
+        menu();
+        return;
       } else {
-          await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/$partition por favor revisar o mira si tienes permisos' 7 95\"");
-          menu();
-          return;
+        await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/$partition por favor revisar o mira si tienes permisos' 7 95\"");
+        clear();
+        menu();
+        return;
       }
     }
   }
@@ -348,20 +359,24 @@ void powerOffAction(String part) async {
   if(powerOffProcess[0].exitCode == 0) {
     if(_language == 1) {
       await shell.run("bash -c \"whiptail --title 'SUCCESS' --msgbox 'SUCCESS: Your device $model was succesfully power-off' 7 95\"");
+      clear();
       menu();
       return;
     } else {
       await shell.run("bash -c \"whiptail --title 'LISTO' --msgbox 'LISTO: Tu dispositivo $model se ha apagado exitosamente' 7 95\"");
+      clear();
       menu();
       return;
     }
   } else {
     if(_language == 1) {
       await shell.run("bash -c \"whiptail --title 'FAIL' --msgbox 'FAIL: FAIL: Power-off is not available on this device, please check or check if you have permissions' 7 95\"");
+      clear();
       menu();
       return;
     } else {
       await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos' 7 95\"");
+      clear();
       menu();
       return;
     }
