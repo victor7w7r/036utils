@@ -254,7 +254,7 @@ void mountAction(String part) async {
 
   final mountActionProcess = await shell.run("bash -c \"udisksctl mount -b $part\"");
   if(mountActionProcess[0].exitCode == 0) {
-    final dialog = await Process.run("bash", ["-c", "whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${mountActionProcess[0].stdout}' 7 35"]);
+    await dialog(reader(8, _language), '${reader(8, _language)}${mountActionProcess[0].stdout}', '7', '35');
     clear();
     menu();
   } else {
