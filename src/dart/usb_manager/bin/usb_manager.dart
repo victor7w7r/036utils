@@ -249,6 +249,7 @@ void mountAction(String part) async {
 
   final mountActionProcess = await shell.run("bash -c \"udisksctl mount -b $part\"");
   if(mountActionProcess[0].exitCode == 0) {
+    print(mountActionProcess[0].stdout);
     await dialog(reader(8, _language), '${reader(8, _language)}${mountActionProcess[0].stdout}', '7', '60');
     clear();
     menu();
@@ -322,16 +323,18 @@ void powerOffAction(String part) async {
   clear();
   if(part == "") return;
 
-  final blockTempProcess = await shell.run("bash -c \"echo {part} | cut -d \"/\" -f3\"");
+  final blockTempProcess = await shell.run("bash -c \"echo $part | cut -d \"/\" -f3\"");
   String blockTemp = (blockTempProcess[0].stdout as String).trim();
 
   final partitionsProcess =  await shell.run("bash -c \"find /dev -name \"$blockTemp[[:digit:]]\" | sort -n | sed 's/^\\/dev\\///' \"");
   List<String>partitions = (partitionsProcess[0].stdout as String).split("\n");
 
+  partitions.removeWhere((e) => e == '');
+
   for(final partition in partitions) {
-    final unMountActionProcess = await shell.run("bash -c \"udisksctl unmount -b $part \"");
+    final unMountActionProcess = await shell.run("bash -c \"udisksctl unmount -b /dev/$partition &> /dev/null \"");
     if(unMountActionProcess[0].exitCode == 0) {
-      spin((){return;});
+      print("");
     } else {
       if(_language == 1) {
         await dialog('ERROR', 'FAIL: Error unmounting /dev/$partition please check or check if you have the right permissions', '7', '60');

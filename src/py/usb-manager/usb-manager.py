@@ -219,7 +219,7 @@ def poweroffaction(part: str) -> None:
                                 stdout=PIPE).stdout.read().decode('utf-8').rstrip().split("\n")
 
     for PARTITION in PARTITIONSQUERY:
-        capture: list = live_tasker(f"udisksctl unmount -b {PARTITION} &> /dev/null")
+        capture: list = live_tasker(f"udisksctl unmount -b /dev/{PARTITION} &> /dev/null")
         if capture[0] == 0:
             spinner = spinning()
             for _ in range(10):
@@ -228,10 +228,10 @@ def poweroffaction(part: str) -> None:
                 stdout.write('\b')
         else:
             if LANGUAGE == 1:
-                system(f"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/{PARTITION} please check or check if you have the right permissions' 7 95")
+                system(f"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/{PARTITION} please check or check if you have the right permissions' 7 55")
                 menu(); return
             else:
-                system(f"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/{PARTITION} por favor revisar o mira si tienes permisos' 7 95")
+                system(f"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/{PARTITION} por favor revisar o mira si tienes permisos' 7 55")
                 menu(); return
 
     MODEL: str = Popen(f'cat /sys/class/block/{BLOCKTEMP}/device/model',
@@ -241,17 +241,17 @@ def poweroffaction(part: str) -> None:
 
     if capture == 0:
         if LANGUAGE == 1:
-            system(f"whiptail --title 'SUCCESS' --msgbox 'SUCCESS: Your device {MODEL} was succesfully power-off' 7 95")
+            system(f"whiptail --title 'SUCCESS' --msgbox 'SUCCESS: Your device {MODEL} was succesfully power-off' 7 55")
             menu()
         else:
-            system(f"whiptail --title 'LISTO' --msgbox 'LISTO: Tu dispositivo {MODEL} se ha apagado exitosamente' 7 95")
+            system(f"whiptail --title 'LISTO' --msgbox 'LISTO: Tu dispositivo {MODEL} se ha apagado exitosamente' 7 55")
             menu()
     else:
         if LANGUAGE == 1:
-            system(f"whiptail --title 'FAIL' --msgbox 'FAIL: Power-off is not available on this device, please check or check if you have permissions' 7 95")
+            system(f"whiptail --title 'FAIL' --msgbox 'FAIL: Power-off is not available on this device, please check or check if you have permissions' 7 55")
             menu(); return
         else:
-            system(f"whiptail --title 'ERROR' --msgbox 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos' 7 95")
+            system(f"whiptail --title 'ERROR' --msgbox 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos' 7 55")
             menu(); return
 
 if __name__ == "__main__": core()
