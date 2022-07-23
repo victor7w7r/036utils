@@ -15,17 +15,15 @@ Future<bool> commandverify(String command) async {
     }
 }
 
-//final dialog = await Process.run("bash", ["-c", "whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${mountActionProcess[0].stdout}' 7 35"]);
-
-Future<void> dialog(String title, String body, String height, String width) async {
-  Process.start("bash", ["-c","whiptail --title $title --msgbox $body $height $width"],
-    mode: ProcessStartMode.inheritStdio).then((p) {
-    try {
-      p.stdout.transform(Utf8Decoder()).listen(print);
-      p.stderr.transform(Utf8Decoder()).listen(print);
-      stdin.pipe(p.stdin);
-    } catch(_) {_.toString();}
-  });
+Future<int> dialog(String title, String body, String height, String width) async {
+  final dialogBox = await Process.start("bash", ["-c","whiptail --title '$title' --msgbox '$body' '$height' '$width'"],mode: ProcessStartMode.inheritStdio);
+  try {
+    await dialogBox.stdout.pipe(stdout);
+    await stdin.pipe(dialogBox.stdin);
+    return dialogBox.exitCode;
+  } on StateError catch(_){
+    return dialogBox.exitCode;
+  }
 }
 
 void spin(Function ready) {

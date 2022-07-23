@@ -1,4 +1,4 @@
-import 'dart:io' show Platform, Process, exit, stdin, stdout;
+import 'dart:io' show Platform, exit, stdin;
 
 import 'package:process_run/shell_run.dart';
 
@@ -9,12 +9,7 @@ import 'package:usb_manager/index.dart';
 int _language = 0;
 
 void core() async {
-
-    final shell = Shell(throwOnError: false, verbose: false);
-
-    final data = await shell.runExecutableArguments("whiptail", ["--title 'a'", "--msgbox 'b'" ,"7", "35"]);
-
-    clear(); language(); cover(); verify();
+  clear(); language(); cover(); verify();
 }
 
 void language() {
@@ -229,18 +224,18 @@ void usblistener(String selector) async {
       count++;
     }
 
-    args.add(reader(16, _language));
+    argspoweroff.add(reader(16, _language));
 
     final selection = Select(
       prompt: reader(11, _language),
-      options: args
+      options: argspoweroff
     ).interact();
     clear();
 
-    if(args[selection] == reader(16, _language)) {
+    if(argspoweroff[selection] == reader(16, _language)) {
       clear(); menu();
     } else {
-      clear(); powerOffAction(args[selection]);
+      clear(); powerOffAction(argspoweroff[selection]);
     }
   }
 }
@@ -254,7 +249,7 @@ void mountAction(String part) async {
 
   final mountActionProcess = await shell.run("bash -c \"udisksctl mount -b $part\"");
   if(mountActionProcess[0].exitCode == 0) {
-    await dialog(reader(8, _language), '${reader(8, _language)}${mountActionProcess[0].stdout}', '7', '35');
+    await dialog(reader(8, _language), '${reader(8, _language)}${mountActionProcess[0].stdout}', '7', '60');
     clear();
     menu();
   } else {
@@ -292,7 +287,7 @@ void unMountAction(String part) async {
 
   final unMountActionProcess = await shell.run("bash -c \"udisksctl unmount -b $part \"");
   if(unMountActionProcess[0].exitCode == 0) {
-    await shell.run("bash -c \"whiptail --title '${reader(8, _language)}' --msgbox '${reader(8, _language)}${unMountActionProcess[0].stdout}' 7 35\"");
+    await dialog(reader(8, _language), '${reader(8, _language)}${unMountActionProcess[0].stdout}', '7', '60');
     clear();
     menu();
   } else {
@@ -339,12 +334,12 @@ void powerOffAction(String part) async {
       spin((){return;});
     } else {
       if(_language == 1) {
-        await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'FAIL: Error unmounting /dev/$partition please check or check if you have the right permissions' 7 95\"");
+        await dialog('ERROR', 'FAIL: Error unmounting /dev/$partition please check or check if you have the right permissions', '7', '60');
         clear();
         menu();
         return;
       } else {
-        await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'ERROR: Hubo un error desmontando /dev/$partition por favor revisar o mira si tienes permisos' 7 95\"");
+        await dialog('ERROR', 'ERROR: Hubo un error desmontando /dev/$partition por favor revisar o mira si tienes permisos', '7', '60');
         clear();
         menu();
         return;
@@ -358,24 +353,24 @@ void powerOffAction(String part) async {
   final powerOffProcess = await shell.run("bash -c \"udisksctl power-off -b $part \"");
   if(powerOffProcess[0].exitCode == 0) {
     if(_language == 1) {
-      await shell.run("bash -c \"whiptail --title 'SUCCESS' --msgbox 'SUCCESS: Your device $model was succesfully power-off' 7 95\"");
+      await dialog('SUCCESS', 'SUCCESS: Your device $model was succesfully power-off', '7', '60');
       clear();
       menu();
       return;
     } else {
-      await shell.run("bash -c \"whiptail --title 'LISTO' --msgbox 'LISTO: Tu dispositivo $model se ha apagado exitosamente' 7 95\"");
+      await dialog('LISTO', 'LISTO: Tu dispositivo $model se ha apagado exitosamente', '7', '60');
       clear();
       menu();
       return;
     }
   } else {
     if(_language == 1) {
-      await shell.run("bash -c \"whiptail --title 'FAIL' --msgbox 'FAIL: FAIL: Power-off is not available on this device, please check or check if you have permissions' 7 95\"");
+      await dialog('FAIL', 'FAIL: Power-off is not available on this device, please check or check if you have permissions', '7', '60');
       clear();
       menu();
       return;
     } else {
-      await shell.run("bash -c \"whiptail --title 'ERROR' --msgbox 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos' 7 95\"");
+      await dialog('ERROR', 'ERROR: no está disponible el apagar este dispositivo, por favor revisar o mira si tienes permisos', '7', '60');
       clear();
       menu();
       return;

@@ -220,7 +220,6 @@ def poweroffaction(part: str) -> None:
 
     for PARTITION in PARTITIONSQUERY:
         capture: list = live_tasker(f"udisksctl unmount -b {PARTITION} &> /dev/null")
-        print(capture); input()
         if capture[0] == 0:
             spinner = spinning()
             for _ in range(10):
