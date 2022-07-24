@@ -16,6 +16,16 @@ func Commandverify(cmd string) bool {
 	}
 }
 
+func RemoveWhere(slice []string, element string)[] string {
+	var temp []string
+	for index, item := range slice {
+		if item != element  {
+			temp = append(temp, slice[index])
+		}
+	}
+	return temp
+}
+
 func Cover() {
 	Clear()
 	fmt.Println("                                    `\"~>v??*^;rikD&MNBQku*;`                                           ")
@@ -63,6 +73,7 @@ func Cover() {
 	fmt.Println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
 	fmt.Println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
 }
+
 
 func Clear() {
 	cmd := exec.Command("clear")

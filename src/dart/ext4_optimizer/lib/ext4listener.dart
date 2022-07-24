@@ -59,7 +59,7 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
   for(final partitionsdef in extParts) {
       final mountedProcess = await shell.run("bash -c \"lsblk /dev/$partitionsdef | sed -ne '/\\//p'\"");
       final mounted = (mountedProcess[0].stdout as String).trim();
-      mounted != "" ? mountCount +=1 : umounts.add("/dev/$partitionsdef");
+      mounted != "" ? mountCount +=1 : umounts.add("UNMOUNTS");
   }
 
   if(mountCount == extCount) {
