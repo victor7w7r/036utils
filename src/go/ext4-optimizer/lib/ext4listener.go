@@ -8,7 +8,7 @@ import (
 )
 
 type OptExtParams struct {
-	menuable, echoparts string
+	Menuable, Echoparts string
 }
 
 func Ext4listener(language int, opt OptExtParams) []string {
@@ -57,10 +57,11 @@ func Ext4listener(language int, opt OptExtParams) []string {
 
 	if EXTCOUNT == 0 {
 		Clear(); Printer("error", 5, language)
-		if opt.menuable == "menu" {
+		if opt.Menuable == "menu" {
 			fmt.Println(Reader(4, language))
 			fmt.Scanln()
 		} else {
+			fmt.Println("")
 			os.Exit(1)
 		}
 	}
@@ -75,12 +76,17 @@ func Ext4listener(language int, opt OptExtParams) []string {
 		}
 	}
 
+	UMOUNTS = RemoveWhere(UMOUNTS,"")
+
+	fmt.Print(UMOUNTS)
+
 	if MOUNTCOUNT == EXTCOUNT {
 		Clear(); Printer("error", 6, language)
-		if opt.menuable == "menu" {
+		if opt.Menuable == "menu" {
 			fmt.Println(Reader(4, language))
 			fmt.Scanln()
 		} else {
+			fmt.Println("")
 			os.Exit(1)
 		}
 	}

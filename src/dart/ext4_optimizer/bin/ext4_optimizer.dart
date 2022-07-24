@@ -36,7 +36,7 @@ void verify() async {
     clear(); printer("error", 3, _language); exit(1);
   }
   printer("print", 4, _language);
-  ext4listener();
+  ext4listener(_language);
   spin(() {
     clear();
     menu();
@@ -57,7 +57,7 @@ void menu() {
 }
 
 void defragmenu() async {
-  List<String> optionable = await ext4listener("menu","print");
+  List<String> optionable = await ext4listener(_language, "menu","print");
   optionable.add(reader(6, _language));
   final selection = Select(
     prompt: reader(0, _language),

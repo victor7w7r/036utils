@@ -57,6 +57,25 @@ func verify() {
 	lib.Clear()
 }
 
+func menu() {
+	option := 0
+	promptMenu := &survey.Select{
+		Message: lib.Reader(0, LANGUAGE),
+		Options: []string{lib.Reader(1, LANGUAGE), lib.Reader(2, LANGUAGE)},
+	}
+	survey.AskOne(promptMenu, &option)
 
+	if option == 0 {
+		lib.Clear(); defragmenu()
+	} else {
+		lib.Clear(); os.Exit(0)
+	}
+}
+
+func defragmenu() {
+
+	optionable := lib.Ext4listener(LANGUAGE, lib.OptExtParams{menuable: "menu", echoparts: "print"})
+
+}
 
 func main() { core() }

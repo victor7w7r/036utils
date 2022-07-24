@@ -4,7 +4,7 @@ import 'package:process_run/shell_run.dart';
 
 import 'package:ext4_optimizer/index.dart';
 
-Future<List<String>> ext4listener([String menuable = "", String echoparts = "", int language = 0]) async {
+Future<List<String>> ext4listener(int language, [String menuable = "", String echoparts = ""]) async {
 
   final shell = Shell(throwOnError: false, verbose: false);
 
@@ -59,7 +59,7 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
   for(final partitionsdef in extParts) {
       final mountedProcess = await shell.run("bash -c \"lsblk /dev/$partitionsdef | sed -ne '/\\//p'\"");
       final mounted = (mountedProcess[0].stdout as String).trim();
-      mounted != "" ? mountCount +=1 : umounts.add("UNMOUNTS");
+      mounted != "" ? mountCount +=1 : umounts.add("/dev/$partitionsdef");
   }
 
   if(mountCount == extCount) {
@@ -72,6 +72,10 @@ Future<List<String>> ext4listener([String menuable = "", String echoparts = "", 
     }
   }
 
-  return umounts;
+  if(echoparts == "print") {
+    return umounts;
+  } else {
+    return [];
+  }
 
 }
