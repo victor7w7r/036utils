@@ -48,6 +48,8 @@ func verify() {
 		fmt.Print("\n"); os.Exit(1)
 	}
 
+	Ext4listener(LANGUAGE,OptExtParams{})
+
 	lib.Printer("print", 4, LANGUAGE)
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()

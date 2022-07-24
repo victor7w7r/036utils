@@ -6,7 +6,11 @@ import (
 	"strings"
 )
 
-func ext4listener(language int, menuable string, echoparts string) []string {
+type OptExtParams struct {
+	menuable, echoparts string
+}
+
+func Ext4listener(language int, opt OptExtParams) []string {
 
 	EXTCOUNT, MOUNTCOUNT := 0,0
 	ABSOLUTEPART, DIRTYDEVS := "", make([]string, 100)
@@ -22,10 +26,8 @@ func ext4listener(language int, menuable string, echoparts string) []string {
 	for _, DEVICE := range VERIFY {
 		SDIRTDEV, _ := exec.Command("bash", "-c", fmt.Sprintf("readlink \"/dev/disk/by-id/%s\""), DEVICE).Output()
 		DIRTYDEVS = append(DIRTYDEVS, strings.Split(string(SDIRTDEV), "\n")[0])
-		
-	}
 
-	
+	}
 
 	return make([]string, 2)
 }
