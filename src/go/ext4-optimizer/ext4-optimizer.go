@@ -102,7 +102,8 @@ func defragaction(part string) {
 	_, ERRSUDO := exec.Command("bash", "-c", "sudo cat < /dev/null").Output()
 	if(ERRSUDO == nil) {
 
-		_,ERRREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		ORRREP,ERRREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		fmt.Printf(string(ORRREP))
 		if(ERRREP == nil) {
 			lib.Printer("print", 9, LANGUAGE)
 			fmt.Println(lib.Reader(4, LANGUAGE))
@@ -116,8 +117,9 @@ func defragaction(part string) {
 
 		lib.Printer("print", 10, LANGUAGE)
 
-		_,OPREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v -D %s", part)).Output()
-		if(OPREP == nil) {
+		OPREP,EPREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v -D %s", part)).Output()
+		fmt.Printf(string(OPREP))
+		if(EPREP == nil) {
 			lib.Printer("print", 9, LANGUAGE)
 			fmt.Println(lib.Reader(4, LANGUAGE))
 			fmt.Scanln(); lib.Clear()
@@ -133,7 +135,8 @@ func defragaction(part string) {
 
 		lib.Printer("print", 11, LANGUAGE)
 
-		exec.Command("bash", "-c", fmt.Sprintf("sudo e4defrag -v %s ",part)).Output()
+		DEFPR,_ := exec.Command("bash", "-c", fmt.Sprintf("sudo e4defrag -v %s ",part)).Output()
+		fmt.Printf(string(DEFPR))
 		fmt.Println("")
 		exec.Command("bash", "-c", fmt.Sprintf("sudo umount %s ",part))
 		lib.Printer("print", 9, LANGUAGE)
@@ -142,11 +145,13 @@ func defragaction(part string) {
 
 		lib.Printer("print", 12, LANGUAGE)
 
-		_,ERRREPFINAL  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		ORRREPFINAL,ERRREPFINAL  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		fmt.Printf(string(ORRREPFINAL))
 		if(ERRREPFINAL == nil) {
 			lib.Printer("print", 9, LANGUAGE)
 			fmt.Println(lib.Reader(4, LANGUAGE))
-			fmt.Scanln(); lib.Clear()
+			fmt.Scanln(); lib.Clear(); menu()
+			return
 		} else {
 			lib.Printer("print", 8, LANGUAGE)
 			fmt.Println(lib.Reader(4, LANGUAGE))
