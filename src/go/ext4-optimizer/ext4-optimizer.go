@@ -4,6 +4,7 @@ import (
 	"ext4-optimizer/lib"
 	"fmt"
 	"os"
+	"os/exec"
 	"runtime"
 	"time"
 
@@ -54,7 +55,7 @@ func verify() {
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Start(); time.Sleep(time.Second); s.Stop()
 
-	lib.Clear()
+	lib.Clear(); menu()
 }
 
 func menu() {
@@ -74,8 +75,90 @@ func menu() {
 
 func defragmenu() {
 
-	optionable := lib.Ext4listener(LANGUAGE, lib.OptExtParams{menuable: "menu", echoparts: "print"})
+	option := 0
+	optionable := lib.Ext4listener(LANGUAGE, lib.OptExtParams{Menuable: "menu", Echoparts: "print"})
+	optionable = append(optionable, lib.Reader(6, LANGUAGE))
 
+	promptDefrag := &survey.Select{
+		Message: lib.Reader(0, LANGUAGE),
+		Options: optionable,
+	}
+	survey.AskOne(promptDefrag, &option)
+
+	if optionable[option] == lib.Reader(6, LANGUAGE) {
+		lib.Clear(); menu()
+	} else {
+		defragaction(optionable[option])
+	}
+}
+
+func defragaction(part string) {
+	lib.Clear()
+
+	if part == "" { return }
+	lib.Printer("print", 7, LANGUAGE)
+	fmt.Print("\n")
+
+	_, ERRSUDO := exec.Command("bash", "-c", "sudo cat < /dev/null").Output()
+	if(ERRSUDO == nil) {
+
+		_,ERRREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		if(ERRREP == nil) {
+			lib.Printer("print", 9, LANGUAGE)
+			fmt.Println(lib.Reader(4, LANGUAGE))
+			fmt.Scanln(); lib.Clear()
+		} else {
+			lib.Printer("print", 8, LANGUAGE)
+			fmt.Println(lib.Reader(4, LANGUAGE))
+			fmt.Scanln(); lib.Clear(); menu()
+			return
+		}
+
+		lib.Printer("print", 10, LANGUAGE)
+
+		_,OPREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v -D %s", part)).Output()
+		if(OPREP == nil) {
+			lib.Printer("print", 9, LANGUAGE)
+			fmt.Println(lib.Reader(4, LANGUAGE))
+			fmt.Scanln(); lib.Clear()
+		} else {
+			lib.Printer("print", 8, LANGUAGE)
+			fmt.Println(lib.Reader(4, LANGUAGE))
+			fmt.Scanln(); lib.Clear(); menu()
+			return
+		}
+
+		exec.Command("bash", "-c", "mkdir /tmp/optimize 2> /dev/null")
+		exec.Command("bash", "-c", fmt.Sprintf("sudo mount %s /tmp/optimize",part))
+
+		lib.Printer("print", 11, LANGUAGE)
+
+		exec.Command("bash", "-c", fmt.Sprintf("sudo e4defrag -v %s ",part)).Output()
+		fmt.Println("")
+		exec.Command("bash", "-c", fmt.Sprintf("sudo umount %s ",part))
+		lib.Printer("print", 9, LANGUAGE)
+		fmt.Println(lib.Reader(4, LANGUAGE))
+		fmt.Scanln(); lib.Clear()
+
+		lib.Printer("print", 12, LANGUAGE)
+
+		_,ERRREPFINAL  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		if(ERRREPFINAL == nil) {
+			lib.Printer("print", 9, LANGUAGE)
+			fmt.Println(lib.Reader(4, LANGUAGE))
+			fmt.Scanln(); lib.Clear()
+		} else {
+			lib.Printer("print", 8, LANGUAGE)
+			fmt.Println(lib.Reader(4, LANGUAGE))
+			fmt.Scanln(); lib.Clear(); menu()
+			return
+		}
+	} else {
+		lib.Printer("print", 8, LANGUAGE)
+		fmt.Println(lib.Reader(4, LANGUAGE))
+		fmt.Scanln(); lib.Clear(); menu()
+		return
+	}
 }
 
 func main() { core() }

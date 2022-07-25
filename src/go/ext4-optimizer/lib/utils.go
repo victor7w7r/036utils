@@ -26,6 +26,13 @@ func RemoveWhere(slice []string, element string)[] string {
 	return temp
 }
 
+func ExitCode(err error) int {
+    if e, ok := err.(interface{ExitCode() int}); ok {
+        return e.ExitCode()
+    }
+    return -1
+}
+
 func Cover() {
 	Clear()
 	fmt.Println("                                    `\"~>v??*^;rikD&MNBQku*;`                                           ")
@@ -74,10 +81,8 @@ func Cover() {
 	fmt.Println(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
 }
 
-
 func Clear() {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 }
-

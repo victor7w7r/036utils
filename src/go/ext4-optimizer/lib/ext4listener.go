@@ -78,8 +78,6 @@ func Ext4listener(language int, opt OptExtParams) []string {
 
 	UMOUNTS = RemoveWhere(UMOUNTS,"")
 
-	fmt.Print(UMOUNTS)
-
 	if MOUNTCOUNT == EXTCOUNT {
 		Clear(); Printer("error", 6, language)
 		if opt.Menuable == "menu" {

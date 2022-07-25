@@ -123,7 +123,7 @@ func syncer() {
 	fmt.Printf("DESTINATION:{%s} \n", DESTREADY)
 	fmt.Println("")
 	syncApt := exec.Command("rsync", "-axHAWXS", "--numeric-ids", "--info=progress2", SOURCEREADY, DESTREADY)
-	_, err := syncApt.Output();
+	_, err := syncApt.Output()
 	if err == nil {
 		fmt.Print("\n =============== OK =============== \n")
 		lib.Printer("print", 6, LANGUAGE); os.Exit(0)
