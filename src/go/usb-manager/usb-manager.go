@@ -1,0 +1,29 @@
+package main
+
+import (
+	"usb-manager/lib"
+
+	"github.com/AlecAivazis/survey/v2"
+)
+
+func core() {
+	lib.Clear(); language(); lib.Cover()
+}
+
+var LANGUAGE int = 0
+
+func language() {
+
+	option := 0
+	promptLang := &survey.Select{
+		Message: "Bienvenido / Welcome \n Choose your language / Selecciona tu idioma",
+		Options: []string{"English", "Espanol"},
+	}
+	survey.AskOne(promptLang, &option)
+
+	if option == 0 {
+		LANGUAGE = 1
+	} else {
+		LANGUAGE = 2
+	}
+}
