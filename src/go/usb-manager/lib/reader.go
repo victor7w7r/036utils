@@ -2,23 +2,43 @@ package lib
 
 func Reader(position int, languaje int) string {
 
-	DICTIONARY_ENG := [7]string{
+	DICTIONARY_ENG := [17]string{
 		"Choose a Option",
-		"Optimize a ext4 partition",
+		"Mount a partition of a device",
+		"Unmount a partition of a device",
+		"Unmount and secure turn-off a USB",
 		"Exit to the shell",
-		"Please select a partition" ,
 		"Press Enter to continue...",
-		"Optimize",
+		"Mount a Partition",
+		"Please Mount a partition",
+		"SUCCESS: ",
+		"Umount a Partition",
+		"Please umount a partition",
+		"Poweroff a Device",
+		"Choose for poweroff a device \nCAUTION: All the partitions will be force unmounted",
+		"Mount",
+		"Unmount",
+		"Power-off",
 		"Exit",
 	}
 
-	DICTIONARY_ESP := [7]string{
-		"Seleccione una opcion",
-		"Optimizar una particion de tipo ext4",
+	DICTIONARY_ESP := [17]string{
+		"Elija una opcion",
+		"Montar una particion de un dispositivo",
+		"Desmontar una particion de un dispositivo",
+		"Desmontar todo y expulsar de manera segura un dispositivo",
 		"Salir al shell",
-		"Por favor selecciona una partition",
 		"Presione Enter para continuar...",
-		"Optimizar",
+		"Montar una particion",
+		"Por favor, monta una particion",
+		"LISTO: ",
+		"Desmontar una particion",
+		"Por favor, desmonta una particion",
+		"Apagar un dispositivo",
+		"Elija uno para apagar \nCUIDADO: Todas las particiones del dispositivo se desmontaran",
+		"Montar",
+		"Desmontar",
+		"Apagar",
 		"Salir",
 	}
 

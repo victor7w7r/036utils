@@ -117,7 +117,7 @@ func defragaction(part string) {
 
 		lib.Printer("print", 10, LANGUAGE)
 
-		OPREP,EPREP  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v -D %s", part)).Output()
+		OPREP,EPREP := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v -D %s", part)).Output()
 		fmt.Printf(string(OPREP))
 		if(EPREP == nil) {
 			lib.Printer("print", 9, LANGUAGE)
@@ -145,7 +145,7 @@ func defragaction(part string) {
 
 		lib.Printer("print", 12, LANGUAGE)
 
-		ORRREPFINAL,ERRREPFINAL  := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
+		ORRREPFINAL,ERRREPFINAL := exec.Command("bash", "-c", fmt.Sprintf("sudo fsck.ext4 -y -f -v %s", part)).Output()
 		fmt.Printf(string(ORRREPFINAL))
 		if(ERRREPFINAL == nil) {
 			lib.Printer("print", 9, LANGUAGE)
