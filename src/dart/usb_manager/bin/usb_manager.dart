@@ -44,12 +44,12 @@ void verify() async {
   final commandVef1 = await commandverify("whiptail");
   if(!commandVef1) {
     clear(); printer("error", 3, _language);
-      exit(1);
+    exit(1);
   }
   final commandVef2 = await commandverify("udisksctl");
   if(!commandVef2) {
     clear(); printer("error", 2, _language);
-      exit(1);
+    exit(1);
   }
 
   final shell = Shell(throwOnError: false, verbose: false);
@@ -249,7 +249,6 @@ void mountAction(String part) async {
 
   final mountActionProcess = await shell.run("bash -c \"udisksctl mount -b $part\"");
   if(mountActionProcess[0].exitCode == 0) {
-    print(mountActionProcess[0].stdout);
     await dialog(reader(8, _language), '${reader(8, _language)}${mountActionProcess[0].stdout}', '7', '60');
     clear();
     menu();
@@ -327,7 +326,7 @@ void powerOffAction(String part) async {
   String blockTemp = (blockTempProcess[0].stdout as String).trim();
 
   final partitionsProcess =  await shell.run("bash -c \"find /dev -name \"$blockTemp[[:digit:]]\" | sort -n | sed 's/^\\/dev\\///' \"");
-  List<String>partitions = (partitionsProcess[0].stdout as String).split("\n");
+  List<String> partitions = (partitionsProcess[0].stdout as String).split("\n");
 
   partitions.removeWhere((e) => e == '');
 
