@@ -1,0 +1,16 @@
+icons_launcher:
+  image_path: 'assets/thumb.png'
+  platforms:
+    android:
+      enable: false
+    ios:
+      enable: false
+    web:
+      enable: false
+    macos:
+      enable: true
+      image_path: 'assets/thumb.png'
+    windows:
+      enable: false
+    linux:
+      enable: false
