@@ -27,25 +27,25 @@ Future<void> main() async {
   setup();
   await locator.get<App>().init();
 
-  if(await _efiCheck() != "") {
+  if(await _efiCheck() != '') {
     lang(2, PrintQuery.normal);
-    codeproc("sudo cat < /dev/null").then((checkSu) {
+    codeproc('sudo cat < /dev/null').then((checkSu) {
       final spinAction = spin();
       checkSu == 0 ? _efiPart().then((efipart){
-        "sudo diskutil unmount $efipart".run;
-        "sudo rm -rf /Volumes/EFI".run;
+        'sudo diskutil unmount $efipart'.run;
+        'sudo rm -rf /Volumes/EFI'.run;
         spinAction.cancel();
         _ok();
       }) : _err();
     });
   } else {
     lang(3, PrintQuery.normal);
-    codeproc("sudo cat < /dev/null").then((checkSu) {
+    codeproc('sudo cat < /dev/null').then((checkSu) {
       final spinAction = spin();
       checkSu == 0 ? _efiPart().then((efipart){
-        "sudo mkdir /Volumes/EFI".run;
-        "sudo mount -t msdos /dev/$efipart /Volumes/EFI".run;
-        "open /Volumes/EFI".run;
+        'sudo mkdir /Volumes/EFI'.run;
+        'sudo mount -t msdos /dev/$efipart /Volumes/EFI'.run;
+        'open /Volumes/EFI'.run;
           spinAction.cancel();
         _ok();
       }) : _err();

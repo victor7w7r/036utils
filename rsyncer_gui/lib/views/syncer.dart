@@ -30,7 +30,7 @@ class Syncer extends StatelessWidget {
         n.Wrap([
           n.Column([
             AdwButton.pill(
-              onPressed: () => dirPick().then((val) => ctl.changeSourceDir(val ?? "")),
+              onPressed: () => dirPick().then((val) => ctl.changeSourceDir(val ?? '')),
               child: Text(dict(0, ctl.lang)),
             ),
             const SizedBox(height: 10),
@@ -38,7 +38,7 @@ class Syncer extends StatelessWidget {
           ]),
           n.Column([
             AdwButton.pill(
-              onPressed: () => dirPick().then((val) => ctl.changeDestDir(val ?? "")),
+              onPressed: () => dirPick().then((val) => ctl.changeDestDir(val ?? '')),
               child: Text(dict(1, ctl.lang)),
             ),
             const SizedBox(height: 10),
@@ -52,7 +52,7 @@ class Syncer extends StatelessWidget {
           ..w = 300
           ..mt = 50
           ..n.topCenter,
-        if(ctl.destDir != "" && ctl.sourceDir != "") AdwButton.pill(
+        if(ctl.destDir != '' && ctl.sourceDir != '') AdwButton.pill(
           onPressed: ctl.requestSync,
           child: const Text('Sync'),
         ).niku

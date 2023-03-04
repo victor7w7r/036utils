@@ -47,13 +47,13 @@ Future<List<String>> ext4listener(bool isMenu) async {
 
   for (final dev in dirtyDevs) {
     final abs = await _absoluteDev(dev);
-    abs != "" && abs != await _rootDev()
+    abs != '' && abs != await _rootDev()
       ? parts.add(await _blockDev(dev))
       : {};
   }
 
   for(final part in parts) {
-    if(await _typePart(part) == "ext4") {
+    if(await _typePart(part) == 'ext4') {
       extCount += 1;
       extParts.add(part);
     }
@@ -62,9 +62,9 @@ Future<List<String>> ext4listener(bool isMenu) async {
   if(extCount == 0) _interrupt(true);
 
   for(final part in extParts) {
-    await _mountCheck(part) != ""
+    await _mountCheck(part) != ''
       ? mountCount +=1
-      : umounts.add("/dev/$part");
+      : umounts.add('/dev/$part');
   }
 
   if(mountCount == extCount) _interrupt(false);

@@ -17,17 +17,17 @@ class App {
 
   Future<bool> _usbCheck() =>
     Task(() => sysout("find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'"))
-    .map((res) => res == "")
+    .map((res) => res == '')
     .run();
 
   Future<void> init() async {
 
     clear();
-    print(green("Bienvenido / Welcome"));
-    print(cyan("Please, choose your language / Por favor selecciona tu idioma"));
+    print(green('Bienvenido / Welcome'));
+    print(cyan('Please, choose your language / Por favor selecciona tu idioma'));
 
     IO(Chooser<String>(['English', 'Espanol'], message: 'Number/Numero: ').chooseSync)
-      .map((selection) => selection == "English" ? english = true : english = false)
+      .map((selection) => selection == 'English' ? english = true : english = false)
       .run();
 
     clear();
@@ -38,7 +38,7 @@ class App {
     if(!Platform.isLinux) {
       clear();
       lang(0, PrintQuery.error);
-      print("\n");
+      print('\n');
       exit(1);
     }
 
@@ -46,37 +46,37 @@ class App {
       if(!val) {
         clear();
         lang(1, PrintQuery.error);
-        print("\n");
+        print('\n');
         exit(1);
       }
     });
 
-    await verifycmd("udisksctl").then((val){
+    await verifycmd('udisksctl').then((val){
       if(!val) {
         clear();
         lang(2, PrintQuery.error);
-        print("\n");
+        print('\n');
         exit(1);
       }
     });
 
-    await verifycmd("whiptail").then((val){
+    await verifycmd('whiptail').then((val){
       if(!val) {
         clear();
         lang(3, PrintQuery.error);
-        print("\n");
+        print('\n');
         exit(1);
       }
     });
 
     await Task(() => Process.run(
-      "bash",
-      ["-c", "systemctl is-active udisks2"],
+      'bash',
+      ['-c', 'systemctl is-active udisks2'],
       runInShell: true))
       .map((srvu) => (srvu.stdout as String).trim())
       .run()
       .then((srv){
-        if(srv == "inactive"){
+        if(srv == 'inactive'){
           clear();
           lang(4, PrintQuery.error);
           exit(1);

@@ -22,7 +22,7 @@ Future<void> usbAction(String part, bool isMount, void Function() call) async {
 
   spinAction.cancel();
 
-  if(action[0] == "0") {
+  if(action[0] == '0') {
     await dialog(lang(19), '${lang(19)}${action[1]}', '8', '80');
     clear();
     call();

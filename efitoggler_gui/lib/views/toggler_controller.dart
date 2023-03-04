@@ -9,8 +9,8 @@ import 'package:efitoggler_gui/widgets/index.dart';
 
 class TogglerController extends ChangeNotifier {
 
-  String efipart = "";
-  String efi = "";
+  String efipart = '';
+  String efi = '';
   bool lang = locator.get<AppConfig>().isEng;
   bool loading = false;
   bool isEfi = false;
@@ -23,14 +23,14 @@ class TogglerController extends ChangeNotifier {
   Future<int> checkSudo(String pass) => codeproc('echo $pass | sudo -S cat /dev/null');
 
   Future<String> umountChain(String efipart, String pass) =>
-    Task(() => sysout("echo $pass | sudo -S diskutil unmount $efipart"))
-      .flatMap((_) => Task(() => sysout("echo $pass | sudo -S rm -rf /Volumes/EFI")))
+    Task(() => sysout('echo $pass | sudo -S diskutil unmount $efipart'))
+      .flatMap((_) => Task(() => sysout('echo $pass | sudo -S rm -rf /Volumes/EFI')))
       .run();
 
   Future<String> mountChain(String efipart, String pass) =>
-    Task(() => sysout("echo $pass | sudo -S mkdir /Volumes/EFI"))
-      .flatMap((_) => Task(() => sysout("echo $pass | sudo -S mount -t msdos /dev/$efipart /Volumes/EFI")))
-      .flatMap((_) => Task(() => sysout("open /Volumes/EFI")))
+    Task(() => sysout('echo $pass | sudo -S mkdir /Volumes/EFI'))
+      .flatMap((_) => Task(() => sysout('echo $pass | sudo -S mount -t msdos /dev/$efipart /Volumes/EFI')))
+      .flatMap((_) => Task(() => sysout('open /Volumes/EFI')))
       .run();
 
   void setLoading(bool value) {
@@ -39,7 +39,7 @@ class TogglerController extends ChangeNotifier {
   }
 
   void init() => sysout(checkEfiMountCmd).then((efiCheck) {
-    isEfi = efiCheck != "";
+    isEfi = efiCheck != '';
     setLoading(false);
   });
 
@@ -76,6 +76,7 @@ class TogglerController extends ChangeNotifier {
   }
 }
 
-final togglerController = ChangeNotifierProvider<TogglerController>((_) =>
-  TogglerController()..init()
-);
+final togglerController =
+  ChangeNotifierProvider<TogglerController>((_) =>
+    TogglerController()..init()
+  );

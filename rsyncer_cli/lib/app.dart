@@ -18,11 +18,11 @@ class App {
   Future<void> init() async {
 
     clear();
-    print(green("Bienvenido / Welcome"));
-    print(cyan("Please, choose your language / Por favor selecciona tu idioma"));
+    print(green('Bienvenido / Welcome'));
+    print(cyan('Please, choose your language / Por favor selecciona tu idioma'));
 
     IO(Chooser<String>(['English', 'Espanol'], message: 'Number/Numero: ').chooseSync)
-      .map((selection) => selection == "English" ? english = true : english = false)
+      .map((selection) => selection == 'English' ? english = true : english = false)
       .run();
 
     clear();
@@ -31,15 +31,15 @@ class App {
     if(!Platform.isLinux) {
       clear();
       lang(0, PrintQuery.error);
-      print("\n");
+      print('\n');
       exit(1);
     }
 
-    await verifycmd("rsync").then((val){
+    await verifycmd('rsync').then((val){
       if(!val) {
         clear();
         lang(1, PrintQuery.error);
-        print("\n");
+        print('\n');
         exit(1);
       }
     });

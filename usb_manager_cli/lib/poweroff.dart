@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart' show Task;
 import 'package:usb_manager_cli/index.dart';
 
 Future<String> _block(String part) =>
-  sysout("echo $part | cut -d \"/\" -f3");
+  sysout('echo $part | cut -d \'/\' -f3');
 
 Future<List<String>> _partsQuery(String part) =>
   Task(() => _block(part))
@@ -12,7 +12,7 @@ Future<List<String>> _partsQuery(String part) =>
 
 Future<String> _modelQuery(String part) =>
   Task(() => _block(part))
-    .flatMap((block) => Task(() => sysout("cat /sys/class/block/$block/device/model")))
+    .flatMap((block) => Task(() => sysout('cat /sys/class/block/$block/device/model')))
     .run();
 
 Future<String> _mountQuery(String part) =>
@@ -29,13 +29,13 @@ Future<void> powerOff(String part, void Function() call) async {
   partitionsQuery.removeWhere((e) => e == '');
 
   for(final parts in partitionsQuery) {
-    if(await _mountQuery(parts) != "") mounts.add(parts);
+    if(await _mountQuery(parts) != '') mounts.add(parts);
   }
 
   if(mounts.isNotEmpty) {
     for(final partition in mounts) {
-      if(await codeproc("udisksctl unmount -b /dev/$partition &> /dev/null") == 0) {
-        print("");
+      if(await codeproc('udisksctl unmount -b /dev/$partition &> /dev/null') == 0) {
+        print('');
       } else {
         spinAction.cancel();
         await dialog('ERROR', dialogLang(1, partition), '8', '80');
@@ -47,7 +47,7 @@ Future<void> powerOff(String part, void Function() call) async {
   }
 
   final model = await _modelQuery(part);
-  final powerOff = await codeproc("udisksctl power-off -b $part");
+  final powerOff = await codeproc('udisksctl power-off -b $part');
 
   spinAction.cancel();
   if(powerOff == 0) {

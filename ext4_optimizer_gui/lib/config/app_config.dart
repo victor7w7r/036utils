@@ -11,7 +11,7 @@ class AppConfig {
   late final SharedPreferences prefs;
   ThemeMode theme = ThemeMode.light;
   bool isEng = true;
-  String tempPath = "";
+  String tempPath = '';
 
   @FactoryMethod(preResolve: true)
   static Future<AppConfig> init() async {
@@ -42,7 +42,7 @@ class AppConfig {
       ..minSize = const Size(640, 360)
       ..size = const Size(1280, 720)
       ..alignment = Alignment.center
-      ..title = "rsyncer_gui"
+      ..title = 'rsyncer_gui'
       ..show()
     );
 

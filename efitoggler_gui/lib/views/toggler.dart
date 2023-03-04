@@ -33,7 +33,7 @@ class Toggler extends StatelessWidget {
           ])
             ..n.top = 10
             ..n.right = 10,
-          "EFI Toggler".n
+          'EFI Toggler'.n
             ..freezed
             ..fontSize = 30
             ..n.topCenter

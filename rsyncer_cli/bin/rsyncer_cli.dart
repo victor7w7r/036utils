@@ -5,20 +5,20 @@ import 'package:dcli/dcli.dart' show exists;
 
 import 'package:rsyncer_cli/index.dart';
 
-String _source = "";
-String _dest = "";
+String _source = '';
+String _dest = '';
 
 Future<int> _syncCmd(String source, String dest) =>
-  codeproc("rsync -axHAWXS --numeric-ids --info=progress2 $source $dest");
+  codeproc('rsync -axHAWXS --numeric-ids --info=progress2 $source $dest');
 
 Future<int> _sudoSyncCmd(String source, String dest) =>
-  codeproc("sudo rsync -axHAWXS --numeric-ids --info=progress2 $source $dest");
+  codeproc('sudo rsync -axHAWXS --numeric-ids --info=progress2 $source $dest');
 
 void _sourceaction() =>
-  readInput(lang(8)).then((val) => _validator("source", val));
+  readInput(lang(8)).then((val) => _validator('source', val));
 
 void _destiaction() =>
-  readInput(lang(9)).then((val) => _validator("dest", val));
+  readInput(lang(9)).then((val) => _validator('dest', val));
 
 void _interrupt(bool op, String data) {
   clear();
@@ -30,13 +30,13 @@ void _interrupt(bool op, String data) {
 }
 
 void _ok(){
-  print("\n =============== OK =============== \n");
+  print('\n =============== OK =============== \n');
   lang(5, PrintQuery.normal);
   exit(0);
 }
 
 void _validator(String typeData, String data) {
-  if(typeData == "source") {
+  if(typeData == 'source') {
     if((data.isNotEmpty)) {
       if(exists(data)) {
         _source = data;
@@ -51,7 +51,7 @@ void _validator(String typeData, String data) {
       clear();
       exit(0);
     }
-  } else if(typeData == "dest") {
+  } else if(typeData == 'dest') {
     if(data.isNotEmpty) {
       if(exists(data)) {
         _dest = data;
@@ -73,30 +73,30 @@ void _validator(String typeData, String data) {
 
 Future<void> _syncer() async {
 
-  String sourceReady = "";
-  String destReady = "";
+  String sourceReady = '';
+  String destReady = '';
 
   RegExp(r'.*\/$').hasMatch(_source)
     ? sourceReady = _source
-    : sourceReady = "$_source/";
+    : sourceReady = '$_source/';
 
   RegExp(r'.*\/$').hasMatch(_dest)
     ? destReady = _dest
-    : destReady = "$_dest/";
+    : destReady = '$_dest/';
 
   clear();
 
   lang(4, PrintQuery.normal);
-  print("SOURCE:{$sourceReady}");
-	print("DESTINATION:{$destReady} \n");
+  print('SOURCE:{$sourceReady}');
+	print('DESTINATION:{$destReady} \n');
 
   if(await _syncCmd(sourceReady, destReady) == 0) {
     _ok();
   } else {
     clear();
     lang(6, PrintQuery.normal);
-    print("SOURCE:{$sourceReady}");
-    print("DESTINATION:{$destReady} \n");
+    print('SOURCE:{$sourceReady}');
+    print('DESTINATION:{$destReady} \n');
     if(await _sudoSyncCmd(sourceReady, destReady) == 0) {
       _ok();
     } else {

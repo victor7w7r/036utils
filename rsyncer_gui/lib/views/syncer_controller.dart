@@ -23,15 +23,15 @@ class SyncerController extends ChangeNotifier {
 
   bool lang = locator.get<AppConfig>().isEng;
 
-  String sourceDir = "";
-  String destDir = "";
+  String sourceDir = '';
+  String destDir = '';
 
   Future<bool> checkPermission(String dir) =>
     Task(() => sysout('if [ -w $dir ]; then echo "y"; else echo "n"; fi'))
-      .map((res) => res == "y")
+      .map((res) => res == 'y')
       .run();
 
-  void init() => verifycmd("rsync").then((ex) =>
+  void init() => verifycmd('rsync').then((ex) =>
     !ex ? FlutterPlatformAlert.showAlert(
       windowTitle: 'Error',
       text: dict(4, lang),
@@ -43,7 +43,7 @@ class SyncerController extends ChangeNotifier {
   void initPty(String cmd) {
 
     pty = Pty.start(
-      "bash",
+      'bash',
       columns: terminal.viewWidth,
       rows: terminal.viewHeight,
     );
@@ -74,8 +74,8 @@ class SyncerController extends ChangeNotifier {
     final chk2 = await checkPermission(destDir);
 
     chk1 && chk2
-      ? initPty("rsync -axHAWXS --numeric-ids --info=progress2 $sourceDir $destDir && exit")
-      : initPty("sudo rsync -axHAWXS --numeric-ids --info=progress2 $sourceDir $destDir; exit");
+      ? initPty('rsync -axHAWXS --numeric-ids --info=progress2 $sourceDir $destDir && exit')
+      : initPty('sudo rsync -axHAWXS --numeric-ids --info=progress2 $sourceDir $destDir; exit');
 
     syncMode = true;
     notifyListeners();
@@ -104,7 +104,7 @@ class SyncerController extends ChangeNotifier {
 
   void cancel(){
     terminal.charInput(99, ctrl: true);
-    terminal.textInput("exit");
+    terminal.textInput('exit');
     terminal.keyInput(TerminalKey.enter);
   }
 

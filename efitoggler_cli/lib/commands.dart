@@ -7,12 +7,12 @@ import 'package:dcli/dcli.dart' show Terminal;
 void clear() => Terminal().clearScreen();
 
 Future<String> sysout(String cmd) =>
-  Task(() async => Process.run("bash", ["-c", cmd], runInShell: true))
+  Task(() async => Process.run('bash', ['-c', cmd], runInShell: true))
     .map((cmd) => (cmd.stdout.toString()).trim())
     .run();
 
 Future<int> codeproc(String cmd) =>
-  Task(() async => Process.run("bash", ["-c", cmd], runInShell: true))
+  Task(() async => Process.run('bash', ['-c', cmd], runInShell: true))
     .map((cmd) => cmd.exitCode)
     .run();
 

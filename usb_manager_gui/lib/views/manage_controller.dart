@@ -23,7 +23,7 @@ class ManageController extends ChangeNotifier {
   final items = <String>[];
 
   Future<String> _block(String part) =>
-    sysout("echo $part | cut -d \"/\" -f3");
+    sysout('echo $part | cut -d \'/\' -f3');
 
   Future<List<String>> _partsQuery(String part) =>
     Task(() => _block(part))
@@ -35,7 +35,7 @@ class ManageController extends ChangeNotifier {
 
   Future<String> _modelQuery(String part) =>
     Task(() => _block(part))
-      .flatMap((block) => Task(() => sysout("cat /sys/class/block/$block/device/model")))
+      .flatMap((block) => Task(() => sysout('cat /sys/class/block/$block/device/model')))
       .run();
 
   Future<String> _mountQuery(String part) =>
@@ -47,25 +47,25 @@ class ManageController extends ChangeNotifier {
   void init() => checkUid().then((val) =>
     !val ? alert(
       okIcon: true,
-      title: "Error",
+      title: 'Error',
       text: dict(0, lang),
       onOk: () => exit(1)
-    ) : verifycmd("udisksctl").then((val) =>
+    ) : verifycmd('udisksctl').then((val) =>
       !val ? alert(
         okIcon: true,
-        title: "Error",
+        title: 'Error',
         text: dict(1, lang),
         onOk: () => exit(1)
       ) : Task(() => Process.run(
-        "bash",
-        ["-c", "systemctl is-active udisks2"],
+        'bash',
+        ['-c', 'systemctl is-active udisks2'],
         runInShell: true
       ))
         .map((srvu) => (srvu.stdout as String).trim())
         .run()
-        .then((srv) => srv == "inactive" ? alert(
+        .then((srv) => srv == 'inactive' ? alert(
           okIcon: true,
-          title: "Error",
+          title: 'Error',
           text: dict(2, lang),
           onOk: () => exit(1)
         ) : listMountParts()
@@ -80,14 +80,14 @@ class ManageController extends ChangeNotifier {
     cancellable = CancelableOperation.fromFuture(usblistener(Action.mount)).then((arr){
       noMountParts = false;
       items.clear();
-      if(arr[0] == "NOUSB") {
+      if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
-          title: "Error",
+          title: 'Error',
           text: dict(3, lang),
           onOk: () => exit(0)
         );
-      } else if(arr[0] == "NOMOUNT") {
+      } else if(arr[0] == 'NOMOUNT') {
         noMountParts = true;
         loading = false;
         notifyListeners();
@@ -106,14 +106,14 @@ class ManageController extends ChangeNotifier {
     cancellable = CancelableOperation.fromFuture(usblistener(Action.unmount)).then((arr){
       noUmountParts = false;
       items.clear();
-      if(arr[0] == "NOUSB") {
+      if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
-          title: "Error",
+          title: 'Error',
           text: dict(3, lang),
           onOk: () => exit(0)
         );
-      } else if(arr[0] == "NOUNMOUNT") {
+      } else if(arr[0] == 'NOUNMOUNT') {
         noUmountParts = true;
         loading = false;
         notifyListeners();
@@ -131,10 +131,10 @@ class ManageController extends ChangeNotifier {
     notifyListeners();
     cancellable = CancelableOperation.fromFuture(usblistener(Action.off)).then((arr){
       items.clear();
-      if(arr[0] == "NOUSB") {
+      if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
-          title: "Error",
+          title: 'Error',
           text: dict(3, lang),
           onOk: () => exit(0)
         );
@@ -204,7 +204,7 @@ class ManageController extends ChangeNotifier {
     } else {
       yesNo(
         title: dict(6, lang),
-        text: "${dict(7, lang)} $el ${dict(8, lang)}?",
+        text: '${dict(7, lang)} $el ${dict(8, lang)}?',
         onYes: () {
           loading = true;
           enableRadio = false;
@@ -227,12 +227,12 @@ class ManageController extends ChangeNotifier {
     partitionsQuery.removeWhere((e) => e == '');
 
     for(final parts in partitionsQuery) {
-      if(await _mountQuery(parts) != "") mounts.add(parts);
+      if(await _mountQuery(parts) != '') mounts.add(parts);
     }
 
     if(mounts.isNotEmpty) {
       for(final partition in mounts) {
-        if(await codeproc("udisksctl unmount -b /dev/$partition &> /dev/null") != 0) {
+        if(await codeproc('udisksctl unmount -b /dev/$partition &> /dev/null') != 0) {
           snackBar(context, dict(12, lang));
           return;
         }
@@ -240,11 +240,11 @@ class ManageController extends ChangeNotifier {
     }
 
     final model = await _modelQuery(part);
-    final powerOff = await codeproc("udisksctl power-off -b $part");
+    final powerOff = await codeproc('udisksctl power-off -b $part');
 
     powerOff == 0
-      ? snackBar(context, "${dict(11, lang)} $model")
-      : snackBar(context, "${dict(13, lang)} $model");
+      ? snackBar(context, '${dict(11, lang)} $model')
+      : snackBar(context, '${dict(13, lang)} $model');
   }
 
   Future<void> toggleLang() async {

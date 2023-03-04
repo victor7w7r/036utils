@@ -21,11 +21,11 @@ class App {
 
     if(args.isEmpty) {
 
-      print(green("Bienvenido / Welcome"));
-      print(cyan("Please, choose your language / Por favor selecciona tu idioma"));
+      print(green('Bienvenido / Welcome'));
+      print(cyan('Please, choose your language / Por favor selecciona tu idioma'));
 
       IO(Chooser<String>(['English', 'Espanol'], message: 'Number/Numero: ').chooseSync)
-      .map((selection) => selection == "English" ? english = true : english = false)
+      .map((selection) => selection == 'English' ? english = true : english = false)
       .run();
     }
 
@@ -39,7 +39,7 @@ class App {
       if(!Platform.isLinux) {
         clear();
         lang(0, PrintQuery.error);
-        print("\n");
+        print('\n');
         exit(1);
       }
 
@@ -47,25 +47,25 @@ class App {
         if(!val) {
           clear();
           lang(1, PrintQuery.error);
-          print("\n");
+          print('\n');
           exit(1);
         }
       });
 
-      await verifycmd("e4defrag").then((val){
+      await verifycmd('e4defrag').then((val){
         if(!val) {
           clear();
           lang(2, PrintQuery.error);
-          print("\n");
+          print('\n');
           exit(1);
         }
       });
 
-      await verifycmd("fsck.ext4").then((val){
+      await verifycmd('fsck.ext4').then((val){
         if(!val) {
           clear();
           lang(3, PrintQuery.error);
-          print("\n");
+          print('\n');
           exit(1);
         }
       });

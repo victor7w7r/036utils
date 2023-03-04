@@ -43,7 +43,7 @@ class SudoDialog extends StatelessWidget {
           buttonSize: ButtonSize.large,
           onPressed: () {
             Navigator.pop(context);
-            onConfirm(false, "");
+            onConfirm(false, '');
           },
           child: Text(dict(9, lang)),
         )

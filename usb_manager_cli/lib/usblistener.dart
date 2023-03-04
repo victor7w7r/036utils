@@ -8,7 +8,7 @@ import 'package:usb_manager_cli/index.dart';
 
 Future<bool> _usbCheck() =>
   Task(() => sysout("find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'"))
-  .map((res) => res == "")
+  .map((res) => res == '')
   .run();
 
 Future<List<String>> _usbPhysicalDevs() =>
@@ -72,7 +72,7 @@ Future<void> usblistener(Action action, void Function() call) async {
   dirtyDevs.removeWhere((e) => e == '');
 
   for (final dev in dirtyDevs) {
-    if(await _absoluteDev(dev) != "") {
+    if(await _absoluteDev(dev) != '') {
       parts.add(await _partsDev(dev));
       count++;
     } else {
@@ -81,7 +81,7 @@ Future<void> usblistener(Action action, void Function() call) async {
   }
 
   for(final part in parts){
-    if(await _mountCheck(part) != "") {
+    if(await _mountCheck(part) != '') {
       unmountCount++;
       mounts.add(part);
     } else {
@@ -101,11 +101,11 @@ Future<void> usblistener(Action action, void Function() call) async {
   }
 
   for(final part in action == Action.mount ? unmounts : mounts) {
-    args.add("/dev/$part");
+    args.add('/dev/$part');
   }
 
   for(final part in block) {
-    if(action == Action.off) argspoweroff.add("/dev/$part");
+    if(action == Action.off) argspoweroff.add('/dev/$part');
   }
 
   action == Action.off

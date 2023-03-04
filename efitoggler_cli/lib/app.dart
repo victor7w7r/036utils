@@ -18,11 +18,11 @@ class App {
   Future<void> init() async {
 
     clear();
-    print(green("Bienvenido / Welcome"));
-    print(cyan("Please, choose your language / Por favor selecciona tu idioma"));
+    print(green('Bienvenido / Welcome'));
+    print(cyan('Please, choose your language / Por favor selecciona tu idioma'));
 
     IO(Chooser<String>(['English', 'Espanol'], message: 'Number/Numero: ').chooseSync)
-      .map((selection) => selection == "English" ? english = true : english = false)
+      .map((selection) => selection == 'English' ? english = true : english = false)
       .run();
 
     clear();
@@ -31,7 +31,7 @@ class App {
     if(!Platform.isMacOS) {
       clear();
       lang(0, PrintQuery.error);
-      print("\n");
+      print('\n');
       exit(1);
     }
 

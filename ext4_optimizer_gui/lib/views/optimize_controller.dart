@@ -25,7 +25,7 @@ class OptimizeController extends ChangeNotifier {
   bool ready = false;
 
   final _app = locator.get<AppConfig>();
-  final _url = "https://github.com/victor7w7r/036utils/releases/download/1.0.0/ext4_optimizer_cli-amd64";
+  final _url = 'https://github.com/victor7w7r/036utils/releases/download/1.0.0/ext4_optimizer_cli-amd64';
   final _cancel = CancelToken();
 
   Pty? pty;
@@ -33,30 +33,30 @@ class OptimizeController extends ChangeNotifier {
   bool lang = locator.get<AppConfig>().isEng;
 
   void init() =>
-    verifycmd("e4defrag").then((val) =>
+    verifycmd('e4defrag').then((val) =>
       !val ? alert(
         okIcon: true,
-        title: "Error",
+        title: 'Error',
         text: dict(1, lang),
         onOk: () => exit(1)
-      ) : verifycmd("fsck.ext4").then((val) =>
+      ) : verifycmd('fsck.ext4').then((val) =>
         !val ? alert(
           okIcon: true,
-          title: "Error",
+          title: 'Error',
           text: dict(2, lang),
           onOk: () => exit(1)
         ) : ext4listener().then((query){
-          if(query[0] == "NOT") {
+          if(query[0] == 'NOT') {
             alert(
               okIcon: true,
-              title: "Error",
+              title: 'Error',
               text: dict(3, lang),
               onOk: () => exit(1)
             );
-          } else if(query[0] == "FULL") {
+          } else if(query[0] == 'FULL') {
             alert(
               okIcon: true,
-              title: "Error",
+              title: 'Error',
               text: dict(4, lang),
               onOk: () => exit(1)
             );
@@ -70,7 +70,7 @@ class OptimizeController extends ChangeNotifier {
 
   void requestOptimize(String part) => yesNo(
     title: dict(6, lang),
-    text: "${dict(7, lang)} $part ?",
+    text: '${dict(7, lang)} $part ?',
     onYes: () {
       loading = true;
       opMode = true;
@@ -79,21 +79,21 @@ class OptimizeController extends ChangeNotifier {
       if(!File(location).existsSync()) {
         download(_url, location, _cancel).then((res){
           if(res) {
-            codeproc("chmod +x ${_app.tempPath}/ext4_optimizer_cli").then((_){
+            codeproc('chmod +x ${_app.tempPath}/ext4_optimizer_cli').then((_){
               loading = false;
-              initPty("sudo $location $part; exit");
+              initPty('sudo $location $part; exit');
               isOptimize = true;
               notifyListeners();
             });
           } else {
             loading = false;
-            alert(okIcon: false, title: "Error", text: dict(10, lang), onOk: (){});
+            alert(okIcon: false, title: 'Error', text: dict(10, lang), onOk: (){});
             notifyListeners();
           }
         });
       } else {
         loading = false;
-        initPty("sudo $location $part; exit");
+        initPty('sudo $location $part; exit');
         isOptimize = true;
         notifyListeners();
       }
@@ -103,7 +103,7 @@ class OptimizeController extends ChangeNotifier {
   void initPty(String cmd) {
 
     pty = Pty.start(
-      "bash",
+      'bash',
       columns: terminal.viewWidth,
       rows: terminal.viewHeight,
     );
@@ -144,7 +144,7 @@ class OptimizeController extends ChangeNotifier {
 
   void cancel(){
     terminal.charInput(99, ctrl: true);
-    terminal.textInput("exit");
+    terminal.textInput('exit');
     terminal.keyInput(TerminalKey.enter);
   }
 

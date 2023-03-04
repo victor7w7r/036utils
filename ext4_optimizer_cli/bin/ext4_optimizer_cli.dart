@@ -47,7 +47,7 @@ Future<void> _defragction(bool interactive, String part) async {
   clear();
   lang(7, PrintQuery.normal);
 
-  if(_runner(await codeproc("fsck.ext4 -y -f -v $part"))) {
+  if(_runner(await codeproc('fsck.ext4 -y -f -v $part'))) {
     if(interactive) {
       return;
     } else {
@@ -56,7 +56,7 @@ Future<void> _defragction(bool interactive, String part) async {
   }
 
   lang(10, PrintQuery.normal);
-  if(_runner(await codeproc("fsck.ext4 -y -f -v -D $part"))) {
+  if(_runner(await codeproc('fsck.ext4 -y -f -v -D $part'))) {
     if(interactive) {
       return;
     } else {
@@ -68,9 +68,9 @@ Future<void> _defragction(bool interactive, String part) async {
   "bash -c 'mount $part /tmp/optimize'".run;
 
   lang(11, PrintQuery.normal);
-  await codeproc("e4defrag -v $part");
+  await codeproc('e4defrag -v $part');
 
-  print("");
+  print('');
   "bash -c 'umount $part'".run;
 
   lang(9, PrintQuery.normal);
@@ -78,7 +78,7 @@ Future<void> _defragction(bool interactive, String part) async {
 
   lang(12, PrintQuery.normal);
 
-  if(_runner(await codeproc("fsck.ext4 -y -f -v $part"))) {
+  if(_runner(await codeproc('fsck.ext4 -y -f -v $part'))) {
     if(interactive) {
       return;
     } else {

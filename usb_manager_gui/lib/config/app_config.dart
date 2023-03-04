@@ -37,7 +37,7 @@ class AppConfig {
       ..minSize = const Size(640, 360)
       ..size = const Size(1280, 720)
       ..alignment = Alignment.center
-      ..title = "rsyncer_gui"
+      ..title = 'usb_manager_gui'
       ..show()
     );
 
