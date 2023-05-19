@@ -2,20 +2,19 @@ import 'package:flutter/cupertino.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 import 'package:macos_ui/macos_ui.dart';
-import 'package:nester/nester.dart' show Nester;
 import 'package:riverpod_context/riverpod_context.dart' show InheritedConsumer, RiverpodContext;
 
-import 'package:efitoggler_gui/config/locator.dart';
+import 'package:efitoggler_gui/inject/inject.dart';
 import 'package:efitoggler_gui/providers/theme_provider.dart';
-import 'package:efitoggler_gui/views/toggler.dart';
+import 'package:efitoggler_gui/screens/toggler.dart';
 
-void main() => setup().then((_) => runApp(
-  Nester.list([
-    (next) => ProviderScope(child: next),
-    (next) => InheritedConsumer(child: next),
-    (_) => const EfiToggler()
-  ])
-));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await configInjection();
+  runApp(const ProviderScope(
+    child: InheritedConsumer(child: EfiToggler())
+  ));
+}
 
 class EfiToggler extends StatelessWidget {
 

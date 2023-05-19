@@ -4,28 +4,27 @@ description: efitoggler_gui
 version: 1.0.0
 
 environment:
-  sdk: ">=2.19.3 <3.0.0"
+  sdk: '>=3.0.1 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_riverpod: ^2.3.0
-  fpdart: ^0.5.0
-  get_it: ^7.2.0
-  injectable: ^2.1.0
+  flutter_riverpod: ^2.3.6
+  fpdart: ^0.6.0
+  get_it: ^7.6.0
+  injectable: ^2.1.1
   macos_ui: ^1.12.2
-  nester: ^1.2.1
   niku: ^2.3.3
   riverpod_context: ^0.3.0
-  shared_preferences: ^2.0.18
+  shared_preferences: ^2.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: ^2.3.3
+  build_runner: ^2.4.4
   flutter_lints: ^2.0.1
   icons_launcher: ^2.1.0
-  injectable_generator: ^2.1.4
+  injectable_generator: ^2.1.5
 
 flutter:
   uses-material-design: true

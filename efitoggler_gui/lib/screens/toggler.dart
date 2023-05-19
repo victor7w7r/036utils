@@ -4,12 +4,12 @@ import 'package:macos_ui/macos_ui.dart';
 import 'package:niku/namespace.dart' as n;
 import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
 
-import 'package:efitoggler_gui/config/index.dart';
+import 'package:efitoggler_gui/config/dict.dart';
 import 'package:efitoggler_gui/providers/theme_provider.dart';
-import 'package:efitoggler_gui/views/toggler_controller.dart';
+import 'package:efitoggler_gui/screens/toggler_controller.dart';
 import 'package:efitoggler_gui/widgets/macos_menubar.dart';
 
-class Toggler extends StatelessWidget {
+final class Toggler extends StatelessWidget {
 
   const Toggler({super.key});
 
@@ -20,15 +20,16 @@ class Toggler extends StatelessWidget {
     final isDark = context.watch(isDarkProvider);
 
     return n.Stack([
-      MacosMenubar(ctl.lang),
+      MacosMenubar(ctl.isLang),
       MacosWindow(
-        child: !ctl.loading ? n.Stack([
+        child: !ctl.isLoading ? n.Stack([
           n.Row([
-            dict(0, ctl.lang).n,
+            dict(0, ctl.isLang).n,
             MacosSwitch(
               value: isDark,
               onChanged: (_) =>
-                context.read(themeProvider.notifier).toggle()
+                context.read(themeProvider.notifier)
+                  .toggle()
             )
           ])
             ..n.top = 10
@@ -39,26 +40,28 @@ class Toggler extends StatelessWidget {
             ..n.topCenter
             ..mt = 80,
           n.Row([
-            dict(2, ctl.lang).n,
+            dict(2, ctl.isLang).n,
             MacosSwitch(
               value: ctl.isEfi,
               onChanged: (_) => ctl.toggle(context)
             ),
-            dict(1, ctl.lang).n,
+            dict(1, ctl.isLang).n,
           ])
             ..mainCenter
             ..n.center,
-          n.Image.asset("assets/${isDark ? "brandwhite" : "brand"}.png")
+          n.Image.asset(
+            "assets/${isDark ? "brandwhite" : "brand"}.png"
+          )
             ..w = 300
             ..n.left = 20
             ..n.bottom = 10,
           n.Row([
-            dict(4, ctl.lang).n,
+            dict(4, ctl.isLang).n,
             MacosSwitch(
-              value: ctl.lang,
-              onChanged: (_) => ctl.toggleLang()
+              value: ctl.isLang,
+              onChanged: (_) => ctl.isLang = !ctl.isLang
             ),
-            dict(3, ctl.lang).n,
+            dict(3, ctl.isLang).n,
           ])
             ..n.bottom = 15
             ..n.right = 20

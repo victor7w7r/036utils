@@ -5,13 +5,17 @@ import 'package:niku/namespace.dart' as n;
 
 import 'package:efitoggler_gui/config/dict.dart';
 
-class SudoDialog extends StatelessWidget {
-
-  SudoDialog(this.lang, this.onConfirm, {super.key});
+final class SudoDialog extends StatelessWidget {
 
   final void Function(bool, String) onConfirm;
   final bool lang;
   final ctl = TextEditingController();
+
+  SudoDialog(
+    this.lang,
+    this.onConfirm,
+    {super.key}
+  );
 
   @override
   Widget build(context) => MacosSheet(
@@ -23,7 +27,7 @@ class SudoDialog extends StatelessWidget {
         MacosTextField(
           placeholder: dict(7, lang),
           controller: ctl,
-          obscureText: true,
+          obscureText: true
         ).niku..w = 300
       ])
         ..mb = 30
@@ -36,7 +40,7 @@ class SudoDialog extends StatelessWidget {
             Navigator.pop(context);
             onConfirm(true, ctl.text);
           },
-          child: Text(dict(8, lang)),
+          child: Text(dict(8, lang))
         ),
         const SizedBox(width: 10),
         PushButton(
@@ -45,7 +49,7 @@ class SudoDialog extends StatelessWidget {
             Navigator.pop(context);
             onConfirm(false, '');
           },
-          child: Text(dict(9, lang)),
+          child: Text(dict(9, lang))
         )
       ])
         ..n.right = 20
