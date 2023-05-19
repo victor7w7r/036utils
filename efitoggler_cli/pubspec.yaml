@@ -9,7 +9,6 @@ dependencies:
   console: ^4.1.0
   dcli: ^2.2.2
   fpdart: ^0.6.0
-  get_it: ^7.6.0
 
 dev_dependencies:
   lints: ^2.1.0
