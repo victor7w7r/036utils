@@ -109,5 +109,6 @@ void _syncer() async {
 
 void main() async {
   await init();
+  clear();
   _action(true);
 }

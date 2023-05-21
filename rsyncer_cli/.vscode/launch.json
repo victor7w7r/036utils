@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "efitoggler_cli",
+      "console": "terminal",
+      "request": "launch",
+      "type": "dart",
+      "program": "bin/rsyncer_cli.dart",
+    }
+  ]
+}
