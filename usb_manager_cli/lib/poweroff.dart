@@ -1,24 +1,37 @@
 import 'package:fpdart/fpdart.dart' show Task;
 
-import 'package:usb_manager_cli/index.dart';
+import 'package:usb_manager_cli/usb_manager_cli.dart';
 
-Future<String> _block(String part) =>
-  sysout('echo $part | cut -d \'/\' -f3');
+Future<T> _block<T>(
+  final String part,
+  Future<T> Function(String) query
+) => Task(() => sys(
+  'echo $part | cut -d \'/\' -f3'
+))
+  .flatMap((block) => Task(() => query(block)))
+  .run();
 
-Future<List<String>> _partsQuery(String part) =>
-  Task(() => _block(part))
-    .flatMap((block) => Task(() => syssplit("find /dev -name \"$block[[:digit:]]\" | sort -n | sed 's/^\\/dev\\///'")))
-    .run();
+Future<List<String>> _partsQuery(
+  final String part
+) => _block(part, (block) => syssplit(
+  'find /dev -name "$block[[:digit:]] "'
+  "| sort -n | sed 's/^\\/dev\\///'"
+));
 
-Future<String> _modelQuery(String part) =>
-  Task(() => _block(part))
-    .flatMap((block) => Task(() => sysout('cat /sys/class/block/$block/device/model')))
-    .run();
+Future<String> _modelQuery(
+  final String part
+) => _block(part, (block) => sys(
+  'cat /sys/class/block/$block/device/model'
+));
 
-Future<String> _mountQuery(String part) =>
-  sysout("lsblk /dev/$part | sed -ne '/\\//p'");
+Future<String> _mountQuery(
+  final String part
+) => sys("lsblk /dev/$part | sed -ne '/\\//p'");
 
-Future<void> powerOff(String part, void Function() call) async {
+void powerOff(
+  final String part,
+  final void Function() call
+) async {
 
   final mounts = <String>[];
 
@@ -26,7 +39,8 @@ Future<void> powerOff(String part, void Function() call) async {
   final spinAction = spin();
 
   final partitionsQuery = await _partsQuery(part);
-  partitionsQuery.removeWhere((e) => e == '');
+
+  partitionsQuery.removeWhere((item) => item == '');
 
   for(final parts in partitionsQuery) {
     if(await _mountQuery(parts) != '') mounts.add(parts);
@@ -34,11 +48,17 @@ Future<void> powerOff(String part, void Function() call) async {
 
   if(mounts.isNotEmpty) {
     for(final partition in mounts) {
-      if(await codeproc('udisksctl unmount -b /dev/$partition &> /dev/null') == 0) {
+      if(await coderes(
+        'udisksctl unmount -b /dev/$partition &> /dev/null'
+      ) == 0) {
         print('');
       } else {
         spinAction.cancel();
-        await dialog('ERROR', dialogLang(1, partition), '8', '80');
+        await dialog(
+          'ERROR',
+          dialogLang(1, partition),
+          '8', '80'
+        );
         clear();
         call();
         return;
@@ -47,10 +67,11 @@ Future<void> powerOff(String part, void Function() call) async {
   }
 
   final model = await _modelQuery(part);
-  final powerOff = await codeproc('udisksctl power-off -b $part');
 
   spinAction.cancel();
-  if(powerOff == 0) {
+  if(await coderes(
+    'udisksctl power-off -b $part'
+  ) == 0) {
     await dialog(dialogLang(0), dialogLang(2, model), '8', '80');
     clear();
     call();

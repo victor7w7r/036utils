@@ -4,7 +4,7 @@ import 'package:console/console.dart' show Chooser;
 import 'package:dcli/dcli.dart' show cyan;
 import 'package:fpdart/fpdart.dart' show IO;
 
-import 'package:usb_manager_cli/index.dart';
+import 'package:usb_manager_cli/usb_manager_cli.dart';
 
 void _menu() {
   print(cyan(lang(11)));
@@ -30,9 +30,8 @@ void _menu() {
     .run();
 }
 
-Future<void> main() async {
-  setup();
-  await locator.get<App>().init();
+void main() async {
+  await init();
   clear();
   _menu();
 }

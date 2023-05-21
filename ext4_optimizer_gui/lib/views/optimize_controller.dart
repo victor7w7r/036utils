@@ -1,133 +1,175 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dio/dio.dart' show CancelToken;
+import 'package:dio/dio.dart' show CancelToken, Dio;
+import 'package:ext4_optimizer_gui/config/system.dart';
+import 'package:ext4_optimizer_gui/inject/inject.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_pty/flutter_pty.dart' show Pty;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
 import 'package:xterm/xterm.dart';
 
-import 'package:ext4_optimizer_gui/config/index.dart';
-import 'package:ext4_optimizer_gui/utils/index.dart';
+import 'package:ext4_optimizer_gui/config/config.dart';
 import 'package:ext4_optimizer_gui/widgets/dialog.dart';
 
-class OptimizeController extends ChangeNotifier {
+const _url =
+  'https://github.com/victor7w7r/036utils/releases/'
+  'download/1.0.0/ext4_optimizer_cli-amd64';
 
-  final terminal = Terminal();
-  final terminalController = TerminalController();
+final downloadDir =
+  '${inject.get<SharedPrefsModule>().tempPath}'
+  '/ext4_optimizer_cli';
 
-  final parts = <String>[];
+Future<bool> _download(
+  final String url,
+  final String savePath,
+  final CancelToken cancel
+) async {
+  try {
+    await Dio().download(
+      url,savePath,
+      cancelToken: cancel
+    );
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
-  bool opMode = false;
-  bool isOptimize = false;
-  bool loading = false;
-  bool ready = false;
+final class OptimizeController
+  extends ChangeNotifier {
 
-  final _app = locator.get<AppConfig>();
-  final _url = 'https://github.com/victor7w7r/036utils/releases/download/1.0.0/ext4_optimizer_cli-amd64';
-  final _cancel = CancelToken();
+  final Terminal terminal;
+  final TerminalController terminalCtrl;
+  final List<String> parts;
 
-  Pty? pty;
+  final CancelToken _cancel;
+  Pty? _pty;
+  bool _opMode;
+  bool _isLang;
+  bool _isOptimize;
+  bool _isLoading;
+  bool _isReady;
 
-  bool lang = locator.get<AppConfig>().isEng;
+  OptimizeController():
+    _cancel = CancelToken(),
+    _isLang = inject.get<SharedPrefsModule>().isEng,
+    _isLoading = false,
+    _isOptimize = false,
+    _isReady = false,
+    _opMode = false,
+    parts = [],
+    terminal = Terminal(),
+    terminalCtrl = TerminalController();
 
-  void init() =>
-    verifycmd('e4defrag').then((val) =>
-      !val ? alert(
+  void init() => success('e4defrag').then((val) =>
+    !val ? alert(
+      okIcon: true,
+      title: 'Error',
+      text: dict(1, _isLang),
+      onOk: () => exit(1)
+    ) : success('fsck.ext4').then((ext4) =>
+      !ext4 ? alert(
         okIcon: true,
         title: 'Error',
-        text: dict(1, lang),
+        text: dict(2, _isLang),
         onOk: () => exit(1)
-      ) : verifycmd('fsck.ext4').then((val) =>
-        !val ? alert(
-          okIcon: true,
-          title: 'Error',
-          text: dict(2, lang),
-          onOk: () => exit(1)
-        ) : ext4listener().then((query){
-          if(query[0] == 'NOT') {
-            alert(
-              okIcon: true,
-              title: 'Error',
-              text: dict(3, lang),
-              onOk: () => exit(1)
-            );
-          } else if(query[0] == 'FULL') {
-            alert(
-              okIcon: true,
-              title: 'Error',
-              text: dict(4, lang),
-              onOk: () => exit(1)
-            );
-          } else {
-            parts.addAll(query);
-            notifyListeners();
-          }
-        })
-      )
+      ) : ext4listener().then((query){
+        if(query[0] == 'NOT') {
+          alert(
+            okIcon: true,
+            title: 'Error',
+            text: dict(3, _isLang),
+            onOk: () => exit(1)
+          );
+        } else if(query[0] == 'FULL') {
+          alert(
+            okIcon: true,
+            title: 'Error',
+            text: dict(4, _isLang),
+            onOk: () => exit(1)
+          );
+        } else {
+          parts.addAll(query);
+          notifyListeners();
+        }
+      })
+    )
     );
 
-  void requestOptimize(String part) => yesNo(
-    title: dict(6, lang),
-    text: '${dict(7, lang)} $part ?',
+  void requestOptimize(
+    final String part
+  ) => yesNo(
+    title: dict(6, _isLang),
+    text: '${dict(7, _isLang)} $part ?',
     onYes: () {
-      loading = true;
-      opMode = true;
-      notifyListeners();
-      final location = '${_app.tempPath}/ext4_optimizer_cli';
-      if(!File(location).existsSync()) {
-        download(_url, location, _cancel).then((res){
+      isLoading = true;
+      _opMode = true;
+      if(!File(downloadDir).existsSync()) {
+        _download(_url, downloadDir, _cancel).then((res){
           if(res) {
-            codeproc('chmod +x ${_app.tempPath}/ext4_optimizer_cli').then((_){
-              loading = false;
-              initPty('sudo $location $part; exit');
+            coderes('chmod +x $downloadDir').then((_){
+              _isLoading = false;
+              _initPty('sudo $downloadDir $part; exit');
               isOptimize = true;
-              notifyListeners();
             });
           } else {
-            loading = false;
-            alert(okIcon: false, title: 'Error', text: dict(10, lang), onOk: (){});
-            notifyListeners();
+            isLoading = false;
+            alert(
+              okIcon: false,
+              title: 'Error',
+              text: dict(10, _isLang),
+              onOk: (){}
+            );
           }
         });
       } else {
-        loading = false;
-        initPty('sudo $location $part; exit');
+        _isLoading = false;
+        _initPty('sudo $downloadDir $part; exit');
         isOptimize = true;
-        notifyListeners();
       }
     },
   );
 
-  void initPty(String cmd) {
+  void _initPty(final String cmd) {
 
-    pty = Pty.start(
+    _pty = Pty.start(
       'bash',
       columns: terminal.viewWidth,
       rows: terminal.viewHeight,
     );
 
-    pty!.output
+    _pty!.output
       .cast<List<int>>()
       .transform(const Utf8Decoder())
       .listen(terminal.write);
 
-    pty!.exitCode.then((_) {
+    _pty!.exitCode.then((_) {
       isOptimize = false;
       ready = true;
       notifyListeners();
     });
 
-    terminal.onOutput = (data) => pty!.write(const Utf8Encoder().convert(data));
-    terminal.onResize = (w, h, _, __) => pty!.resize(h, w);
+    terminal.onOutput = (data) => _pty!.write(
+      const Utf8Encoder().convert(data)
+    );
 
-    Future.delayed(const Duration(seconds: 1), () => terminal.textInput(cmd));
-    Future.delayed(const Duration(milliseconds: 2000), (){
-      terminal.keyInput(TerminalKey.enter);
-      isOptimize = true;
-      notifyListeners();
-    });
+    terminal.onResize = (w, h, _, __) =>
+      _pty!.resize(h, w);
+
+    Future.delayed(
+      const Duration(seconds: 1),
+      () => terminal.textInput(cmd)
+    );
+
+    Future.delayed(
+      const Duration(milliseconds: 2000), (){
+        terminal.keyInput(TerminalKey.enter);
+        isOptimize = true;
+        notifyListeners();
+      }
+    );
   }
 
   void exitOp() {
@@ -136,9 +178,8 @@ class OptimizeController extends ChangeNotifier {
       isOptimize = false;
     }
     opMode = false;
-    pty = null;
-    ready = false;
-    notifyListeners();
+    _pty = null;
+    _isReady = false;
   }
 
 
@@ -148,14 +189,47 @@ class OptimizeController extends ChangeNotifier {
     terminal.keyInput(TerminalKey.enter);
   }
 
-  Future<void> toggleLang() async {
-    lang = !lang;
-    await locator.get<AppConfig>().prefs.setBool('lang', lang);
+
+  bool get isLang => _isLang;
+
+  set isLang(final bool value) {
+    _isLang = value;
+    inject.get<SharedPrefsModule>()
+      .prefs.setBool('lang', isLang)
+      .then((_) => notifyListeners());
+  }
+
+  bool get isOptimize => _isOptimize;
+
+  set isOptimize(final bool val) {
+    _isOptimize = val;
+    notifyListeners();
+  }
+
+  bool get ready => _isReady;
+
+  set ready(final bool val) {
+    _isReady = val;
+    notifyListeners();
+  }
+
+  bool get opMode => _opMode;
+
+  set opMode(final bool val) {
+    _opMode = val;
+    notifyListeners();
+  }
+
+  bool get isLoading => _isLoading;
+
+  set isLoading(final bool val) {
+    _isLoading = val;
     notifyListeners();
   }
 
 }
 
-final optimizeController = ChangeNotifierProvider<OptimizeController>((_) =>
-  OptimizeController()..init()
-);
+final optimizeController =
+  ChangeNotifierProvider<OptimizeController>((_) =>
+    OptimizeController()..init()
+  );

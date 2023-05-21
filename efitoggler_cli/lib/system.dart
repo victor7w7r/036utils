@@ -28,7 +28,7 @@ Future<int> coderes(
   .run();
 
 Timer spin() {
-  int cursor = 0;
+  var cursor = 0;
   return Timer.periodic(
     Duration(milliseconds: 100),
     (t) {

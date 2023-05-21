@@ -1,38 +1,58 @@
 import 'dart:io' show exit;
 
-import 'package:ext4_optimizer_cli/index.dart';
+import 'package:ext4_optimizer_cli/ext4_optimizer_cli.dart';
 
 Future<String> _rootDev() =>
-  sysout(r"df -h | sed -ne '/\/$/p' | cut -d ' ' -f1");
+  sys(r"df -h | sed -ne '/\/$/p' | cut -d ' ' -f1");
 
 Future<List<String>> _physicalDevs() =>
-  syssplit(r"find /dev/disk/by-id/ | sort -n | sed 's/^\/dev\/disk\/by-id\///'");
+  syssplit(
+    'find /dev/disk/by-id/ '
+    '| sort -n '
+    r"| sed 's/^\/dev\/disk\/by-id\///'"
+  );
 
-Future<String> _dirtyDev(String dev) =>
-  sysoutwline('readlink "/dev/disk/by-id/$dev"');
+Future<String> _dirtyDev(
+  final String dev
+) => syswline(
+  'readlink "/dev/disk/by-id/$dev"'
+);
 
-Future<String> _absoluteDev(String dev) =>
-  sysout("echo $dev | sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'");
+Future<String> _absoluteDev(
+  final String dev
+) => sys(
+  'echo $dev '
+  "| sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' "
+  "| sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"
+);
 
-Future<String> _blockDev(String dev) =>
-  sysoutwline("echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'");
+Future<String> _blockDev(
+  final String dev
+) => syswline(
+  'echo $dev '
+  "| sed 's/^\\.\\.\\/\\.\\.\\///' "
+  "| sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"
+);
 
-Future<String> _typePart(String part) =>
-  sysout("lsblk -f /dev/$part | sed -ne '2p' | cut -d ' ' -f2");
+Future<String> _typePart(
+  final String part
+) => sys("lsblk -f /dev/$part | sed -ne '2p' | cut -d ' ' -f2");
 
-Future<String> _mountCheck(String part) =>
-  sysout("lsblk /dev/$part | sed -ne '/\\//p'");
+Future<String> _mountCheck(
+  final String part
+) => sys("lsblk /dev/$part | sed -ne '/\\//p'");
 
-void _interrupt(bool op) {
+void _interrupt(final bool op) {
   clear();
-  lang(op ? 5:6, PrintQuery.error);
+  lang(op ? 5 : 6, PrintQuery.error);
   exit(1);
 }
 
-Future<List<String>> ext4listener(bool isMenu) async {
+Future<List<String>> ext4listener(
+  final bool isMenu
+) async {
 
-  int extCount = 0;
-  int mountCount = 0;
+  var (extCount, mountCount) = (0, 0);
 
   final dirtyDevs = <String>[];
   final extParts = <String>[];
@@ -43,7 +63,7 @@ Future<List<String>> ext4listener(bool isMenu) async {
     dirtyDevs.add(await _dirtyDev(dev));
   }
 
-  dirtyDevs.removeWhere((e) => e == '');
+  dirtyDevs.removeWhere((dev) => dev == '');
 
   for (final dev in dirtyDevs) {
     final abs = await _absoluteDev(dev);
@@ -69,6 +89,7 @@ Future<List<String>> ext4listener(bool isMenu) async {
 
   if(mountCount == extCount) _interrupt(false);
 
-  return umounts.reversed.toSet().toList();
+  return umounts.reversed
+    .toSet().toList();
 
 }

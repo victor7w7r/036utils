@@ -6,13 +6,12 @@ import 'package:niku/namespace.dart' as n;
 import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
 import 'package:xterm/xterm.dart';
 
-import 'package:rsyncer_gui/config/index.dart';
+import 'package:rsyncer_gui/config/config.dart';
 import 'package:rsyncer_gui/providers/theme_provider.dart';
 import 'package:rsyncer_gui/views/syncer_controller.dart';
-import 'package:rsyncer_gui/utils/index.dart';
 import 'package:rsyncer_gui/widgets/header.dart';
 
-class Syncer extends StatelessWidget {
+final class Syncer extends StatelessWidget {
 
   const Syncer({super.key});
 
@@ -30,16 +29,18 @@ class Syncer extends StatelessWidget {
         n.Wrap([
           n.Column([
             AdwButton.pill(
-              onPressed: () => dirPick().then((val) => ctl.changeSourceDir(val ?? '')),
-              child: Text(dict(0, ctl.lang)),
+              onPressed: () => dirPick()
+                .then((val) => ctl.sourceDir = val ?? ''),
+              child: Text(dict(0, ctl.isLang))
             ),
             const SizedBox(height: 10),
             ctl.sourceDir.n
           ]),
           n.Column([
             AdwButton.pill(
-              onPressed: () => dirPick().then((val) => ctl.changeDestDir(val ?? '')),
-              child: Text(dict(1, ctl.lang)),
+              onPressed: () => dirPick()
+                .then((val) => ctl.destDir = val ?? ''),
+              child: Text(dict(1, ctl.isLang))
             ),
             const SizedBox(height: 10),
             ctl.destDir.n,
@@ -61,23 +62,23 @@ class Syncer extends StatelessWidget {
       ]): n.Stack([
         TerminalView(
           ctl.terminal,
-          controller: ctl.terminalController,
+          controller: ctl.terminalCtrl,
           theme: TerminalThemes.whiteOnBlack,
           autofocus: true,
           backgroundOpacity: isDark ? 0.2 : 0.7,
         ).niku
-          ..w = context.mediaQuerySize.width - 100
-          ..h = context.mediaQuerySize.height - 200
+          ..w = context.mWidth - 100
+          ..h = context.mHeight - 200
           ..center,
         n.Row([
           if(ctl.isSyncing) AdwButton.pill(
             onPressed: ctl.cancel,
-            child: Text(dict(2, ctl.lang))
+            child: Text(dict(2, ctl.isLang))
           ),
           const SizedBox(width: 10),
           AdwButton.pill(
             onPressed: ctl.exitOp,
-            child: Text(dict(4, ctl.lang))
+            child: Text(dict(4, ctl.isLang))
           )
         ])
           ..n.bottom = 10

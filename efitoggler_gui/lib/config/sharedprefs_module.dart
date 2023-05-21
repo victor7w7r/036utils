@@ -5,9 +5,9 @@ import 'package:fpdart/fpdart.dart' show FpdartOnNullable;
 import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 
 @injectable
-final class SharedPrefsModule {
+class SharedPrefsModule {
 
-  bool isEng = true;
+  var isEng = true;
   late final SharedPreferences prefs;
   ThemeMode theme = ThemeMode.light;
 

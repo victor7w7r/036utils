@@ -4,7 +4,7 @@ import 'package:console/console.dart';
 import 'package:dcli/dcli.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:ext4_optimizer_cli/index.dart';
+import 'package:ext4_optimizer_cli/ext4_optimizer_cli.dart';
 
 final _options = <String>[];
 
@@ -14,7 +14,7 @@ void _continue() {
   clear();
 }
 
-bool _runner(int code) {
+bool _runner(final int code) {
   if(code != 8) {
     lang(9, PrintQuery.normal);
     _continue();
@@ -27,10 +27,13 @@ bool _runner(int code) {
   }
 }
 
-Future<void> _menu() async {
+void _menu() async {
   _options.add(lang(16));
   print(cyan(lang(14)));
-  IO(Chooser<String>(_options, message: lang(13)).chooseSync)
+  IO(Chooser<String>(
+    _options,
+    message: lang(13)
+  ).chooseSync)
     .map((sel){
       if(sel == lang(16)) {
         clear();
@@ -42,12 +45,15 @@ Future<void> _menu() async {
     .run();
 }
 
-Future<void> _defragction(bool interactive, String part) async {
+void _defragction(
+  final bool interactive,
+  final String part
+) async {
 
   clear();
   lang(7, PrintQuery.normal);
 
-  if(_runner(await codeproc('fsck.ext4 -y -f -v $part'))) {
+  if(_runner(await coderes('fsck.ext4 -y -f -v $part'))) {
     if(interactive) {
       return;
     } else {
@@ -56,7 +62,7 @@ Future<void> _defragction(bool interactive, String part) async {
   }
 
   lang(10, PrintQuery.normal);
-  if(_runner(await codeproc('fsck.ext4 -y -f -v -D $part'))) {
+  if(_runner(await coderes('fsck.ext4 -y -f -v -D $part'))) {
     if(interactive) {
       return;
     } else {
@@ -64,11 +70,12 @@ Future<void> _defragction(bool interactive, String part) async {
     }
   }
 
-  "bash -c 'mkdir /tmp/optimize 2> /dev/null'".start(detached: false, nothrow: true);
+  "bash -c 'mkdir /tmp/optimize 2> /dev/null'"
+    .start(detached: false, nothrow: true);
   "bash -c 'mount $part /tmp/optimize'".run;
 
   lang(11, PrintQuery.normal);
-  await codeproc('e4defrag -v $part');
+  await coderes('e4defrag -v $part');
 
   print('');
   "bash -c 'umount $part'".run;
@@ -78,7 +85,7 @@ Future<void> _defragction(bool interactive, String part) async {
 
   lang(12, PrintQuery.normal);
 
-  if(_runner(await codeproc('fsck.ext4 -y -f -v $part'))) {
+  if(_runner(await coderes('fsck.ext4 -y -f -v $part'))) {
     if(interactive) {
       return;
     } else {
@@ -89,9 +96,10 @@ Future<void> _defragction(bool interactive, String part) async {
   interactive ? _menu() : exit(0);
 }
 
-Future<void> main(List<String> args) async {
-  setup();
-  _options.addAll(await locator.get<App>().init(args));
+void main(
+  final List<String> args
+) async {
+  _options.addAll(await init(args));
   if(args.isEmpty) {
     clear();
     _menu();

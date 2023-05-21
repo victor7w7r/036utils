@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:efitoggler_gui/inject/inject.dart';
 import 'package:efitoggler_gui/config/sharedprefs_module.dart';
+import 'package:efitoggler_gui/inject/inject.dart';
 
-class ThemeNotifier extends Notifier<ThemeMode> {
+final class ThemeNotifier
+  extends Notifier<ThemeMode> {
 
   @override
   ThemeMode build() =>

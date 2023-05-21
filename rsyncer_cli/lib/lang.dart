@@ -1,15 +1,25 @@
+import 'dart:io' show exit;
+
 import 'package:console/console.dart' show Console;
 import 'package:dcli/dcli.dart' show cyan, red;
+import 'package:fpdart/fpdart.dart' show IO;
 
-import 'package:rsyncer_cli/app.dart';
+import 'package:rsyncer_cli/system.dart';
 
-enum PrintQuery { normal, inline, warn, error }
+enum PrintQuery {
+  normal, inline,
+  warn, error
+}
 
-String lang(int index, [PrintQuery? typeQuery, List<String>? custom]) {
+var english = false;
 
-  final app = locator.get<App>();
+String lang(
+  final int index, [
+    final PrintQuery? typeQuery,
+    final List<String>? custom
+  ]) {
 
-  final dictEsp = [
+  final dictEsp = <String>[
     'Este sistema no es GNU/Linux, saliendo',
 		'El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo',
 		'¡Todo ok!',
@@ -23,7 +33,7 @@ String lang(int index, [PrintQuery? typeQuery, List<String>? custom]) {
     'Presione Enter para continuar...'
   ];
 
-  final dictEng = [
+  final dictEng = <String>[
     'Your Operating System is not GNU/Linux, exiting',
 		'The rsync binary is not available in this system, please install',
 		'All dependencies is ok!',
@@ -37,24 +47,33 @@ String lang(int index, [PrintQuery? typeQuery, List<String>? custom]) {
     'Press Enter to continue...'
   ];
 
-  if(typeQuery == null) {
-    return app.english ? dictEng[index] : dictEsp[index];
-  } else {
-    switch(typeQuery) {
-      case PrintQuery.normal:
-        print(app.english ? dictEng[index] : dictEsp[index]);
-        return '';
-      case PrintQuery.inline:
-        Console.write(app.english ? dictEng[index] : dictEsp[index]);
-        return '';
-      case PrintQuery.warn:
-        Console.write(cyan('[*] '));
-        print('WARNING: ${app.english ? dictEng[index] : dictEsp[index]}');
-        return '';
-      case PrintQuery.error:
-        Console.write(red('[*] '));
-        print('ERROR: ${app.english ? dictEng[index] : dictEsp[index]}');
-        return '';
-    }
-  }
+  return IO(() =>
+    english ? dictEng[index] : dictEsp[index]
+  ).map((sel) => typeQuery != null
+    ? IO(() => switch(typeQuery) {
+        PrintQuery.normal =>
+          print(sel),
+        PrintQuery.inline =>
+          Console.write(sel),
+        PrintQuery.warn =>
+          print('${cyan('[*] ')} WARNING: $sel'),
+        PrintQuery.error =>
+          print('${red('[*] ')} ERROR: $sel')
+      })
+      .map((_) => '').run()
+    : sel
+  ).run();
+}
+
+void error(final int index) {
+  clear();
+  lang(index, PrintQuery.error);
+  print('\n');
+  exit(1);
+}
+
+void ok(){
+  print('\n =============== OK =============== \n');
+  lang(5, PrintQuery.normal);
+  exit(0);
 }

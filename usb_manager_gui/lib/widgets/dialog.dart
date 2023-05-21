@@ -25,7 +25,10 @@ Future<dynamic> yesNo({
   iconStyle: IconStyle.question
 ).then((btn) => btn == AlertButton.yesButton ? onYes() : {});
 
-dynamic snackBar(BuildContext context, String text) => ScaffoldMessenger.of(context)
+dynamic snackBar(
+  final BuildContext context,
+  final String text
+) => ScaffoldMessenger.of(context)
   .showSnackBar(SnackBar(
     content: Text(text),
     duration: const Duration(seconds: 2)

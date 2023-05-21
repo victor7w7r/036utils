@@ -1,60 +1,56 @@
 import 'dart:io' show exit, Process;
 
-import 'package:async/async.dart' show CancelableOperation;
 import 'package:flutter/material.dart' hide Action;
+
+import 'package:async/async.dart' show CancelableOperation;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
 import 'package:fpdart/fpdart.dart' show Task;
 
-import 'package:usb_manager_gui/config/index.dart';
-import 'package:usb_manager_gui/utils/index.dart';
+import 'package:usb_manager_gui/config/config.dart';
+import 'package:usb_manager_gui/inject/inject.dart';
 import 'package:usb_manager_gui/widgets/dialog.dart';
 
-class ManageController extends ChangeNotifier {
+CancelableOperation _cancellable =
+  CancelableOperation.fromFuture(Future.value());
 
-  bool lang = locator.get<AppConfig>().isEng;
+Future<List<String>> _usbAction(
+  final String part,
+  final bool isMount
+) => codeout(
+  "udisksctl ${isMount ? 'mount' : 'unmount'} -b $part"
+);
 
-  int radioGroup = 1;
+final class ManageController extends ChangeNotifier {
 
-  bool loading = false;
-  bool noMountParts = false;
-  bool noUmountParts = false;
-  bool enableRadio = true;
+  bool _isEnabledRadio;
+  bool _isLang;
+  bool _isLoading;
+  final List<String> _items;
 
-  final items = <String>[];
+  int radioGroup;
+  bool noMountParts;
+  bool noUmountParts;
 
-  Future<String> _block(String part) =>
-    sysout('echo $part | cut -d \'/\' -f3');
-
-  Future<List<String>> _partsQuery(String part) =>
-    Task(() => _block(part))
-      .flatMap((block) => Task(() => syssplit("find /dev -name \"$block[[:digit:]]\" | sort -n | sed 's/^\\/dev\\///'")))
-      .run();
-
-  Future<List<String>> _usbAction(String part, bool isMount)  =>
-    syscodeout("udisksctl ${isMount ? 'mount' : 'unmount'} -b $part");
-
-  Future<String> _modelQuery(String part) =>
-    Task(() => _block(part))
-      .flatMap((block) => Task(() => sysout('cat /sys/class/block/$block/device/model')))
-      .run();
-
-  Future<String> _mountQuery(String part) =>
-    sysout("lsblk /dev/$part | sed -ne '/\\//p'");
-
-  CancelableOperation cancellable =
-    CancelableOperation.fromFuture(Future.value());
+  ManageController():
+    _isEnabledRadio = true,
+    _isLang = inject.get<SharedPrefsModule>().isEng,
+    _isLoading = false,
+    _items = [],
+    noMountParts = false,
+    noUmountParts = false,
+    radioGroup = 1;
 
   void init() => checkUid().then((val) =>
     !val ? alert(
       okIcon: true,
       title: 'Error',
-      text: dict(0, lang),
+      text: dict(0, _isLang),
       onOk: () => exit(1)
-    ) : verifycmd('udisksctl').then((val) =>
-      !val ? alert(
+    ) : success('udisksctl').then((udisk) =>
+      !udisk ? alert(
         okIcon: true,
         title: 'Error',
-        text: dict(1, lang),
+        text: dict(1, _isLang),
         onOk: () => exit(1)
       ) : Task(() => Process.run(
         'bash',
@@ -66,7 +62,7 @@ class ManageController extends ChangeNotifier {
         .then((srv) => srv == 'inactive' ? alert(
           okIcon: true,
           title: 'Error',
-          text: dict(2, lang),
+          text: dict(2, _isLang),
           onOk: () => exit(1)
         ) : listMountParts()
       )
@@ -74,74 +70,72 @@ class ManageController extends ChangeNotifier {
   );
 
   void listMountParts() {
-    cancellable.cancel();
-    loading = true;
-    notifyListeners();
-    cancellable = CancelableOperation.fromFuture(usblistener(Action.mount)).then((arr){
+    _cancellable.cancel();
+    isLoading = true;
+    _cancellable = CancelableOperation.fromFuture(
+      usblistener(Action.mount)
+    ).then((arr){
       noMountParts = false;
-      items.clear();
+      _items.clear();
       if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
           title: 'Error',
-          text: dict(3, lang),
+          text: dict(3, _isLang),
           onOk: () => exit(0)
         );
       } else if(arr[0] == 'NOMOUNT') {
         noMountParts = true;
-        loading = false;
-        notifyListeners();
+        isLoading = false;
       } else {
-        items.addAll(arr);
-        loading = false;
-        notifyListeners();
+        _items.addAll(arr);
+        isLoading = false;
       }
     });
   }
 
   void listUnmountParts() {
-    cancellable.cancel();
-    loading = true;
-    notifyListeners();
-    cancellable = CancelableOperation.fromFuture(usblistener(Action.unmount)).then((arr){
+    _cancellable.cancel();
+    isLoading = true;
+    _cancellable = CancelableOperation.fromFuture(
+      usblistener(Action.unmount)
+    ).then((arr){
       noUmountParts = false;
-      items.clear();
+      _items.clear();
       if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
           title: 'Error',
-          text: dict(3, lang),
+          text: dict(3, _isLang),
           onOk: () => exit(0)
         );
       } else if(arr[0] == 'NOUNMOUNT') {
         noUmountParts = true;
-        loading = false;
-        notifyListeners();
+        isLoading = false;
       } else {
-        items.addAll(arr);
-        loading = false;
-        notifyListeners();
+        _items.addAll(arr);
+        isLoading = false;
       }
     });
   }
 
   void listPoweroffDevs() {
-    cancellable.cancel();
-    loading = true;
-    notifyListeners();
-    cancellable = CancelableOperation.fromFuture(usblistener(Action.off)).then((arr){
-      items.clear();
+    _cancellable.cancel();
+    isLoading = true;
+    _cancellable = CancelableOperation.fromFuture(
+      usblistener(Action.off)
+    ).then((arr){
+      _items.clear();
       if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
           title: 'Error',
-          text: dict(3, lang),
+          text: dict(3, _isLang),
           onOk: () => exit(0)
         );
       } else {
-        items.addAll(arr);
-        loading = false;
-        notifyListeners();
+        _items.addAll(arr);
+        isLoading = false;
       }
     });
   }
@@ -170,48 +164,36 @@ class ManageController extends ChangeNotifier {
     }
   }
 
-  void update() {
-    if(radioGroup == 1) {
-      listMountParts();
-    } else if(radioGroup == 2) {
-      listUnmountParts();
-    } else {
-      listPoweroffDevs();
-    }
-  }
 
-  void requestManage(BuildContext context, String el) {
+  void requestManage(
+    final BuildContext context,
+    final String el
+  ) {
     if(radioGroup == 1) {
-      loading = true;
-      enableRadio = false;
-      notifyListeners();
+      isEnabledRadio = false;
+      isLoading = true;
       _usbAction(el, true).then((_){
-        enableRadio = true;
-        notifyListeners();
+        isEnabledRadio = true;
         listMountParts();
-        snackBar(context, dict(9, lang));
+        snackBar(context, dict(9, _isLang));
       });
     } else if(radioGroup == 2) {
-      loading = true;
-      enableRadio = false;
-      notifyListeners();
+      isEnabledRadio = false;
+      isLoading = true;
       _usbAction(el, false).then((_){
-        enableRadio = true;
-        notifyListeners();
+        isEnabledRadio = true;
         listUnmountParts();
-        snackBar(context, dict(10, lang));
+        snackBar(context, dict(10, _isLang));
       });
     } else {
       yesNo(
-        title: dict(6, lang),
-        text: '${dict(7, lang)} $el ${dict(8, lang)}?',
+        title: dict(6, _isLang),
+        text: '${dict(7, _isLang)} $el ${dict(8, _isLang)}?',
         onYes: () {
-          loading = true;
-          enableRadio = false;
-          notifyListeners();
-          powerOff(context, el).then((_){
-            enableRadio = true;
-            notifyListeners();
+          isEnabledRadio = false;
+          isLoading = true;
+          powerOff(context, _isLang, el).then((_){
+            isEnabledRadio = true;
             listPoweroffDevs();
           });
         }
@@ -219,42 +201,39 @@ class ManageController extends ChangeNotifier {
     }
   }
 
-  Future<void> powerOff(BuildContext context, String part) async {
+  void update() =>
+    switch(radioGroup) {
+      1 => listMountParts(),
+      2 => listUnmountParts(),
+      _ => listPoweroffDevs()
+    };
 
-    final mounts = <String>[];
+  bool get isEnabledRadio => _isEnabledRadio;
 
-    final partitionsQuery = await _partsQuery(part);
-    partitionsQuery.removeWhere((e) => e == '');
-
-    for(final parts in partitionsQuery) {
-      if(await _mountQuery(parts) != '') mounts.add(parts);
-    }
-
-    if(mounts.isNotEmpty) {
-      for(final partition in mounts) {
-        if(await codeproc('udisksctl unmount -b /dev/$partition &> /dev/null') != 0) {
-          snackBar(context, dict(12, lang));
-          return;
-        }
-      }
-    }
-
-    final model = await _modelQuery(part);
-    final powerOff = await codeproc('udisksctl power-off -b $part');
-
-    powerOff == 0
-      ? snackBar(context, '${dict(11, lang)} $model')
-      : snackBar(context, '${dict(13, lang)} $model');
+  set isEnabledRadio(final bool value) {
+    _isEnabledRadio = value;
+    notifyListeners();
   }
 
-  Future<void> toggleLang() async {
-    lang = !lang;
-    await locator.get<AppConfig>().prefs.setBool('lang', lang);
+  bool get isLoading => _isLoading;
+
+  set isLoading(final bool value) {
+    _isLoading = value;
     notifyListeners();
+  }
+
+  bool get isLang => _isLang;
+
+  set isLang(final bool value) {
+    _isLang = value;
+    inject.get<SharedPrefsModule>()
+      .prefs.setBool('lang', isLang)
+      .then((_) => notifyListeners());
   }
 
 }
 
-final manageController = ChangeNotifierProvider<ManageController>((_) =>
-  ManageController()..init()
-);
+final manageController =
+  ChangeNotifierProvider<ManageController>((_) =>
+    ManageController()..init()
+  );

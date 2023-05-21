@@ -3,45 +3,40 @@ import 'dart:io' show exit, stdin;
 import 'package:console/console.dart' show readInput;
 import 'package:dcli/dcli.dart' show exists;
 
-import 'package:rsyncer_cli/index.dart';
+import 'package:rsyncer_cli/rsyncer_cli.dart';
 
-String _source = '';
-String _dest = '';
+var _source = '';
+var _dest = '';
 
-Future<int> _syncCmd(String source, String dest) =>
-  codeproc('rsync -axHAWXS --numeric-ids --info=progress2 $source $dest');
+void _action(
+  final bool isSource
+) => readInput(lang(isSource ? 8 : 9))
+  .then((val) => _validator(
+    isSource ? 'source' : 'dest', val
+  ));
 
-Future<int> _sudoSyncCmd(String source, String dest) =>
-  codeproc('sudo rsync -axHAWXS --numeric-ids --info=progress2 $source $dest');
-
-void _sourceaction() =>
-  readInput(lang(8)).then((val) => _validator('source', val));
-
-void _destiaction() =>
-  readInput(lang(9)).then((val) => _validator('dest', val));
-
-void _interrupt(bool op, String data) {
+void _interrupt(
+  final bool isOp,
+  final String data
+) {
   clear();
   lang(3, PrintQuery.error, [data]);
   lang(10, PrintQuery.normal);
   stdin.readLineSync();
   clear();
-  op ? _sourceaction() : _destiaction();
+  _action(isOp);
 }
 
-void _ok(){
-  print('\n =============== OK =============== \n');
-  lang(5, PrintQuery.normal);
-  exit(0);
-}
-
-void _validator(String typeData, String data) {
+void _validator(
+  final String typeData,
+  final String data
+) {
   if(typeData == 'source') {
     if((data.isNotEmpty)) {
       if(exists(data)) {
         _source = data;
         clear();
-        _destiaction();
+        _action(false);
         return;
       } else {
         _interrupt(true, data);
@@ -62,7 +57,7 @@ void _validator(String typeData, String data) {
         return;
       }
     } else {
-      _sourceaction();
+      _action(true);
       return;
     }
   } else {
@@ -71,34 +66,40 @@ void _validator(String typeData, String data) {
   }
 }
 
-Future<void> _syncer() async {
+String _match(
+  final String sel
+) => RegExp(r'.*\/$')
+  .hasMatch(sel) ? sel : '$sel/';
 
-  String sourceReady = '';
-  String destReady = '';
+Future<int> _syncCmd(
+  final bool sudo,
+  final String source,
+  final String dest
+) => coderes(
+  '${sudo ? 'sudo' : ''} rsync -axHAWXS '
+  '--numeric-ids --info=progress2 $source $dest'
+);
 
-  RegExp(r'.*\/$').hasMatch(_source)
-    ? sourceReady = _source
-    : sourceReady = '$_source/';
+void _syncer() async {
 
-  RegExp(r'.*\/$').hasMatch(_dest)
-    ? destReady = _dest
-    : destReady = '$_dest/';
+  final source = _match(_source);
+  final dest = _match(_dest);
 
   clear();
 
   lang(4, PrintQuery.normal);
-  print('SOURCE:{$sourceReady}');
-	print('DESTINATION:{$destReady} \n');
+  print('SOURCE:{$source}');
+	print('DESTINATION:{$dest} \n');
 
-  if(await _syncCmd(sourceReady, destReady) == 0) {
-    _ok();
+  if(await _syncCmd(false, source, dest) == 0) {
+    ok();
   } else {
     clear();
     lang(6, PrintQuery.normal);
-    print('SOURCE:{$sourceReady}');
-    print('DESTINATION:{$destReady} \n');
-    if(await _sudoSyncCmd(sourceReady, destReady) == 0) {
-      _ok();
+    print('SOURCE:{$source}');
+    print('DESTINATION:{$dest} \n');
+    if(await _syncCmd(true, source, dest) == 0) {
+      ok();
     } else {
       lang(7, PrintQuery.normal);
       exit(1);
@@ -106,8 +107,7 @@ Future<void> _syncer() async {
   }
 }
 
-Future<void> main() async {
-  setup();
-  await locator.get<App>().init();
-  _sourceaction();
+void main() async {
+  await init();
+  _action(true);
 }

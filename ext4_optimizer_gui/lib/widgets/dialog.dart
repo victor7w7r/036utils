@@ -11,7 +11,9 @@ Future<dynamic> alert({
   windowTitle: title,
   text: text,
   alertStyle: AlertButtonStyle.ok,
-  iconStyle: okIcon ? IconStyle.information : IconStyle.error
+  iconStyle: okIcon
+    ? IconStyle.information
+    : IconStyle.error
 ).then((_) => onOk());
 
 Future<dynamic> yesNo({
@@ -23,4 +25,6 @@ Future<dynamic> yesNo({
   text: text,
   alertStyle: AlertButtonStyle.yesNo,
   iconStyle: IconStyle.question
-).then((btn) => btn == AlertButton.yesButton ? onYes() : {});
+).then((btn) =>
+  btn == AlertButton.yesButton ? onYes() : {}
+);

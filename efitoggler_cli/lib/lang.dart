@@ -2,7 +2,7 @@ import 'dart:io' show exit;
 
 import 'package:console/console.dart' show Console;
 import 'package:dcli/dcli.dart' show cyan, red;
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' show IO;
 
 import 'package:efitoggler_cli/system.dart';
 
@@ -11,7 +11,7 @@ enum PrintQuery {
   warn, error
 }
 
-bool english = false;
+var english = false;
 
 const _dictEsp = <String>[
   'Tu sistema operativo no es macOS, saliendo',

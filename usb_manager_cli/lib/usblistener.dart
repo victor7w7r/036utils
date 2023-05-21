@@ -1,37 +1,63 @@
-import 'dart:io' show exit, stdin;
+import 'dart:io' show stdin;
 
 import 'package:console/console.dart' show Chooser;
 import 'package:dcli/dcli.dart' show cyan;
 import 'package:fpdart/fpdart.dart' show IO, Task;
 
-import 'package:usb_manager_cli/index.dart';
+import 'package:usb_manager_cli/usb_manager_cli.dart';
 
 Future<bool> _usbCheck() =>
-  Task(() => sysout("find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'"))
+  Task(() => sys(
+    "find /dev/disk/by-id/ -name 'usb*' "
+    '| sort -n '
+    "| sed 's/^\\/dev\\/disk\\/by-id\\///'"
+  ))
   .map((res) => res == '')
   .run();
 
 Future<List<String>> _usbPhysicalDevs() =>
-  syssplit("find /dev/disk/by-id/ -name 'usb*' | sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'");
+  syssplit(
+    "find /dev/disk/by-id/ -name 'usb*' "
+    '| sort -n '
+    "| sed 's/^\\/dev\\/disk\\/by-id\\///'"
+  );
 
-Future<String> _dirtyDev(String dev) =>
-  sysoutwline('readlink "/dev/disk/by-id/$dev"');
+Future<String> _dirtyDev(
+  final String dev
+) => syswline(
+  'readlink "/dev/disk/by-id/$dev"'
+);
 
-Future<String> _absoluteDev(String dev) =>
-  sysout("echo $dev | sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'");
+Future<String> _absoluteDev(
+  final String dev
+) => sys(
+  'echo $dev '
+  "| sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' "
+  "| sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"
+);
 
-Future<String> _partsDev(String dev) =>
-  sysoutwline("echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///' | sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'");
+Future<String> _partsDev(
+  final String dev
+) => syswline(
+  'echo $dev '
+  "| sed 's/^\\.\\.\\/\\.\\.\\///' "
+  "| sed '/.*[[:alpha:]]\$/d' "
+  "| sed '/blk[[:digit:]]\$/d'"
+);
 
-Future<String> _blocksDev(String dev) =>
-  sysoutwline("echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///'");
+Future<String> _blocksDev(
+  final String dev
+) => syswline(
+  "echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///'"
+);
 
-Future<String> _mountCheck(String part) =>
-  sysout("lsblk /dev/$part | sed -ne '/\\//p'");
+Future<String> _mountCheck(
+  final String part
+) => sys("lsblk /dev/$part | sed -ne '/\\//p'");
 
 enum Action { mount , unmount, off }
 
-void _err(bool op) {
+void _err(final bool op) {
   clear();
   lang(op ? 7 : 8, PrintQuery.error);
   print(lang(17));
@@ -39,37 +65,38 @@ void _err(bool op) {
   clear();
 }
 
-Future<void> usblistener(Action action, void Function() call) async {
+void usblistener(
+  final Action action,
+  final void Function() call
+) async {
 
-  final parts = <String>[];
-  final block = <String>[];
-  final mounts = <String>[];
-  final unmounts = <String>[];
-  final args = <String>[];
-  final argspoweroff = <String>[];
-  final dirtyDevs = <String>[];
+  final (
+    parts, block, mounts,
+    unmounts, args, argspoweroff,
+    dirtyDevs
+  ) = (
+    <String>[], <String>[], <String>[],
+    <String>[], <String>[], <String>[],
+    <String>[]
+  );
 
-  int count = 0;
-  int mountCount = 0;
-  int unmountCount = 0;
+  var (
+    count, mountCount, unmountCount
+  ) = (0,0,0);
 
   clear();
 
   final spinAction = spin();
 
-  _usbCheck().then((val){
-    if(val) {
-      clear();
-      lang(6, PrintQuery.error);
-      exit(1);
-    }
+  await _usbCheck().then((val){
+    if(val) error(6);
   });
 
   for (final dev in await _usbPhysicalDevs()) {
     dirtyDevs.add(await _dirtyDev(dev));
   }
 
-  dirtyDevs.removeWhere((e) => e == '');
+  dirtyDevs.removeWhere((dev) => dev == '');
 
   for (final dev in dirtyDevs) {
     if(await _absoluteDev(dev) != '') {
