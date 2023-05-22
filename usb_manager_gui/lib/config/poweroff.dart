@@ -17,7 +17,7 @@ Future<T> _block<T>(
 Future<List<String>> _partsQuery(
   final String part
 ) => _block(part, (block) => syssplit(
-  'find /dev -name "$block[[:digit:]] "'
+  'find /dev -name "$block[[:digit:]]" '
   "| sort -n | sed 's/^\\/dev\\///'"
 ));
 

@@ -25,7 +25,7 @@ final class ManageController extends ChangeNotifier {
   bool _isEnabledRadio;
   bool _isLang;
   bool _isLoading;
-  final List<String> _items;
+  final List<String> items;
 
   int radioGroup;
   bool noMountParts;
@@ -35,7 +35,7 @@ final class ManageController extends ChangeNotifier {
     _isEnabledRadio = true,
     _isLang = inject.get<SharedPrefsModule>().isEng,
     _isLoading = false,
-    _items = [],
+    items = [],
     noMountParts = false,
     noUmountParts = false,
     radioGroup = 1;
@@ -76,7 +76,7 @@ final class ManageController extends ChangeNotifier {
       usblistener(Action.mount)
     ).then((arr){
       noMountParts = false;
-      _items.clear();
+      items.clear();
       if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
@@ -88,7 +88,7 @@ final class ManageController extends ChangeNotifier {
         noMountParts = true;
         isLoading = false;
       } else {
-        _items.addAll(arr);
+        items.addAll(arr);
         isLoading = false;
       }
     });
@@ -101,7 +101,7 @@ final class ManageController extends ChangeNotifier {
       usblistener(Action.unmount)
     ).then((arr){
       noUmountParts = false;
-      _items.clear();
+      items.clear();
       if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
@@ -113,7 +113,7 @@ final class ManageController extends ChangeNotifier {
         noUmountParts = true;
         isLoading = false;
       } else {
-        _items.addAll(arr);
+        items.addAll(arr);
         isLoading = false;
       }
     });
@@ -125,7 +125,7 @@ final class ManageController extends ChangeNotifier {
     _cancellable = CancelableOperation.fromFuture(
       usblistener(Action.off)
     ).then((arr){
-      _items.clear();
+      items.clear();
       if(arr[0] == 'NOUSB') {
         alert(
           okIcon: true,
@@ -134,7 +134,7 @@ final class ManageController extends ChangeNotifier {
           onOk: () => exit(0)
         );
       } else {
-        _items.addAll(arr);
+        items.addAll(arr);
         isLoading = false;
       }
     });

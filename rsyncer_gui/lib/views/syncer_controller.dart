@@ -98,15 +98,21 @@ final class SyncerController extends ChangeNotifier {
     _pty = null;
   }
 
-  void init() => verify('rsync').then((ex) =>
+    void init() => verify('rsync').then((ex) =>
     !ex ? FlutterPlatformAlert.showAlert(
       windowTitle: 'Error',
-      text: dict(4, isLang),
+      text: dict(3, isLang),
       alertStyle: AlertButtonStyle.ok,
       iconStyle: IconStyle.error
-    ).then((_) => exit(1)) : {}
+    ).then((_) => exit(1)) : verify('zenity').then((zen) =>
+      !zen ? FlutterPlatformAlert.showAlert(
+        windowTitle: 'Error',
+        text: dict(5, isLang),
+        alertStyle: AlertButtonStyle.ok,
+        iconStyle: IconStyle.error
+      ).then((_) => exit(1)) : {}
+    )
   );
-
 
   Future<void> requestSync() async {
     final chk1 = await _checkPermission(_sourceDir);

@@ -12,7 +12,7 @@ Task<ProcessResult> _exec(
 
 Future<bool> verify(
   final String cmd
-) => _exec(cmd)
+) => _exec('type $cmd')
   .map((res) => res.exitCode == 0)
   .run();
 

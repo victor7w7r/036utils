@@ -29,7 +29,7 @@ Future<int> coderes(
 
 Future<bool> success(
   final String cmd
-) => _exec(cmd)
+) => _exec('type $cmd')
   .map((res) => res.exitCode == 0)
   .run();
 

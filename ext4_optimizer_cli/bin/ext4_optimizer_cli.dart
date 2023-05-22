@@ -93,7 +93,14 @@ void _defragction(
     }
   }
 
-  interactive ? _menu() : exit(0);
+  if(interactive) {
+    _options.clear();
+    _options.addAll(await ext4listener(false));
+    _menu();
+  } else {
+    exit(0);
+  }
+
 }
 
 void main(

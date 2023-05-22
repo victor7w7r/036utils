@@ -3,7 +3,8 @@ const _dictEsp = [
   'Destino',
   'Cancelar',
   'El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo',
-  'Salir'
+  'Salir',
+  'El ejecutable de zenity, no se encuentra en el sistema, por favor instalalo'
 ];
 
 const _dictEng = [
@@ -11,7 +12,8 @@ const _dictEng = [
   'Destination',
   'Cancel',
   'The rsync binary is not available in this system, please install',
-  'Exit'
+  'Exit',
+  'The zenity binary, is not available in this system, please install'
 ];
 
 String dict(

@@ -4,6 +4,9 @@ import 'dart:io' show Process, ProcessResult, stdout;
 import 'package:dcli/dcli.dart' show Terminal;
 import 'package:fpdart/fpdart.dart' show Task;
 
+void clear() =>
+  Terminal().clearScreen();
+
 Task<ProcessResult> _exec(
   final String cmd
 ) => Task(() => Process.run(
@@ -11,9 +14,6 @@ Task<ProcessResult> _exec(
   ['-c', cmd],
   runInShell: true
 ));
-
-void clear() =>
-  Terminal().clearScreen();
 
 Future<String> sys(
   final String cmd

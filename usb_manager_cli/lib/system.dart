@@ -27,7 +27,7 @@ Task<Process> _sysExec(
 
 Future<bool> success(
   final String cmd
-) => _exec(cmd)
+) => _exec('type $cmd')
   .map((res) => res.exitCode == 0)
   .run();
 

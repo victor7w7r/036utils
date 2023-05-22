@@ -75,28 +75,35 @@ final class OptimizeController
         title: 'Error',
         text: dict(2, _isLang),
         onOk: () => exit(1)
-      ) : ext4listener().then((query){
-        if(query[0] == 'NOT') {
-          alert(
-            okIcon: true,
-            title: 'Error',
-            text: dict(3, _isLang),
-            onOk: () => exit(1)
-          );
-        } else if(query[0] == 'FULL') {
-          alert(
-            okIcon: true,
-            title: 'Error',
-            text: dict(4, _isLang),
-            onOk: () => exit(1)
-          );
-        } else {
-          parts.addAll(query);
-          notifyListeners();
-        }
-      })
+      ) : success('zenity').then((zen) =>
+        !zen ? alert(
+          okIcon: true,
+          title: 'Error',
+          text: dict(12, _isLang),
+          onOk: () => exit(1)
+        ) : ext4listener().then((query){
+          if(query[0] == 'NOT') {
+            alert(
+              okIcon: true,
+              title: 'Error',
+              text: dict(3, _isLang),
+              onOk: () => exit(1)
+            );
+          } else if(query[0] == 'FULL') {
+            alert(
+              okIcon: true,
+              title: 'Error',
+              text: dict(4, _isLang),
+              onOk: () => exit(1)
+            );
+          } else {
+            parts.addAll(query);
+            notifyListeners();
+          }
+        })
+      )
     )
-    );
+  );
 
   void requestOptimize(
     final String part

@@ -37,7 +37,7 @@ String lang(
     'Your Operating System is not GNU/Linux, exiting',
 		'The rsync binary is not available in this system, please install',
 		'All dependencies is ok!',
-    "The directory ${custom != null ? custom[0] : ''} doesn't exist"
+    "The directory ${custom != null ? custom[0] : ''} doesn't exist",
 		'=============== START RSYNC =============== \n' ,
 		'Done!\n',
 		"You don't have permissions to write the destination or read the source \n",

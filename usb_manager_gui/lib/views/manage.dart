@@ -94,7 +94,11 @@ final class Manage extends StatelessWidget {
               ..n.center
               ..textAlign = TextAlign.center;
             } else {
-              return Container();
+              return n.ListView.children(
+              ctl.items.map((el) => n.ListTile()
+                ..title = el.n
+                ..onTap = () => ctl.requestManage(context, el)
+              ).toList());
             }
           }),
         ))
