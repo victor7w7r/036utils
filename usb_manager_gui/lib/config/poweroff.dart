@@ -48,7 +48,9 @@ Future<void> powerOff(
 
   if(mounts.isNotEmpty) {
     for(final partition in mounts) {
-      if(await coderes('udisksctl unmount -b /dev/$partition &> /dev/null') != 0) {
+      if(await coderes(
+        'udisksctl unmount -b /dev/$partition &> /dev/null') != 0
+      ) {
         snackBar(context, dict(12, isLang));
         return;
       }

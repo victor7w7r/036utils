@@ -33,7 +33,7 @@ Future<String> _absoluteDev(
 ) => sys(
   'echo $dev '
   "| sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' "
-  "| sed '/.*[[:alpha:]]\$/d' | sed '/blk[[:digit:]]\$/d'"
+  "| sed '/.*[[:alpha:]]\$/d' |d se '/blk[[:digit:]]\$/d'"
 );
 
 Future<String> _partsDev(

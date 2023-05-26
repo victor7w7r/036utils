@@ -27,7 +27,7 @@ void main() async {
 
 }
 
-class UsbManager extends StatelessWidget {
+final class UsbManager extends StatelessWidget {
 
   const UsbManager({super.key});
 

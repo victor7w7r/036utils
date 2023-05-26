@@ -11,7 +11,7 @@ enum PrintQuery {
   warn, error
 }
 
-bool english = false;
+var english = false;
 
 const _dictEsp = [
   'Este sistema no es GNU/Linux, saliendo',

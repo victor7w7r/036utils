@@ -165,18 +165,18 @@ packages:
     dependency: "direct main"
     description:
       name: dcli
-      sha256: a5e5d77a1b57b6590ac6a15e7be3307c398283606ffe0c608ce600d47204839d
+      sha256: "036afa6aa442a27ebdddc765b53d5d8786e9600c0a25de8d035f136fbb2ad3b2"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.2"
+    version: "2.2.4"
   dcli_core:
     dependency: transitive
     description:
       name: dcli_core
-      sha256: "441ebd54e5f0b549516537e82c8e62ca866351d7abff99183c9b8a8bdf324506"
+      sha256: "98eaf8975d47abd990ed58d96b2442abcd541eb627943ffb20ce23d734c18c5e"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.2"
+    version: "2.2.4"
   equatable:
     dependency: transitive
     description:
@@ -325,10 +325,10 @@ packages:
     dependency: transitive
     description:
       name: logging
-      sha256: "04094f2eb032cbb06c6f6e8d3607edcfcb0455e2bb6cbc010cb01171dcb64e6d"
+      sha256: "623a88c9594aa774443aa3eb2d41807a48486b5613e67599fb4c41c0ad47c340"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.1"
+    version: "1.2.0"
   matcher:
     dependency: transitive
     description:
@@ -445,10 +445,10 @@ packages:
     dependency: transitive
     description:
       name: scope
-      sha256: e0c880d8f0db2ffd2accd63eeb02396748f3b8a2f71bce4b7d3f8dab75fc8a74
+      sha256: "5e777fa2dcdf31e09ad0b0034b965d75ea2f0b0a77fab8ef340d9478f9df755c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "4.0.1"
   settings_yaml:
     dependency: transitive
     description:
@@ -666,4 +666,4 @@ packages:
     source: hosted
     version: "3.1.2"
 sdks:
-  dart: ">=3.0.1 <4.0.0"
+  dart: ">=3.0.2 <4.0.0"

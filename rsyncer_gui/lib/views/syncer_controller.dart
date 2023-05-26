@@ -98,7 +98,7 @@ final class SyncerController extends ChangeNotifier {
     _pty = null;
   }
 
-    void init() => verify('rsync').then((ex) =>
+  void init() => verify('rsync').then((ex) =>
     !ex ? FlutterPlatformAlert.showAlert(
       windowTitle: 'Error',
       text: dict(3, isLang),
