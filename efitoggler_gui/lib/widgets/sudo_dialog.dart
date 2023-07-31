@@ -3,13 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:niku/namespace.dart' as n;
 
-import 'package:efitoggler_gui/config/dict.dart';
+import 'package:efitoggler_gui/core/dict.dart';
 
 final class SudoDialog extends StatelessWidget {
-
-  final void Function(bool, String) onConfirm;
-  final bool lang;
-  final ctl = TextEditingController();
 
   SudoDialog(
     this.lang,
@@ -17,8 +13,12 @@ final class SudoDialog extends StatelessWidget {
     {super.key}
   );
 
+  final void Function(bool, String) onConfirm;
+  final bool lang;
+  final ctl = TextEditingController();
+
   @override
-  Widget build(context) => MacosSheet(
+  Widget build(final BuildContext context) => MacosSheet(
     insetPadding: const EdgeInsets.all(230),
     child: n.Stack([
       n.Column([
@@ -35,7 +35,7 @@ final class SudoDialog extends StatelessWidget {
         ..n.center,
       n.Row([
         PushButton(
-          buttonSize: ButtonSize.large,
+          controlSize: ControlSize.large,
           onPressed: () {
             Navigator.pop(context);
             onConfirm(true, ctl.text);
@@ -44,7 +44,7 @@ final class SudoDialog extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         PushButton(
-          buttonSize: ButtonSize.large,
+          controlSize: ControlSize.large,
           onPressed: () {
             Navigator.pop(context);
             onConfirm(false, '');

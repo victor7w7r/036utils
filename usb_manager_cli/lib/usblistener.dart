@@ -2,58 +2,10 @@ import 'dart:io' show stdin;
 
 import 'package:console/console.dart' show Chooser;
 import 'package:dcli/dcli.dart' show cyan;
-import 'package:fpdart/fpdart.dart' show IO, Task;
+import 'package:fpdart/fpdart.dart' show IO;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager_cli/usb_manager_cli.dart';
-
-Future<bool> _usbCheck() =>
-  Task(() => sys(
-    "find /dev/disk/by-id/ -name 'usb*' "
-    '| sort -n '
-    "| sed 's/^\\/dev\\/disk\\/by-id\\///'"
-  ))
-  .map((res) => res == '')
-  .run();
-
-Future<List<String>> _usbPhysicalDevs() =>
-  syssplit(
-    "find /dev/disk/by-id/ -name 'usb*' "
-    '| sort -n '
-    "| sed 's/^\\/dev\\/disk\\/by-id\\///'"
-  );
-
-Future<String> _dirtyDev(
-  final String dev
-) => syswline(
-  'readlink "/dev/disk/by-id/$dev"'
-);
-
-Future<String> _absoluteDev(
-  final String dev
-) => sys(
-  'echo $dev '
-  "| sed 's/^\\.\\.\\/\\.\\.\\//\\/dev\\//' "
-  "| sed '/.*[[:alpha:]]\$/d' |d se '/blk[[:digit:]]\$/d'"
-);
-
-Future<String> _partsDev(
-  final String dev
-) => syswline(
-  'echo $dev '
-  "| sed 's/^\\.\\.\\/\\.\\.\\///' "
-  "| sed '/.*[[:alpha:]]\$/d' "
-  "| sed '/blk[[:digit:]]\$/d'"
-);
-
-Future<String> _blocksDev(
-  final String dev
-) => syswline(
-  "echo $dev | sed 's/^\\.\\.\\/\\.\\.\\///'"
-);
-
-Future<String> _mountCheck(
-  final String part
-) => sys("lsblk /dev/$part | sed -ne '/\\//p'");
 
 enum Action { mount , unmount, off }
 
@@ -65,7 +17,7 @@ void _err(final bool op) {
   clear();
 }
 
-void usblistener(
+Future<void> usblistener(
   final Action action,
   final void Function() call
 ) async {
@@ -88,27 +40,27 @@ void usblistener(
 
   final spinAction = spin();
 
-  await _usbCheck().then((val){
+  await checkUsbDevices().then((final val){
     if(val) error(6);
   });
 
-  for (final dev in await _usbPhysicalDevs()) {
-    dirtyDevs.add(await _dirtyDev(dev));
+  for (final dev in await allDevs()) {
+    dirtyDevs.add(await dirtyDev(dev));
   }
 
-  dirtyDevs.removeWhere((dev) => dev == '');
+  dirtyDevs.removeWhere((final dev) => dev == '');
 
   for (final dev in dirtyDevs) {
-    if(await _absoluteDev(dev) != '') {
-      parts.add(await _partsDev(dev));
+    if(await absoluteDev(dev) != '') {
+      parts.add(await getAllBlockDev(dev));
       count++;
     } else {
-      block.add(await _blocksDev(dev));
+      block.add(await getBlockDev(dev));
     }
   }
 
   for(final part in parts){
-    if(await _mountCheck(part) != '') {
+    if(await mountUsbCheck(part) != '') {
       unmountCount++;
       mounts.add(part);
     } else {
@@ -153,7 +105,7 @@ void usblistener(
     action == Action.off ? argspoweroff : args,
     message: lang(12)).chooseSync
   )
-    .map((sel){
+    .map((final sel){
       if(sel == lang(25)) {
         clear();
         call();

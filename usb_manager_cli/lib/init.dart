@@ -1,33 +1,15 @@
 import 'dart:io' show Platform, Process;
 
-import 'package:console/console.dart' show Chooser;
-import 'package:dcli/dcli.dart' show cyan, green;
-import 'package:fpdart/fpdart.dart' show IO, Task;
+import 'package:fpdart/fpdart.dart' show Task;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager_cli/usb_manager_cli.dart';
-
-Future<bool> _usbCheck() =>
-  Task(() => sys("find /dev/disk/by-id/ -name 'usb*' "
-    "| sort -n | sed 's/^\\/dev\\/disk\\/by-id\\///'"
-  ))
-  .map((res) => res == '')
-  .run();
 
 Future<void> init() async {
 
   clear();
-  print(green('Bienvenido / Welcome'));
-  print(cyan(
-    'Please, choose your language / Por favor selecciona tu idioma'
-  ));
-
-  IO(Chooser<String>(
-    ['English', 'Espanol'],
-    message: 'Number/Numero: '
-  ).chooseSync)
-    .map((sel) => english = sel == 'English')
-    .run();
-
+  setLang();
+  initLang();
   clear();
   cover();
 
@@ -35,15 +17,15 @@ Future<void> init() async {
 
   if(!Platform.isLinux) error(0);
 
-  await checkUid().then((val){
+  await checkUid().then((final val) {
     if(!val) error(1);
   });
 
-  await success('udisksctl').then((val){
+  await success('udisksctl').then((final val) {
     if(!val) error(2);
   });
 
-  await success('whiptail').then((val){
+  await success('whiptail').then((final val) {
     if(!val) error(3);
   });
 
@@ -52,13 +34,13 @@ Future<void> init() async {
     ['-c', 'systemctl is-active udisks2'],
     runInShell: true)
   )
-    .map((srvu) => (srvu.stdout as String).trim())
+    .map((final srvu) => (srvu.stdout as String).trim())
     .run()
-    .then((srv){
+    .then((final srv) {
       if(srv == 'inactive') error(4);
     });
 
-  await _usbCheck().then((val){
+  await checkUsbDevices().then((final val) {
     print(val);
     if(val) error(6);
   });

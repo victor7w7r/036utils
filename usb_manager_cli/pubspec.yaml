@@ -3,12 +3,13 @@ description: usb_manager_cli
 version: 1.0.0
 
 environment:
-  sdk: '>=3.0.2 <4.0.0'
+  sdk: '>=3.0.6 <4.0.0'
 
 dependencies:
   console: ^4.1.0
-  dcli: ^2.2.4
-  fpdart: ^0.6.0
+  dcli: ^3.0.2
+  fpdart: ^1.0.0
+  zerothreesix_dart: ^0.0.3
 
 dev_dependencies:
-  lints: ^2.1.0
+  lints: ^2.1.1

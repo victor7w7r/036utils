@@ -3,22 +3,25 @@ import 'dart:io' show exit;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
-import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:efitoggler_gui/config/dict.dart';
+import 'package:efitoggler_gui/core/dict.dart';
 import 'package:efitoggler_gui/providers/theme_provider.dart';
 import 'package:efitoggler_gui/screens/toggler_controller.dart';
 
-final class MacosMenubar extends StatelessWidget {
-
-  final bool lang;
+final class MacosMenubar extends ConsumerWidget {
 
   const MacosMenubar(
     this.lang, {super.key}
   );
 
+  final bool lang;
+
   @override
-  Widget build(context) => PlatformMenuBar(menus: [
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref
+  ) => PlatformMenuBar(menus: [
     PlatformMenu(
       label: 'App',
       menus: [
@@ -26,14 +29,14 @@ final class MacosMenubar extends StatelessWidget {
           members: [
             PlatformMenuItem(
               label: dict(10, lang),
-              onSelected: context.read(themeProvider.notifier)
+              onSelected: ref.read(themeProvider.notifier)
                 .toggle,
             ),
             PlatformMenuItem(
               label: dict(11, lang),
-              onSelected: () => context
+              onSelected: () => ref
                 .read(togglerController.notifier)
-                .isLang = !context
+                .isLang = !ref
                   .read(togglerController.notifier).isLang
             )
           ]

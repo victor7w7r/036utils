@@ -1,7 +1,9 @@
+import 'dart:async' show unawaited;
 import 'dart:io' show exit, stdin;
 
 import 'package:console/console.dart' show readInput;
 import 'package:dcli/dcli.dart' show exists;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:rsyncer_cli/rsyncer_cli.dart';
 
@@ -10,10 +12,10 @@ var _dest = '';
 
 void _action(
   final bool isSource
-) => readInput(lang(isSource ? 8 : 9))
-  .then((val) => _validator(
+) => unawaited(readInput(lang(isSource ? 8 : 9))
+  .then((final val) => _validator(
     isSource ? 'source' : 'dest', val
-  ));
+  )));
 
 void _interrupt(
   final bool isOp,
@@ -32,7 +34,7 @@ void _validator(
   final String data
 ) {
   if(typeData == 'source') {
-    if((data.isNotEmpty)) {
+    if(data.isNotEmpty) {
       if(exists(data)) {
         _source = data;
         clear();
@@ -51,7 +53,7 @@ void _validator(
       if(exists(data)) {
         _dest = data;
         clear();
-        _syncer();
+        unawaited(_syncer());
       } else {
         _interrupt(false, data);
         return;
@@ -80,7 +82,7 @@ Future<int> _syncCmd(
   '--numeric-ids --info=progress2 $source $dest'
 );
 
-void _syncer() async {
+Future<void> _syncer() async {
 
   final source = _match(_source);
   final dest = _match(_dest);
@@ -92,14 +94,14 @@ void _syncer() async {
 	print('DESTINATION:{$dest} \n');
 
   if(await _syncCmd(false, source, dest) == 0) {
-    ok();
+    okLine();
   } else {
     clear();
     lang(6, PrintQuery.normal);
     print('SOURCE:{$source}');
     print('DESTINATION:{$dest} \n');
     if(await _syncCmd(true, source, dest) == 0) {
-      ok();
+      okLine();
     } else {
       lang(7, PrintQuery.normal);
       exit(1);

@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:niku/namespace.dart' as n;
 
-import 'package:efitoggler_gui/config/dict.dart';
+import 'package:efitoggler_gui/core/dict.dart';
 
 Future<dynamic> errorDialog(
   final BuildContext context,
@@ -11,7 +11,7 @@ Future<dynamic> errorDialog(
   final VoidCallback onClose
 ) => showMacosAlertDialog(
   context: context,
-  builder: (_) => MacosAlertDialog(
+  builder: (final _) => MacosAlertDialog(
     appIcon: n.Icon(CupertinoIcons.stop_circle),
     title: Text(
       'Error',
@@ -25,7 +25,7 @@ Future<dynamic> errorDialog(
         .typography.headline
     ),
     primaryButton: PushButton(
-      buttonSize: ButtonSize.large,
+      controlSize: ControlSize.large,
       child: const Text('OK'),
       onPressed: () {
         Navigator.pop(context);

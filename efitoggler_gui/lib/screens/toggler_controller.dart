@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:macos_ui/macos_ui.dart';
 
-import 'package:efitoggler_gui/config/config.dart';
-import 'package:efitoggler_gui/inject/inject.dart';
 import 'package:efitoggler_gui/widgets/widgets.dart';
 
 Future<int> _checkSudo(
@@ -115,6 +113,6 @@ final class TogglerController
 }
 
 final togglerController =
-  ChangeNotifierProvider<TogglerController>((_) =>
+  ChangeNotifierProvider<TogglerController>((final _) =>
     TogglerController()..init()
   );

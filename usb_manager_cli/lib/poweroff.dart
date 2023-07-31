@@ -1,34 +1,30 @@
 import 'package:fpdart/fpdart.dart' show Task;
 
-import 'package:usb_manager_cli/usb_manager_cli.dart';
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 Future<T> _block<T>(
   final String part,
-  Future<T> Function(String) query
+  final Future<T> Function(String) query
 ) => Task(() => sys(
-  'echo $part | cut -d \'/\' -f3'
+  "echo $part | cut -d '/' -f3"
 ))
-  .flatMap((block) => Task(() => query(block)))
+  .flatMap((final block) => Task(() => query(block)))
   .run();
 
 Future<List<String>> _partsQuery(
   final String part
-) => _block(part, (block) => syssplit(
+) => _block(part, (final block) => syssplit(
   'find /dev -name "$block[[:digit:]]" '
-  "| sort -n | sed 's/^\\/dev\\///'"
+  r"| sort -n | sed 's/^\/dev\///'"
 ));
 
 Future<String> _modelQuery(
   final String part
-) => _block(part, (block) => sys(
+) => _block(part, (final block) => sys(
   'cat /sys/class/block/$block/device/model'
 ));
 
-Future<String> _mountQuery(
-  final String part
-) => sys("lsblk /dev/$part | sed -ne '/\\//p'");
-
-void powerOff(
+Future<void> powerOff(
   final String part,
   final void Function() call
 ) async {
@@ -40,10 +36,10 @@ void powerOff(
 
   final partitionsQuery = await _partsQuery(part);
 
-  partitionsQuery.removeWhere((item) => item == '');
+  partitionsQuery.removeWhere((final item) => item == '');
 
   for(final parts in partitionsQuery) {
-    if(await _mountQuery(parts) != '') mounts.add(parts);
+    if(await mountUsbCheck(parts) != '') mounts.add(parts);
   }
 
   if(mounts.isNotEmpty) {

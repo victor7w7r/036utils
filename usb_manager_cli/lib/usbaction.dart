@@ -1,6 +1,6 @@
 import 'dart:io' show stdin;
 
-import 'package:usb_manager_cli/usb_manager_cli.dart';
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 void _err(final bool op) {
   clear();
@@ -10,7 +10,7 @@ void _err(final bool op) {
   clear();
 }
 
-void usbAction(
+Future<void> usbAction(
   final String part,
   final bool isMount,
   final void Function() call
@@ -24,8 +24,8 @@ void usbAction(
   );
 
   final notAuth =
-    RegExp(r'NotAuthorized*').hasMatch(out) ||
-      RegExp(r'NotAuthorizedDismissed*').hasMatch(out);
+    RegExp('NotAuthorized*').hasMatch(out) ||
+      RegExp('NotAuthorizedDismissed*').hasMatch(out);
 
   spinAction.cancel();
 

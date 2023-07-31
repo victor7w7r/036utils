@@ -1,8 +1,10 @@
+import 'dart:async' show unawaited;
 import 'dart:io' show exit, stdin;
 
-import 'package:console/console.dart';
+import 'package:console/console.dart' show Chooser;
 import 'package:dcli/dcli.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' show IO;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:ext4_optimizer_cli/ext4_optimizer_cli.dart';
 
@@ -22,19 +24,19 @@ bool _runner(final int code) {
   } else {
     lang(8, PrintQuery.normal);
     _continue();
-    _menu();
+    unawaited(_menu());
     return true;
   }
 }
 
-void _menu() async {
+Future<void> _menu() async {
   _options.add(lang(16));
   print(cyan(lang(14)));
   IO(Chooser<String>(
     _options,
     message: lang(13)
   ).chooseSync)
-    .map((sel){
+    .map((final sel){
       if(sel == lang(16)) {
         clear();
         exit(0);
@@ -45,7 +47,7 @@ void _menu() async {
     .run();
 }
 
-void _defragction(
+Future<void> _defragction(
   final bool interactive,
   final String part
 ) async {
@@ -71,7 +73,7 @@ void _defragction(
   }
 
   "bash -c 'mkdir /tmp/optimize 2> /dev/null'"
-    .start(detached: false, nothrow: true);
+    .start(nothrow: true);
   "bash -c 'mount $part /tmp/optimize'".run;
 
   lang(11, PrintQuery.normal);
@@ -94,9 +96,10 @@ void _defragction(
   }
 
   if(interactive) {
-    _options.clear();
-    _options.addAll(await ext4listener(false));
-    _menu();
+    _options
+      ..clear()
+      ..addAll(await ext4listener(false));
+    unawaited(_menu());
   } else {
     exit(0);
   }
@@ -109,8 +112,8 @@ void main(
   _options.addAll(await init(args));
   if(args.isEmpty) {
     clear();
-    _menu();
+    unawaited(_menu());
   } else {
-    _defragction(false, args[0]);
+    unawaited(_defragction(false, args[0]));
   }
 }

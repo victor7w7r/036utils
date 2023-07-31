@@ -6,34 +6,35 @@ publish_to: 'none'
 version: 1.0.0
 
 environment:
-  sdk: '>=3.0.2 <4.0.0'
+  sdk: '>=3.0.6 <4.0.0'
 
 dependencies:
+  adwaita: ^1.0.1
+  bitsdojo_window: ^0.1.5
+  dio: ^5.3.0
   flutter:
     sdk: flutter
-  adwaita: ^0.5.2
-  bitsdojo_window: ^0.1.5
-  dio: ^5.1.2
   flutter_platform_alert: ^0.4.0
   flutter_pty: ^0.4.0
   flutter_riverpod: ^2.3.6
-  fpdart: ^0.6.0
+  fpdart: ^1.0.0
   get_it: ^7.6.0
-  injectable: ^2.1.1
-  libadwaita: ^1.2.5
+  injectable: ^2.1.2
+  libadwaita: ^2.0.2
   libadwaita_bitsdojo: ^0.5.5
-  niku: ^2.3.3
+  niku: ^2.4.2
   path_provider: ^2.0.15
   riverpod_context: ^0.3.0
-  shared_preferences: ^2.1.1
+  shared_preferences: ^2.2.0
   xterm: ^3.5.0
 
+dependency_overrides:
+  win32: 5.0.6
+
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  build_runner: ^2.4.4
-  flutter_lints: ^2.0.1
-  injectable_generator: ^2.1.5
+  build_runner: ^2.4.6
+  flutter_lints: ^2.0.2
+  injectable_generator: ^2.1.6
 
 flutter:
   uses-material-design: true

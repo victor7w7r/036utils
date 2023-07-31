@@ -1,32 +1,20 @@
 import 'dart:io' show Platform;
 
-import 'package:console/console.dart' show Chooser;
-import 'package:dcli/dcli.dart' show cyan, green;
-import 'package:fpdart/fpdart.dart' show IO;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:rsyncer_cli/rsyncer_cli.dart';
 
 Future<void> init() async {
 
   clear();
-  print(green('Bienvenido / Welcome'));
-  print(cyan(
-    'Please, choose your language / Por favor selecciona tu idioma'
-  ));
-
-  IO(Chooser<String>(
-    ['English', 'Espanol'],
-    message: 'Number/Numero: '
-  ).chooseSync)
-    .map((sel) => english = sel == 'English')
-    .run();
-
+  setLang();
+  initLang();
   clear();
   cover();
 
   if(!Platform.isLinux) error(0);
 
-  await success('rsync').then((val){
+  await success('rsync').then((final val){
     if(!val) error(1);
   });
 
