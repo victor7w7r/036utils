@@ -29,7 +29,7 @@ final class ManageController extends ChangeNotifier {
     this._prefsMod
   ):
     _isEnabledRadio = true,
-    _isLang =  _prefsMod.isEng,
+    _isLang = _prefsMod.isEng,
     _isLoading = false,
     items = [],
     noMountParts = false,

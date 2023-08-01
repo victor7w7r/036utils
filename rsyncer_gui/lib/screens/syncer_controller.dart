@@ -5,8 +5,8 @@ import 'dart:io' show exit;
 import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart' show FilePicker;
-import 'package:flutter_pty/flutter_pty.dart' show Pty;
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
+import 'package:flutter_pty/flutter_pty.dart' show Pty;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;

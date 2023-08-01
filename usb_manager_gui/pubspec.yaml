@@ -21,7 +21,7 @@ dependencies:
   libadwaita_bitsdojo: ^0.5.5
   niku: ^2.4.2
   shared_preferences: ^2.2.0
-  zerothreesix_dart: ^0.0.3
+  zerothreesix_dart: ^0.0.4
 
 dependency_overrides:
   file: 7.0.0
