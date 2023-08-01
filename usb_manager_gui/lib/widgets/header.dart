@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart' show WidgetRef;
 import 'package:libadwaita/libadwaita.dart' show AdwHeaderButton;
-import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
 
 import 'package:usb_manager_gui/providers/theme_provider.dart';
-import 'package:usb_manager_gui/views/manage_controller.dart';
+import 'package:usb_manager_gui/screens/manage_controller.dart';
 
 List<Widget> header(
-  final BuildContext context,
+  final WidgetRef ref,
   final bool isDark
 ) => [
   AdwHeaderButton(
@@ -17,13 +17,13 @@ List<Widget> header(
         : Icons.light_mode_rounded,
       size: 15,
     ),
-    onPressed: context.read(themeProvider.notifier).toggle,
+    onPressed: ref.read(themeProvider.notifier).toggle,
   ),
   AdwHeaderButton(
     icon: const Icon(Icons.book, size: 15),
-    onPressed: () => context
+    onPressed: () => ref
       .read(manageController.notifier)
-      .isLang = !context
+      .isLang = !ref
         .read(manageController.notifier).isLang
   )
 ];

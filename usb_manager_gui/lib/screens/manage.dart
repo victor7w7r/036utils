@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_bitsdojo/libadwaita_bitsdojo.dart';
 import 'package:niku/namespace.dart' as n;
 import 'package:niku/niku.dart' show Niku;
-import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
 
-import 'package:usb_manager_gui/config/dict.dart';
+import 'package:usb_manager_gui/core/dict.dart';
 import 'package:usb_manager_gui/providers/theme_provider.dart';
-import 'package:usb_manager_gui/views/manage_controller.dart';
+import 'package:usb_manager_gui/screens/manage_controller.dart';
 import 'package:usb_manager_gui/widgets/header.dart';
 
-final class Manage extends StatelessWidget {
+final class Manage extends ConsumerWidget {
 
   const Manage({super.key});
 
   @override
-  Widget build(context) {
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref
+  ) {
 
-    final ctl = context.watch(manageController);
-    final isDark = context.watch(isDarkProvider);
+    final ctl = ref.watch(manageController);
+    final isDark = ref.watch(isDarkProvider);
 
     return AdwScaffold(
       actions: AdwActions().bitsdojo,
@@ -36,7 +39,7 @@ final class Manage extends StatelessWidget {
               value: 1,
               groupValue: ctl.radioGroup,
               onChanged: ctl.isEnabledRadio
-                ? (_) => ctl.mountChange()
+                ? (final _) => ctl.mountChange()
                 : null
             ),
             dict(14, ctl.isLang).n
@@ -47,7 +50,7 @@ final class Manage extends StatelessWidget {
               value: 2,
               groupValue: ctl.radioGroup,
               onChanged: ctl.isEnabledRadio
-                ? (_) => ctl.unmountChange()
+                ? (final _) => ctl.unmountChange()
                 : null
             ),
             dict(15, ctl.isLang).n
@@ -58,7 +61,7 @@ final class Manage extends StatelessWidget {
               value: 3,
               groupValue: ctl.radioGroup,
               onChanged: ctl.isEnabledRadio
-                ? (_) => ctl.poweroffChange()
+                ? (final _) => ctl.poweroffChange()
                 : null
             ),
             dict(16, ctl.isLang).n
@@ -84,7 +87,7 @@ final class Manage extends StatelessWidget {
               ),
             borderRadius: BorderRadius.circular(10)
           ),
-          child: Builder(builder: (ctx) {
+          child: Builder(builder: (final ctx) {
             if(ctl.noMountParts && ctl.radioGroup == 1) {
               return dict(4, ctl.isLang).n
               ..n.center
@@ -95,12 +98,12 @@ final class Manage extends StatelessWidget {
               ..textAlign = TextAlign.center;
             } else {
               return n.ListView.children(
-              ctl.items.map((el) => n.ListTile()
+              ctl.items.map((final el) => n.ListTile()
                 ..title = el.n
                 ..onTap = () => ctl.requestManage(context, el)
               ).toList());
             }
-          }),
+          })
         ))
           ..center
           ..ml = 15,

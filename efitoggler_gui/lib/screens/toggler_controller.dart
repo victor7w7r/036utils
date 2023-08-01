@@ -1,9 +1,14 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/cupertino.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:macos_ui/macos_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
+import 'package:efitoggler_gui/core/prefs_module.dart';
 import 'package:efitoggler_gui/widgets/widgets.dart';
 
 Future<int> _checkSudo(
@@ -16,17 +21,17 @@ Future<String> _mountChain(
   final String efipart,
   final String pass
 ) => Task(() => sys('echo $pass | sudo -S mkdir /Volumes/EFI'))
-  .flatMap((_) => Task(() => sys('echo $pass | '
+  .flatMap((final _) => Task(() => sys('echo $pass | '
     'sudo -S mount -t msdos /dev/$efipart /Volumes/EFI')
   ))
-  .flatMap((_) => Task(() => sys('open /Volumes/EFI')))
+  .flatMap((final _) => Task(() => sys('open /Volumes/EFI')))
   .run();
 
 Future<String> _umountChain(
   final String efipart,
   final String pass
 ) => Task(() => sys('echo $pass | sudo -S diskutil unmount $efipart'))
-  .flatMap((_) => Task(() => sys('echo $pass | '
+  .flatMap((final _) => Task(() => sys('echo $pass | '
     'sudo -S rm -rf /Volumes/EFI'
   )))
   .run();
@@ -34,6 +39,27 @@ Future<String> _umountChain(
 final class TogglerController
   extends ChangeNotifier {
 
+  TogglerController(
+    this._prefs,
+    this._prefsMod
+  ):
+    _isLang = _prefsMod.isEng,
+    _isLoading = false,
+    _checkEfiMountCmd = 'diskutil list '
+      "| sed -ne '/EFI/p' "
+      r"| sed -ne 's/.*\(d.*\).*/\1/p'",
+    _checkEfiPartCmd =  r'EFIPART=$(diskutil list '
+      "| sed -ne '/EFI/p' "
+      r"| sed -ne 's/.*\(d.*\).*/\1/p') "
+      r'MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p"); '
+      r'echo $MOUNTROOT',
+    efipart = '',
+    efi = '',
+    isEfi = false;
+
+  final SharedPreferences _prefs;
+  // ignore: unused_field
+  final PrefsModule _prefsMod;
   final String _checkEfiMountCmd;
   final String _checkEfiPartCmd;
   bool _isLoading;
@@ -43,42 +69,27 @@ final class TogglerController
   String efi;
   bool isEfi;
 
-  TogglerController():
-    _checkEfiMountCmd = 'diskutil list '
-      "| sed -ne '/EFI/p' "
-      r"| sed -ne 's/.*\(d.*\).*/\1/p'",
-    _checkEfiPartCmd =  'EFIPART=\$(diskutil list '
-      "| sed -ne '/EFI/p' "
-      "| sed -ne 's/.*\\(d.*\\).*/\\1/p') "
-      'MOUNTROOT=\$(df -h | sed -ne "/\$EFIPART/p");'
-      'echo \$MOUNTROOT',
-    efipart = '',
-    efi = '',
-    isEfi = false,
-    _isLang = inject.get<SharedPrefsModule>().isEng,
-    _isLoading = false;
-
-  void init() => sys(_checkEfiMountCmd)
-    .then((efiCheck) {
+  void init() => unawaited(sys(_checkEfiMountCmd)
+    .then((final efiCheck) {
       isEfi = efiCheck != '';
       isLoading = false;
-    });
+    }));
 
   void toggle(final BuildContext context) {
     isLoading = true;
-    showMacosSheet(
+    unawaited(showMacosSheet<dynamic>(
       context: context,
-      builder: (_) => SudoDialog(isLang, (res, pass) =>
-        res ? _checkSudo(pass).then((proc) => proc == 0
-          ? sys(_checkEfiPartCmd).then((efiPart) {
+      builder: (final _) => SudoDialog(isLang, (final res, final pass) =>
+        res ? _checkSudo(pass).then((final proc) => proc == 0
+          ? sys(_checkEfiPartCmd).then((final efiPart) {
             if(isEfi) {
-              _umountChain(efiPart, pass).then((_){
+              _umountChain(efiPart, pass).then((final _){
                 isEfi = false;
                 isLoading = false;
               });
               return;
             } else {
-              _mountChain(efiPart, pass).then((_){
+              _mountChain(efiPart, pass).then((final _){
                 isEfi = true;
                 isLoading = false;
               });
@@ -91,7 +102,7 @@ final class TogglerController
           )
         ) : isLoading = false
       )
-    );
+    ));
   }
 
   bool get isLoading => _isLoading;
@@ -105,14 +116,18 @@ final class TogglerController
 
   set isLang(final bool value) {
     _isLang = value;
-    inject.get<SharedPrefsModule>()
-      .prefs.setBool('lang', isLang)
-      .then((_) => notifyListeners());
+    unawaited(_prefs
+      .setBool('lang', isLang)
+      .then((final _) => notifyListeners())
+    );
   }
 
 }
 
 final togglerController =
-  ChangeNotifierProvider<TogglerController>((final _) =>
-    TogglerController()..init()
+  ChangeNotifierProvider<TogglerController>((final ref) =>
+    TogglerController(
+      ref.watch(prefsModule),
+      ref.watch(sharedPrefs)
+    )..init()
   );

@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 const _dictEsp = [
   'Necesitas ser superusuario, por favor ejecuta con sudo',
   'El ejecutable e4defrag no está presente en tu sistema, por favor instalalo',

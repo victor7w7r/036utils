@@ -18,23 +18,20 @@ dependencies:
   flutter_pty: ^0.4.0
   flutter_riverpod: ^2.3.6
   fpdart: ^1.0.0
-  get_it: ^7.6.0
-  injectable: ^2.1.2
   libadwaita: ^2.0.2
   libadwaita_bitsdojo: ^0.5.5
   niku: ^2.4.2
   path_provider: ^2.0.15
-  riverpod_context: ^0.3.0
   shared_preferences: ^2.2.0
   xterm: ^3.5.0
+  zerothreesix_dart: ^0.0.3
 
 dependency_overrides:
+  file: 7.0.0
   win32: 5.0.6
 
 dev_dependencies:
-  build_runner: ^2.4.6
   flutter_lints: ^2.0.2
-  injectable_generator: ^2.1.6
 
 flutter:
   uses-material-design: true

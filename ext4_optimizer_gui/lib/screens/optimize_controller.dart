@@ -1,25 +1,29 @@
+import 'dart:async' show unawaited;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dio/dio.dart' show CancelToken, Dio;
-import 'package:ext4_optimizer_gui/config/system.dart';
-import 'package:ext4_optimizer_gui/inject/inject.dart';
+import 'package:dio/dio.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_pty/flutter_pty.dart' show Pty;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
+import 'package:fpdart/fpdart.dart' show Task;
+import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
+import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 import 'package:xterm/xterm.dart';
+import 'package:zerothreesix_dart/zerothreesix_dart.dart' hide yesNo;
 
-import 'package:ext4_optimizer_gui/config/config.dart';
+import 'package:ext4_optimizer_gui/core/core.dart';
 import 'package:ext4_optimizer_gui/widgets/dialog.dart';
 
 const _url =
   'https://github.com/victor7w7r/036utils/releases/'
   'download/1.0.0/ext4_optimizer_cli-amd64';
 
-final downloadDir =
-  '${inject.get<SharedPrefsModule>().tempPath}'
-  '/ext4_optimizer_cli';
+Future<String> _downloadDir() =>
+  const Task(getTemporaryDirectory)
+    .map((final dir) => '${dir.path}/ext4_optimizer_cli')
+    .run();
 
 Future<bool> _download(
   final String url,
@@ -32,7 +36,7 @@ Future<bool> _download(
       cancelToken: cancel
     );
     return true;
-  } catch (_) {
+  } on DioException catch (_) {
     return false;
   }
 }
@@ -40,21 +44,12 @@ Future<bool> _download(
 final class OptimizeController
   extends ChangeNotifier {
 
-  final Terminal terminal;
-  final TerminalController terminalCtrl;
-  final List<String> parts;
-
-  final CancelToken _cancel;
-  Pty? _pty;
-  bool _opMode;
-  bool _isLang;
-  bool _isOptimize;
-  bool _isLoading;
-  bool _isReady;
-
-  OptimizeController():
+  OptimizeController(
+    this._prefs,
+    this._prefsMod
+  ):
     _cancel = CancelToken(),
-    _isLang = inject.get<SharedPrefsModule>().isEng,
+    _isLang =  _prefsMod.isEng,
     _isLoading = false,
     _isOptimize = false,
     _isReady = false,
@@ -63,25 +58,40 @@ final class OptimizeController
     terminal = Terminal(),
     terminalCtrl = TerminalController();
 
-  void init() => success('e4defrag').then((val) =>
+  final SharedPreferences _prefs;
+  // ignore: unused_field
+  final PrefsModule _prefsMod;
+  final CancelToken _cancel;
+  Pty? _pty;
+  bool _opMode;
+  bool _isLang;
+  bool _isOptimize;
+  bool _isLoading;
+  bool _isReady;
+
+  final Terminal terminal;
+  final TerminalController terminalCtrl;
+  final List<String> parts;
+
+  void init() => unawaited(success('e4defrag').then((final val) =>
     !val ? alert(
       okIcon: true,
       title: 'Error',
       text: dict(1, _isLang),
       onOk: () => exit(1)
-    ) : success('fsck.ext4').then((ext4) =>
+    ) : success('fsck.ext4').then((final ext4) =>
       !ext4 ? alert(
         okIcon: true,
         title: 'Error',
         text: dict(2, _isLang),
         onOk: () => exit(1)
-      ) : success('zenity').then((zen) =>
+      ) : success('zenity').then((final zen) =>
         !zen ? alert(
           okIcon: true,
           title: 'Error',
           text: dict(12, _isLang),
           onOk: () => exit(1)
-        ) : ext4listener().then((query){
+        ) : ext4listener().then((final query){
           if(query[0] == 'NOT') {
             alert(
               okIcon: true,
@@ -103,20 +113,21 @@ final class OptimizeController
         })
       )
     )
-  );
+  ));
 
   void requestOptimize(
     final String part
-  ) => yesNo(
+  ) => unawaited(yesNo(
     title: dict(6, _isLang),
     text: '${dict(7, _isLang)} $part ?',
-    onYes: () {
+    onYes: () async {
       isLoading = true;
       _opMode = true;
+      final downloadDir = await _downloadDir();
       if(!File(downloadDir).existsSync()) {
-        _download(_url, downloadDir, _cancel).then((res){
+        unawaited(_download(_url, downloadDir, _cancel).then((final res){
           if(res) {
-            coderes('chmod +x $downloadDir').then((_){
+            coderes('chmod +x $downloadDir').then((final _){
               _isLoading = false;
               _initPty('sudo $downloadDir $part; exit');
               isOptimize = true;
@@ -130,14 +141,14 @@ final class OptimizeController
               onOk: (){}
             );
           }
-        });
+        }));
       } else {
         _isLoading = false;
         _initPty('sudo $downloadDir $part; exit');
         isOptimize = true;
       }
     },
-  );
+  ));
 
   void _initPty(final String cmd) {
 
@@ -152,17 +163,18 @@ final class OptimizeController
       .transform(const Utf8Decoder())
       .listen(terminal.write);
 
-    _pty!.exitCode.then((_) {
+    unawaited(_pty!.exitCode.then((final _) {
       isOptimize = false;
       ready = true;
       notifyListeners();
-    });
+    }));
 
-    terminal.onOutput = (data) => _pty!.write(
+    terminal.onOutput = (final data) => _pty!.write(
       const Utf8Encoder().convert(data)
     );
 
-    terminal.onResize = (w, h, _, __) =>
+    // ignore: cascade_invocations
+    terminal.onResize = (final w, final h, final _, final __) =>
       _pty!.resize(h, w);
 
     Future.delayed(
@@ -189,21 +201,19 @@ final class OptimizeController
     _isReady = false;
   }
 
-
-  void cancel(){
-    terminal.charInput(99, ctrl: true);
-    terminal.textInput('exit');
-    terminal.keyInput(TerminalKey.enter);
-  }
-
+  void cancel() => terminal
+    ..charInput(99, ctrl: true)
+    ..textInput('exit')
+    ..keyInput(TerminalKey.enter);
 
   bool get isLang => _isLang;
 
   set isLang(final bool value) {
     _isLang = value;
-    inject.get<SharedPrefsModule>()
-      .prefs.setBool('lang', isLang)
-      .then((_) => notifyListeners());
+    unawaited(_prefs
+      .setBool('lang', isLang)
+      .then((final _) => notifyListeners())
+    );
   }
 
   bool get isOptimize => _isOptimize;
@@ -237,6 +247,9 @@ final class OptimizeController
 }
 
 final optimizeController =
-  ChangeNotifierProvider<OptimizeController>((_) =>
-    OptimizeController()..init()
+  ChangeNotifierProvider<OptimizeController>((final ref) =>
+    OptimizeController(
+      ref.watch(prefsModule),
+      ref.watch(sharedPrefs)
+    )..init()
   );

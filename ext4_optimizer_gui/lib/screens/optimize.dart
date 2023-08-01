@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_bitsdojo/libadwaita_bitsdojo.dart';
 import 'package:niku/namespace.dart' as n;
-import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
 import 'package:xterm/xterm.dart';
 
-import 'package:ext4_optimizer_gui/config/config.dart';
+import 'package:ext4_optimizer_gui/core/core.dart';
 import 'package:ext4_optimizer_gui/providers/theme_provider.dart';
-import 'package:ext4_optimizer_gui/views/optimize_controller.dart';
+import 'package:ext4_optimizer_gui/screens/optimize_controller.dart';
 import 'package:ext4_optimizer_gui/widgets/header.dart';
 
-final class Optimize extends StatelessWidget {
+final class Optimize extends ConsumerWidget {
 
   const Optimize({super.key});
 
   @override
-  Widget build(context) {
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref
+  ) {
 
-    final ctl = context.watch(optimizeController);
-    final isDark = context.watch(isDarkProvider);
+    final ctl = ref.watch(optimizeController);
+    final isDark = ref.watch(isDarkProvider);
 
     return AdwScaffold(
       actions: AdwActions().bitsdojo,
@@ -42,7 +45,7 @@ final class Optimize extends StatelessWidget {
             borderRadius: BorderRadius.circular(10)
           ),
           child: n.ListView.children(
-            ctl.parts.map((el) => n.ListTile()
+            ctl.parts.map((final el) => n.ListTile()
               ..title = el.n
               ..onTap = () => ctl.requestOptimize(el)
             ).toList()

@@ -1,25 +1,30 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_bitsdojo/libadwaita_bitsdojo.dart';
 import 'package:niku/namespace.dart' as n;
-import 'package:riverpod_context/riverpod_context.dart' show RiverpodContext;
 import 'package:xterm/xterm.dart';
 
-import 'package:rsyncer_gui/config/config.dart';
+import 'package:rsyncer_gui/core/core.dart';
 import 'package:rsyncer_gui/providers/theme_provider.dart';
-import 'package:rsyncer_gui/views/syncer_controller.dart';
+import 'package:rsyncer_gui/screens/syncer_controller.dart';
 import 'package:rsyncer_gui/widgets/header.dart';
 
-final class Syncer extends StatelessWidget {
+final class Syncer extends ConsumerWidget {
 
   const Syncer({super.key});
 
   @override
-  Widget build(context) {
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref
+  ) {
 
-    final ctl = context.watch(syncerController);
-    final isDark = context.watch(isDarkProvider);
+    final ctl = ref.watch(syncerController);
+    final isDark = ref.watch(isDarkProvider);
 
     return AdwScaffold(
       actions: AdwActions().bitsdojo,
@@ -29,8 +34,8 @@ final class Syncer extends StatelessWidget {
         n.Wrap([
           n.Column([
             AdwButton.pill(
-              onPressed: () => dirPick()
-                .then((val) => ctl.sourceDir = val ?? ''),
+              onPressed: () => unawaited(dirPick()
+                .then((final val) => ctl.sourceDir = val ?? '')),
               child: Text(dict(0, ctl.isLang))
             ),
             const SizedBox(height: 10),
@@ -38,8 +43,8 @@ final class Syncer extends StatelessWidget {
           ]),
           n.Column([
             AdwButton.pill(
-              onPressed: () => dirPick()
-                .then((val) => ctl.destDir = val ?? ''),
+              onPressed: () => unawaited(dirPick()
+                .then((final val) => ctl.destDir = val ?? '')),
               child: Text(dict(1, ctl.isLang))
             ),
             const SizedBox(height: 10),

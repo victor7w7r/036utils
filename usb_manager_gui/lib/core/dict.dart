@@ -1,6 +1,7 @@
+// ignore_for_file: lines_longer_than_80_chars
 const _dictEsp = [
   'Necesitas ser superusuario, por favor ejecuta con sudo',
-  'El \'udisks command line tool (udisksctl)\' no existe, por favor instale udisks2',
+  "El 'udisks command line tool (udisksctl)' no existe, por favor instale udisks2",
   'El servicio udisks2 no esta ejecutandose, por favor ejecutalo',
   'No hay dispositivos USB conectados en esta PC, o los mismos estan apagados',
   'No hay particiones para montar, desmonta alguno por favor',

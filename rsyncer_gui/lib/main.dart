@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 
 import 'package:adwaita/adwaita.dart' show AdwaitaThemeData;
 import 'package:bitsdojo_window/bitsdojo_window.dart' show appWindow, doWhenWindowReady;
-import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
-import 'package:riverpod_context/riverpod_context.dart' show InheritedConsumer, RiverpodContext;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 
-import 'package:rsyncer_gui/inject/inject.dart';
+import 'package:rsyncer_gui/core/prefs_module.dart';
 import 'package:rsyncer_gui/providers/theme_provider.dart';
-import 'package:rsyncer_gui/views/syncer.dart';
+import 'package:rsyncer_gui/screens/syncer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await configInjection();
 
   doWhenWindowReady(() => appWindow
     ..minSize = const Size(640, 360)
@@ -21,22 +20,30 @@ void main() async {
     ..show()
   );
 
-  runApp(const ProviderScope(
-    child: InheritedConsumer(child: Rsyncer())
+  runApp(ProviderScope(
+    overrides: [
+      sharedPrefs.overrideWithValue(
+        await SharedPreferences.getInstance()
+      )
+    ],
+    child: const Rsyncer()
   ));
 
 }
 
-final class Rsyncer extends StatelessWidget {
+final class Rsyncer extends ConsumerWidget {
 
   const Rsyncer({super.key});
 
   @override
-  Widget build(context) => MaterialApp(
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref
+  ) => MaterialApp(
     theme: AdwaitaThemeData.light(),
     darkTheme: AdwaitaThemeData.dark(),
     debugShowCheckedModeBanner: false,
-    themeMode: context.watch(themeProvider),
+    themeMode: ref.watch(themeProvider),
     home: const Syncer()
   );
 }

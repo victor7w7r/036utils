@@ -1,4 +1,5 @@
-import 'dart:convert';
+import 'dart:async' show unawaited;
+import 'dart:convert' show Utf8Decoder, Utf8Encoder;
 import 'dart:io' show exit;
 
 import 'package:flutter/material.dart';
@@ -8,10 +9,11 @@ import 'package:flutter_pty/flutter_pty.dart' show Pty;
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
 import 'package:fpdart/fpdart.dart' show Task;
+import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 import 'package:xterm/xterm.dart';
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
-import 'package:rsyncer_gui/config/config.dart';
-import 'package:rsyncer_gui/inject/inject.dart';
+import 'package:rsyncer_gui/core/core.dart';
 
 Future<bool> _checkPermission(
   final String dir
@@ -19,7 +21,7 @@ Future<bool> _checkPermission(
     'if [ -w $dir ]; then echo "y";'
     ' else echo "n"; fi'
   ))
-  .map((res) => res == 'y')
+  .map((final res) => res == 'y')
   .run();
 
 Future<String?> dirPick() => FilePicker
@@ -28,23 +30,30 @@ Future<String?> dirPick() => FilePicker
 
 final class SyncerController extends ChangeNotifier {
 
-  final Terminal terminal;
-  final TerminalController terminalCtrl;
+  SyncerController(
+    this._prefs,
+    this._prefsMod
+  ):
+    _destDir = '',
+    _isSyncing = false,
+    _isLang = _prefsMod.isEng,
+    _syncMode = false,
+    _sourceDir = '',
+    terminal = Terminal(),
+    terminalCtrl = TerminalController();
+
+  final SharedPreferences _prefs;
+  // ignore: unused_field
+  final PrefsModule _prefsMod;
   String _destDir;
   bool _isSyncing;
   bool _isLang;
   Pty? _pty;
   String _sourceDir;
   bool _syncMode;
-
-  SyncerController():
-    _destDir = '',
-    _isSyncing = false,
-    _isLang = inject.get<SharedPrefsModule>().isEng,
-    _syncMode = false,
-    _sourceDir = '',
-    terminal = Terminal(),
-    terminalCtrl = TerminalController();
+  
+  final Terminal terminal;
+  final TerminalController terminalCtrl;
 
   void _initPty(final String cmd) {
 
@@ -59,15 +68,16 @@ final class SyncerController extends ChangeNotifier {
       .transform(const Utf8Decoder())
       .listen(terminal.write);
 
-    _pty!.exitCode.then((_) =>
+    unawaited(_pty!.exitCode.then((final _) =>
       isSyncing = false
-    );
+    ));
 
-    terminal.onOutput = (data) => _pty!.write(
+    terminal.onOutput = (final data) => _pty!.write(
       const Utf8Encoder().convert(data)
     );
 
-    terminal.onResize = (w, h, _, __) =>
+    // ignore: cascade_invocations
+    terminal.onResize = (final w, final h, final _, final __) =>
       _pty!.resize(h, w);
 
     Future.delayed(
@@ -83,11 +93,10 @@ final class SyncerController extends ChangeNotifier {
     );
   }
 
-  void cancel() {
-    terminal.charInput(99, ctrl: true);
-    terminal.textInput('exit');
-    terminal.keyInput(TerminalKey.enter);
-  }
+  void cancel() => terminal
+    ..charInput(99, ctrl: true)
+    ..textInput('exit')
+    ..keyInput(TerminalKey.enter);
 
   void exitOp() {
     if(isSyncing) {
@@ -98,21 +107,19 @@ final class SyncerController extends ChangeNotifier {
     _pty = null;
   }
 
-  void init() => verify('rsync').then((ex) =>
+  void init() => unawaited(success('rsync').then((final ex) =>
     !ex ? FlutterPlatformAlert.showAlert(
       windowTitle: 'Error',
       text: dict(3, isLang),
-      alertStyle: AlertButtonStyle.ok,
       iconStyle: IconStyle.error
-    ).then((_) => exit(1)) : verify('zenity').then((zen) =>
+    ).then((final _) => exit(1)) : success('zenity').then((final zen) =>
       !zen ? FlutterPlatformAlert.showAlert(
         windowTitle: 'Error',
         text: dict(5, isLang),
-        alertStyle: AlertButtonStyle.ok,
         iconStyle: IconStyle.error
-      ).then((_) => exit(1)) : {}
+      ).then((final _) => exit(1)) : {}
     )
-  );
+  ));
 
   Future<void> requestSync() async {
     final chk1 = await _checkPermission(_sourceDir);
@@ -128,35 +135,36 @@ final class SyncerController extends ChangeNotifier {
 
   set isLang(final bool value) {
     _isLang = value;
-    inject.get<SharedPrefsModule>()
-      .prefs.setBool('lang', isLang)
-      .then((_) => notifyListeners());
+    unawaited(_prefs
+      .setBool('lang', isLang)
+      .then((final _) => notifyListeners())
+    );
   }
 
   bool get isSyncing => _isSyncing;
 
-  set isSyncing(bool val) {
+  set isSyncing(final bool val) {
     _isSyncing = val;
     notifyListeners();
   }
 
   bool get syncMode => _syncMode;
 
-  set syncMode(bool val) {
+  set syncMode(final bool val) {
     _syncMode = val;
     notifyListeners();
   }
 
   String get sourceDir => _sourceDir;
 
-  set sourceDir(String val) {
+  set sourceDir(final String val) {
     _sourceDir = val;
     notifyListeners();
   }
 
   String get destDir => _destDir;
 
-  set destDir(String val) {
+  set destDir(final String val) {
     _destDir = val;
     notifyListeners();
   }
@@ -164,6 +172,9 @@ final class SyncerController extends ChangeNotifier {
 }
 
 final syncerController =
-  ChangeNotifierProvider<SyncerController>((_) =>
-    SyncerController()..init()
+  ChangeNotifierProvider<SyncerController>((final ref) =>
+    SyncerController(
+      ref.watch(prefsModule),
+      ref.watch(sharedPrefs)
+    )..init()
   );
