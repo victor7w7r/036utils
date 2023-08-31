@@ -6,14 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:macos_ui/macos_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
-import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:efitoggler_gui/core/prefs_module.dart';
+import 'package:efitoggler_gui/core/system.dart';
 import 'package:efitoggler_gui/widgets/widgets.dart';
 
 Future<int> _checkSudo(
   final String pass
-) => coderes(
+) => call(
   'echo $pass | sudo -S cat /dev/null'
 );
 

@@ -205,10 +205,10 @@ packages:
     dependency: transitive
     description:
       name: fpdart
-      sha256: b254aef83353a12e355df6f1231d9b646638bb9493b3f2a2c4800961f7e8bf0b
+      sha256: "7413acc5a6569a3fe8277928fc7487f3198530f0c4e635d0baef199ea36e8ee9"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.1.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -669,9 +669,9 @@ packages:
     dependency: "direct main"
     description:
       name: zerothreesix_dart
-      sha256: ecaaa2ef49d9a11da5e5aa12c340c5289be2910f5c85151e554d15119604a80d
+      sha256: "2d68bf56c710b0081de123bb5a1ab76a98d4e898956e0c9a16485df6a7fc9629"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4"
+    version: "0.0.5"
 sdks:
-  dart: ">=3.0.6 <4.0.0"
+  dart: ">=3.1.0 <4.0.0"

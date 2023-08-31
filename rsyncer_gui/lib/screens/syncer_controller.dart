@@ -11,7 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvi
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 import 'package:xterm/xterm.dart';
-import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:rsyncer_gui/core/core.dart';
 
@@ -51,7 +50,7 @@ final class SyncerController extends ChangeNotifier {
   Pty? _pty;
   String _sourceDir;
   bool _syncMode;
-  
+
   final Terminal terminal;
   final TerminalController terminalCtrl;
 

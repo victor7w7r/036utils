@@ -7,7 +7,6 @@ import 'package:async/async.dart' show CancelableOperation;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
-import 'package:zerothreesix_dart/zerothreesix_dart.dart' hide yesNo;
 
 import 'package:usb_manager_gui/core/core.dart';
 import 'package:usb_manager_gui/widgets/dialog.dart';

@@ -11,7 +11,6 @@ import 'package:fpdart/fpdart.dart' show Task;
 import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
 import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 import 'package:xterm/xterm.dart';
-import 'package:zerothreesix_dart/zerothreesix_dart.dart' hide yesNo;
 
 import 'package:ext4_optimizer_gui/core/core.dart';
 import 'package:ext4_optimizer_gui/widgets/dialog.dart';
@@ -127,7 +126,7 @@ final class OptimizeController
       if(!File(downloadDir).existsSync()) {
         unawaited(_download(_url, downloadDir, _cancel).then((final res){
           if(res) {
-            coderes('chmod +x $downloadDir').then((final _){
+            call('chmod +x $downloadDir').then((final _){
               _isLoading = false;
               _initPty('sudo $downloadDir $part; exit');
               isOptimize = true;
