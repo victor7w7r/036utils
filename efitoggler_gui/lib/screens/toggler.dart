@@ -27,7 +27,8 @@ final class Toggler extends ConsumerWidget {
       MacosWindow(
         child: !ctl.isLoading ? n.Stack([
           n.Row([
-            dict(0, ctl.isLang).n,
+            dict(0, ctl.isLang).n
+              ..mr = 10,
             MacosSwitch(
               value: isDark,
               onChanged: (final _) async =>
@@ -43,12 +44,14 @@ final class Toggler extends ConsumerWidget {
             ..n.topCenter
             ..mt = 80,
           n.Row([
-            dict(2, ctl.isLang).n,
+            dict(2, ctl.isLang).n
+              ..mr = 10,
             MacosSwitch(
               value: ctl.isEfi,
               onChanged: (final _) => ctl.toggle(context)
             ),
-            dict(1, ctl.isLang).n,
+            dict(1, ctl.isLang).n
+              ..ml = 10,
           ])
             ..mainCenter
             ..n.center,
@@ -59,12 +62,14 @@ final class Toggler extends ConsumerWidget {
             ..n.left = 20
             ..n.bottom = 10,
           n.Row([
-            dict(4, ctl.isLang).n,
+            dict(4, ctl.isLang).n
+              ..mr = 10,
             MacosSwitch(
               value: ctl.isLang,
               onChanged: (final _) => ctl.isLang = !ctl.isLang
             ),
-            dict(3, ctl.isLang).n,
+            dict(3, ctl.isLang).n
+              ..ml = 10,
           ])
             ..n.bottom = 15
             ..n.right = 20

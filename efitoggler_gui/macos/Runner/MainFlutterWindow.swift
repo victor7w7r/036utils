@@ -17,7 +17,7 @@ class BlurryContainerViewController: NSViewController {
     blurView.autoresizingMask = [.width, .height]
     blurView.blendingMode = .behindWindow
     blurView.state = .active
-    if #available(macOS 10.14, *) {
+    if #available(macOS 10.15, *) {
         blurView.material = .sidebar
     }
     self.view = blurView

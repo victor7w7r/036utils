@@ -69,7 +69,7 @@ final class TogglerController
   String efi;
   bool isEfi;
 
-  void init() => unawaited(sys(_checkEfiMountCmd)
+  void init() => unawaited(sys(_checkEfiPartCmd)
     .then((final efiCheck) {
       isEfi = efiCheck != '';
       isLoading = false;
@@ -81,7 +81,7 @@ final class TogglerController
       context: context,
       builder: (final _) => SudoDialog(isLang, (final res, final pass) =>
         res ? _checkSudo(pass).then((final proc) => proc == 0
-          ? sys(_checkEfiPartCmd).then((final efiPart) {
+          ? sys(_checkEfiMountCmd).then((final efiPart) {
             if(isEfi) {
               _umountChain(efiPart, pass).then((final _){
                 isEfi = false;
@@ -127,7 +127,7 @@ final class TogglerController
 final togglerController =
   ChangeNotifierProvider<TogglerController>((final ref) =>
     TogglerController(
-      ref.watch(prefsModule),
-      ref.watch(sharedPrefs)
+      ref.watch(sharedPrefs),
+      ref.watch(prefsModule)
     )..init()
   );
