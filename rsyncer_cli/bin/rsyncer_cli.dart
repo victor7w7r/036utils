@@ -22,7 +22,7 @@ void _interrupt(
   final String data
 ) {
   clear();
-  lang(3, PrintQuery.error, [data]);
+  lang(3, PrintQuery.error, data);
   lang(10, PrintQuery.normal);
   stdin.readLineSync();
   clear();

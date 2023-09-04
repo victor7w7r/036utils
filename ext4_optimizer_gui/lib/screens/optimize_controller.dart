@@ -248,7 +248,7 @@ final class OptimizeController
 final optimizeController =
   ChangeNotifierProvider<OptimizeController>((final ref) =>
     OptimizeController(
-      ref.watch(prefsModule),
-      ref.watch(sharedPrefs)
+      ref.watch(sharedPrefs),
+      ref.watch(prefsModule)
     )..init()
   );

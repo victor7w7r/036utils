@@ -7,7 +7,7 @@ import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager_cli/usb_manager_cli.dart';
 
-enum Action { mount , unmount, off }
+enum Action { mount, unmount, off }
 
 void _err(final bool op) {
   clear();
@@ -44,7 +44,7 @@ Future<void> usblistener(
     if(val) error(6);
   });
 
-  for (final dev in await allDevs()) {
+  for (final dev in await usbDevices()) {
     dirtyDevs.add(await dirtyDev(dev));
   }
 
@@ -59,7 +59,7 @@ Future<void> usblistener(
     }
   }
 
-  for(final part in parts){
+  for (final part in parts){
     if(await mountUsbCheck(part) != '') {
       unmountCount++;
       mounts.add(part);

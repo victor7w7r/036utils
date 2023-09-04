@@ -26,7 +26,7 @@ final class Optimize extends ConsumerWidget {
 
     return AdwScaffold(
       actions: AdwActions().bitsdojo,
-      start: header(context, isDark),
+      start: header(ref, isDark),
       title: const Text('ext4_optimizer'),
       body: !ctl.opMode ? n.Stack([
         dict(5, ctl.isLang).n

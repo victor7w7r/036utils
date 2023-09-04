@@ -28,7 +28,7 @@ final class Syncer extends ConsumerWidget {
 
     return AdwScaffold(
       actions: AdwActions().bitsdojo,
-      start: header(context, isDark),
+      start: header(ref, isDark),
       title: const Text('rsyncer'),
       body: !ctl.syncMode ? n.Stack([
         n.Wrap([

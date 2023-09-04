@@ -12,7 +12,7 @@ import 'package:usb_manager_gui/core/core.dart';
 import 'package:usb_manager_gui/widgets/dialog.dart';
 
 CancelableOperation<dynamic> _cancellable =
-  CancelableOperation.fromFuture([]);
+  CancelableOperation.fromFuture(Future.value([]));
 
 Future<List<String>> _usbAction(
   final String part,
@@ -244,7 +244,7 @@ final class ManageController extends ChangeNotifier {
 final manageController =
   ChangeNotifierProvider<ManageController>((final ref) =>
     ManageController(
-      ref.watch(prefsModule),
-      ref.watch(sharedPrefs)
+      ref.watch(sharedPrefs),
+      ref.watch(prefsModule)
     )..init()
   );

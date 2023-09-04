@@ -26,7 +26,7 @@ final class Manage extends ConsumerWidget {
 
     return AdwScaffold(
       actions: AdwActions().bitsdojo,
-      start: header(context, isDark),
+      start: header(ref, isDark),
       title: const Text('usb_manager'),
       body: n.Stack([
         n.IconButton(Icons.refresh)

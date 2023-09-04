@@ -173,7 +173,7 @@ final class SyncerController extends ChangeNotifier {
 final syncerController =
   ChangeNotifierProvider<SyncerController>((final ref) =>
     SyncerController(
-      ref.watch(prefsModule),
-      ref.watch(sharedPrefs)
+      ref.watch(sharedPrefs),
+      ref.watch(prefsModule)
     )..init()
   );
