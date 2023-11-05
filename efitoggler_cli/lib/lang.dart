@@ -1,4 +1,5 @@
-import 'package:zerothreesix_dart/zerothreesix_dart.dart' show setDictEng, setDictEsp;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart'
+    show setDictEng, setDictEsp;
 
 void initLang() {
   setDictEsp([
@@ -7,7 +8,7 @@ void initLang() {
     'La carpeta EFI esta montada, desmontando',
     'La carpeta EFI no esta montada, montando',
     '¡Listo!',
-    'Autenticación con sudo falló'
+    'Autenticación con sudo falló',
   ]);
   setDictEng([
     'Your Operating System is not macOS, exiting',
@@ -15,6 +16,6 @@ void initLang() {
     'EFI Folder is mounted, unmounting',
     'EFI Folder is not mounted, mounting',
     'Done!',
-    'Sudo auth fails'
+    'Sudo auth fails',
   ]);
 }

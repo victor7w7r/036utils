@@ -10,17 +10,13 @@ import 'package:rsyncer_cli/rsyncer_cli.dart';
 var _source = '';
 var _dest = '';
 
-void _action(
-  final bool isSource
-) => unawaited(readInput(lang(isSource ? 8 : 9))
-  .then((final val) => _validator(
-    isSource ? 'source' : 'dest', val
-  )));
+// ignore: require_trailing_commas
+void _action(final bool isSource) => unawaited(
+      readInput(lang(isSource ? 8 : 9))
+          .then((final val) => _validator(isSource ? 'source' : 'dest', val)),
+    );
 
-void _interrupt(
-  final bool isOp,
-  final String data
-) {
+void _interrupt(final bool isOp, final String data) {
   clear();
   lang(3, PrintQuery.error, data);
   lang(10, PrintQuery.normal);
@@ -29,13 +25,10 @@ void _interrupt(
   _action(isOp);
 }
 
-void _validator(
-  final String typeData,
-  final String data
-) {
-  if(typeData == 'source') {
-    if(data.isNotEmpty) {
-      if(exists(data)) {
+void _validator(final String typeData, final String data) {
+  if (typeData == 'source') {
+    if (data.isNotEmpty) {
+      if (exists(data)) {
         _source = data;
         clear();
         _action(false);
@@ -48,9 +41,9 @@ void _validator(
       clear();
       exit(0);
     }
-  } else if(typeData == 'dest') {
-    if(data.isNotEmpty) {
-      if(exists(data)) {
+  } else if (typeData == 'dest') {
+    if (data.isNotEmpty) {
+      if (exists(data)) {
         _dest = data;
         clear();
         unawaited(_syncer());
@@ -68,22 +61,14 @@ void _validator(
   }
 }
 
-String _match(
-  final String sel
-) => RegExp(r'.*\/$')
-  .hasMatch(sel) ? sel : '$sel/';
+String _match(final String sel) =>
+    RegExp(r'.*\/$').hasMatch(sel) ? sel : '$sel/';
 
-Future<int> _syncCmd(
-  final bool sudo,
-  final String source,
-  final String dest
-) => coderes(
-  '${sudo ? 'sudo' : ''} rsync -axHAWXS '
-  '--numeric-ids --info=progress2 $source $dest'
-);
+Future<int> _syncCmd(final bool sudo, final String source, final String dest) =>
+    coderes('${sudo ? 'sudo' : ''} rsync -axHAWXS '
+        '--numeric-ids --info=progress2 $source $dest');
 
 Future<void> _syncer() async {
-
   final source = _match(_source);
   final dest = _match(_dest);
 
@@ -91,16 +76,16 @@ Future<void> _syncer() async {
 
   lang(4, PrintQuery.normal);
   print('SOURCE:{$source}');
-	print('DESTINATION:{$dest} \n');
+  print('DESTINATION:{$dest} \n');
 
-  if(await _syncCmd(false, source, dest) == 0) {
+  if (await _syncCmd(false, source, dest) == 0) {
     okLine();
   } else {
     clear();
     lang(6, PrintQuery.normal);
     print('SOURCE:{$source}');
     print('DESTINATION:{$dest} \n');
-    if(await _syncCmd(true, source, dest) == 0) {
+    if (await _syncCmd(true, source, dest) == 0) {
       okLine();
     } else {
       lang(7, PrintQuery.normal);

@@ -17,7 +17,7 @@ void _continue() {
 }
 
 bool _runner(final int code) {
-  if(code != 8) {
+  if (code != 8) {
     lang(9, PrintQuery.normal);
     _continue();
     return false;
@@ -32,31 +32,22 @@ bool _runner(final int code) {
 Future<void> _menu() async {
   _options.add(lang(16));
   print(cyan(lang(14)));
-  IO(Chooser<String>(
-    _options,
-    message: lang(13)
-  ).chooseSync)
-    .map((final sel){
-      if(sel == lang(16)) {
-        clear();
-        exit(0);
-      } else {
-        _defragction(true, sel);
-      }
-    })
-    .run();
+  IO(Chooser<String>(_options, message: lang(13)).chooseSync).map((final sel) {
+    if (sel == lang(16)) {
+      clear();
+      exit(0);
+    } else {
+      _defragction(true, sel);
+    }
+  }).run();
 }
 
-Future<void> _defragction(
-  final bool interactive,
-  final String part
-) async {
-
+Future<void> _defragction(final bool interactive, final String part) async {
   clear();
   lang(7, PrintQuery.normal);
 
-  if(_runner(await coderes('fsck.ext4 -y -f -v $part'))) {
-    if(interactive) {
+  if (_runner(await coderes('fsck.ext4 -y -f -v $part'))) {
+    if (interactive) {
       return;
     } else {
       exit(1);
@@ -64,16 +55,15 @@ Future<void> _defragction(
   }
 
   lang(10, PrintQuery.normal);
-  if(_runner(await coderes('fsck.ext4 -y -f -v -D $part'))) {
-    if(interactive) {
+  if (_runner(await coderes('fsck.ext4 -y -f -v -D $part'))) {
+    if (interactive) {
       return;
     } else {
       exit(1);
     }
   }
 
-  "bash -c 'mkdir /tmp/optimize 2> /dev/null'"
-    .start(nothrow: true);
+  "bash -c 'mkdir /tmp/optimize 2> /dev/null'".start(nothrow: true);
   "bash -c 'mount $part /tmp/optimize'".run;
 
   lang(11, PrintQuery.normal);
@@ -87,15 +77,15 @@ Future<void> _defragction(
 
   lang(12, PrintQuery.normal);
 
-  if(_runner(await coderes('fsck.ext4 -y -f -v $part'))) {
-    if(interactive) {
+  if (_runner(await coderes('fsck.ext4 -y -f -v $part'))) {
+    if (interactive) {
       return;
     } else {
       exit(1);
     }
   }
 
-  if(interactive) {
+  if (interactive) {
     _options
       ..clear()
       ..addAll(await ext4listener(false));
@@ -103,14 +93,11 @@ Future<void> _defragction(
   } else {
     exit(0);
   }
-
 }
 
-void main(
-  final List<String> args
-) async {
+void main(final List<String> args) async {
   _options.addAll(await init(args));
-  if(args.isEmpty) {
+  if (args.isEmpty) {
     clear();
     unawaited(_menu());
   } else {

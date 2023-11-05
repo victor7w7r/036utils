@@ -11,7 +11,7 @@ const _dictEsp = <String>[
   'Cancelar',
   'Cambiar de modo oscuro',
   'Cambiar de idioma',
-  'Salir'
+  'Salir',
 ];
 
 const _dictEng = <String>[
@@ -27,11 +27,8 @@ const _dictEng = <String>[
   'Cancel',
   'Change dark mode',
   'Change language',
-  'Exit'
+  'Exit',
 ];
 
-String dict(
-  final int index,
-  final bool isEng
-) => isEng
-  ? _dictEsp[index] : _dictEng[index];
+String dict(final int index, final bool isEng) =>
+    isEng ? _dictEsp[index] : _dictEng[index];

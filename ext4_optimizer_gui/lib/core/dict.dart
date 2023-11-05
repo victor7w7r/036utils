@@ -12,7 +12,7 @@ const _dictEsp = [
   'Salir',
   'No se pudo descargar la aplicación auxiliar, verifique su conexión al internet',
   'La operación a finalizado, puedes salir',
-  'El ejecutable zenity no está presente en tu sistema, por favor instalalo'
+  'El ejecutable zenity no está presente en tu sistema, por favor instalalo',
 ];
 
 const _dictEng = [
@@ -28,11 +28,8 @@ const _dictEng = [
   'Exit',
   'The auxiliary application could not be downloaded, please check your internet connection',
   'The operation was finished, you can exit',
-  'zenity binary is not present in this system, please install'
+  'zenity binary is not present in this system, please install',
 ];
 
-String dict(
-  final int index,
-  final bool isEng
-) => isEng
-  ? _dictEsp[index] : _dictEng[index];
+String dict(final int index, final bool isEng) =>
+    isEng ? _dictEsp[index] : _dictEng[index];

@@ -6,12 +6,7 @@ import 'package:niku/namespace.dart' as n;
 import 'package:efitoggler_gui/core/dict.dart';
 
 final class SudoDialog extends StatelessWidget {
-
-  SudoDialog(
-    this.lang,
-    this.onConfirm,
-    {super.key}
-  );
+  SudoDialog(this.lang, this.onConfirm, {super.key});
 
   final void Function(bool, String) onConfirm;
   final bool lang;
@@ -19,41 +14,42 @@ final class SudoDialog extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) => MacosSheet(
-    insetPadding: const EdgeInsets.all(230),
-    child: n.Stack([
-      n.Column([
-        dict(6, lang).n,
-        const SizedBox(height: 10),
-        MacosTextField(
-          placeholder: dict(7, lang),
-          controller: ctl,
-          obscureText: true
-        ).niku..w = 300
-      ])
-        ..mb = 30
-        ..mainCenter
-        ..n.center,
-      n.Row([
-        PushButton(
-          controlSize: ControlSize.large,
-          onPressed: () {
-            Navigator.pop(context);
-            onConfirm(true, ctl.text);
-          },
-          child: Text(dict(8, lang))
-        ),
-        const SizedBox(width: 10),
-        PushButton(
-          controlSize: ControlSize.large,
-          onPressed: () {
-            Navigator.pop(context);
-            onConfirm(false, '');
-          },
-          child: Text(dict(9, lang))
-        )
-      ])
-        ..n.right = 20
-        ..n.bottom = 20
-    ])
-  );
+        insetPadding: const EdgeInsets.all(230),
+        child: n.Stack([
+          n.Column([
+            dict(6, lang).n,
+            const SizedBox(height: 10),
+            MacosTextField(
+              placeholder: dict(7, lang),
+              controller: ctl,
+              obscureText: true,
+            ).niku
+              ..w = 300,
+          ])
+            ..mb = 30
+            ..mainCenter
+            ..n.center,
+          n.Row([
+            PushButton(
+              controlSize: ControlSize.large,
+              onPressed: () {
+                Navigator.pop(context);
+                onConfirm(true, ctl.text);
+              },
+              child: Text(dict(8, lang)),
+            ),
+            const SizedBox(width: 10),
+            PushButton(
+              controlSize: ControlSize.large,
+              onPressed: () {
+                Navigator.pop(context);
+                onConfirm(false, '');
+              },
+              child: Text(dict(9, lang)),
+            ),
+          ])
+            ..n.right = 20
+            ..n.bottom = 20,
+        ]),
+      );
 }

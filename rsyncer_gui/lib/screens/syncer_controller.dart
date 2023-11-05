@@ -7,39 +7,32 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart' show FilePicker;
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:flutter_pty/flutter_pty.dart' show Pty;
-import 'package:flutter_riverpod/flutter_riverpod.dart' show ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show ChangeNotifierProvider;
 import 'package:fpdart/fpdart.dart' show Task;
-import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
+import 'package:shared_preferences/shared_preferences.dart'
+    show SharedPreferences;
 import 'package:xterm/xterm.dart';
 
 import 'package:rsyncer_gui/core/core.dart';
 
-Future<bool> _checkPermission(
-  final String dir
-) => Task(() => sys(
-    'if [ -w $dir ]; then echo "y";'
-    ' else echo "n"; fi'
-  ))
-  .map((final res) => res == 'y')
-  .run();
+Future<bool> _checkPermission(final String dir) => Task(
+      () => sys('if [ -w $dir ]; then echo "y";'
+          ' else echo "n"; fi'),
+    ).map((final res) => res == 'y').run();
 
-Future<String?> dirPick() => FilePicker
-  .platform
-  .getDirectoryPath(lockParentWindow: true);
+Future<String?> dirPick() =>
+    FilePicker.platform.getDirectoryPath(lockParentWindow: true);
 
 final class SyncerController extends ChangeNotifier {
-
-  SyncerController(
-    this._prefs,
-    this._prefsMod
-  ):
-    _destDir = '',
-    _isSyncing = false,
-    _isLang = _prefsMod.isEng,
-    _syncMode = false,
-    _sourceDir = '',
-    terminal = Terminal(),
-    terminalCtrl = TerminalController();
+  SyncerController(this._prefs, this._prefsMod)
+      : _destDir = '',
+        _isSyncing = false,
+        _isLang = _prefsMod.isEng,
+        _syncMode = false,
+        _sourceDir = '',
+        terminal = Terminal(),
+        terminalCtrl = TerminalController();
 
   final SharedPreferences _prefs;
   // ignore: unused_field
@@ -55,7 +48,6 @@ final class SyncerController extends ChangeNotifier {
   final TerminalController terminalCtrl;
 
   void _initPty(final String cmd) {
-
     _pty = Pty.start(
       'bash',
       columns: terminal.viewWidth,
@@ -63,33 +55,25 @@ final class SyncerController extends ChangeNotifier {
     );
 
     _pty!.output
-      .cast<List<int>>()
-      .transform(const Utf8Decoder())
-      .listen(terminal.write);
+        .cast<List<int>>()
+        .transform(const Utf8Decoder())
+        .listen(terminal.write);
 
-    unawaited(_pty!.exitCode.then((final _) =>
-      isSyncing = false
-    ));
+    unawaited(_pty!.exitCode.then((final _) => isSyncing = false));
 
-    terminal.onOutput = (final data) => _pty!.write(
-      const Utf8Encoder().convert(data)
-    );
+    terminal.onOutput =
+        (final data) => _pty!.write(const Utf8Encoder().convert(data));
 
     // ignore: cascade_invocations
-    terminal.onResize = (final w, final h, final _, final __) =>
-      _pty!.resize(h, w);
+    terminal.onResize =
+        (final w, final h, final _, final __) => _pty!.resize(h, w);
 
-    Future.delayed(
-      const Duration(seconds: 1),
-      () => terminal.textInput(cmd)
-    );
+    Future.delayed(const Duration(seconds: 1), () => terminal.textInput(cmd));
 
-    Future.delayed(
-      const Duration(milliseconds: 1400), (){
-        terminal.keyInput(TerminalKey.enter);
-        isSyncing = true;
-      }
-    );
+    Future.delayed(const Duration(milliseconds: 1400), () {
+      terminal.keyInput(TerminalKey.enter);
+      isSyncing = true;
+    });
   }
 
   void cancel() => terminal
@@ -98,7 +82,7 @@ final class SyncerController extends ChangeNotifier {
     ..keyInput(TerminalKey.enter);
 
   void exitOp() {
-    if(isSyncing) {
+    if (isSyncing) {
       cancel();
       isSyncing = false;
     }
@@ -106,27 +90,32 @@ final class SyncerController extends ChangeNotifier {
     _pty = null;
   }
 
-  void init() => unawaited(success('rsync').then((final ex) =>
-    !ex ? FlutterPlatformAlert.showAlert(
-      windowTitle: 'Error',
-      text: dict(3, isLang),
-      iconStyle: IconStyle.error
-    ).then((final _) => exit(1)) : success('zenity').then((final zen) =>
-      !zen ? FlutterPlatformAlert.showAlert(
-        windowTitle: 'Error',
-        text: dict(5, isLang),
-        iconStyle: IconStyle.error
-      ).then((final _) => exit(1)) : {}
-    )
-  ));
+  void init() => unawaited(
+        success('rsync').then(
+          (final ex) => !ex
+              ? FlutterPlatformAlert.showAlert(
+                  windowTitle: 'Error',
+                  text: dict(3, isLang),
+                  iconStyle: IconStyle.error,
+                ).then((final _) => exit(1))
+              : success('zenity').then(
+                  (final zen) => !zen
+                      ? FlutterPlatformAlert.showAlert(
+                          windowTitle: 'Error',
+                          text: dict(5, isLang),
+                          iconStyle: IconStyle.error,
+                        ).then((final _) => exit(1))
+                      : {},
+                ),
+        ),
+      );
 
   Future<void> requestSync() async {
     final chk1 = await _checkPermission(_sourceDir);
     final chk2 = await _checkPermission(_destDir);
     _initPty('${chk1 && chk2 ? 'sudo' : ''} '
-      'rsync -axHAWXS --numeric-ids '
-      '--info=progress2 $sourceDir $destDir; exit'
-    );
+        'rsync -axHAWXS --numeric-ids '
+        '--info=progress2 $sourceDir $destDir; exit');
     syncMode = true;
   }
 
@@ -134,9 +123,8 @@ final class SyncerController extends ChangeNotifier {
 
   set isLang(final bool value) {
     _isLang = value;
-    unawaited(_prefs
-      .setBool('lang', isLang)
-      .then((final _) => notifyListeners())
+    unawaited(
+      _prefs.setBool('lang', isLang).then((final _) => notifyListeners()),
     );
   }
 
@@ -167,13 +155,9 @@ final class SyncerController extends ChangeNotifier {
     _destDir = val;
     notifyListeners();
   }
-
 }
 
-final syncerController =
-  ChangeNotifierProvider<SyncerController>((final ref) =>
-    SyncerController(
-      ref.watch(sharedPrefs),
-      ref.watch(prefsModule)
-    )..init()
-  );
+final syncerController = ChangeNotifierProvider<SyncerController>(
+  (final ref) =>
+      SyncerController(ref.watch(sharedPrefs), ref.watch(prefsModule))..init(),
+);

@@ -14,7 +14,6 @@ linter:
     - always_declare_return_types
     - always_put_required_named_parameters_first
     - always_use_package_imports
-    - avoid_annotating_with_dynamic
     - avoid_bool_literals_in_conditional_expressions
     - avoid_catches_without_on_clauses
     - avoid_catching_errors
@@ -51,7 +50,10 @@ linter:
     - literal_only_boolean_expressions
     - missing_whitespace_between_adjacent_strings
     - no_adjacent_strings_in_list
+    - no_default_cases
+    - no_literal_bool_comparisons
     - no_runtimeType_toString
+    - no_self_assignments
     - noop_primitive_operations
     - omit_local_variable_types
     - one_member_abstracts
@@ -59,6 +61,8 @@ linter:
     - parameter_assignments
     - prefer_asserts_in_initializer_lists
     - prefer_asserts_with_message
+    - prefer_const_constructors
+    - prefer_const_declarations
     - prefer_constructors_over_static_methods
     - prefer_expression_function_bodies
     - prefer_final_in_for_each
@@ -68,6 +72,8 @@ linter:
     - prefer_mixin
     - prefer_null_aware_method_calls
     - prefer_single_quotes
+    - prefer_void_to_null
+    - require_trailing_commas
     - secure_pubspec_urls
     - sort_constructors_first
     - sort_unnamed_constructors_first
@@ -77,12 +83,14 @@ linter:
     - type_annotate_public_apis
     - unawaited_futures
     - unnecessary_await_in_return
+    - unnecessary_breaks
     - unnecessary_lambdas
-    - unnecessary_to_list_in_spreads
+    - unnecessary_null_checks
     - unnecessary_null_aware_operator_on_extension_on_nullable
     - unnecessary_parenthesis
     - unnecessary_raw_strings
     - unnecessary_statements
+    - unnecessary_to_list_in_spreads
     - use_enums
     - use_if_null_to_convert_nulls_to_bools
     - use_is_even_rather_than_modulo

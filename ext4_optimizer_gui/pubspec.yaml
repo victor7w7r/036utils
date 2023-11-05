@@ -6,23 +6,23 @@ publish_to: 'none'
 version: 1.0.0
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '>=3.1.5 <4.0.0'
 
 dependencies:
   adwaita: ^1.0.1
   bitsdojo_window: ^0.1.5
-  dio: ^5.3.2
+  dio: ^5.3.3
   flutter:
     sdk: flutter
   flutter_platform_alert: ^0.4.0
   flutter_pty: ^0.4.0
-  flutter_riverpod: ^2.3.10
+  flutter_riverpod: ^2.4.5
   fpdart: ^1.1.0
   libadwaita: ^2.0.2
   libadwaita_bitsdojo: ^0.5.5
   niku: ^2.4.2
   path_provider: ^2.1.1
-  shared_preferences: ^2.2.1
+  shared_preferences: ^2.2.2
   xterm: ^3.5.0
 
 dependency_overrides:
@@ -30,7 +30,7 @@ dependency_overrides:
   win32: 5.0.6
 
 dev_dependencies:
-  flutter_lints: ^2.0.3
+  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true

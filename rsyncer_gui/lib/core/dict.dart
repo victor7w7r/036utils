@@ -4,7 +4,7 @@ const _dictEsp = [
   'Cancelar',
   'El ejecutable de rsync, no se encuentra en el sistema, por favor instalalo',
   'Salir',
-  'El ejecutable de zenity, no se encuentra en el sistema, por favor instalalo'
+  'El ejecutable de zenity, no se encuentra en el sistema, por favor instalalo',
 ];
 
 const _dictEng = [
@@ -13,11 +13,8 @@ const _dictEng = [
   'Cancel',
   'The rsync binary is not available in this system, please install',
   'Exit',
-  'The zenity binary, is not available in this system, please install'
+  'The zenity binary, is not available in this system, please install',
 ];
 
-String dict(
-  final int index,
-  final bool isEng
-) => isEng
-  ? _dictEsp[index] : _dictEng[index];
+String dict(final int index, final bool isEng) =>
+    isEng ? _dictEsp[index] : _dictEng[index];

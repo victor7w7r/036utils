@@ -6,7 +6,7 @@ void initLang() {
     'Este sistema no es GNU/Linux, saliendo',
     'Necesitas ser superusuario, por favor ejecuta con sudo',
     "El 'udisks command line tool (udisksctl)'"
-      ' no existe, por favor instale udisks2',
+        ' no existe, por favor instale udisks2',
     'El ejecutable de whiptail, no se encuentra en el sistema, por favor instalalo',
     'El servicio udisks2 no esta ejecutandose, por favor ejecutalo',
     'Todo ok!',
@@ -29,13 +29,13 @@ void initLang() {
     'Montar',
     'Desmontar',
     'Apagar',
-    'Salir'
+    'Salir',
   ]);
   setDictEng([
     'Your Operating System is not GNU/Linux, exiting',
     'You need to be root, please execute with sudo',
     'The udisks command line tool (udisksctl '
-      "doesn't exist, please install udisks2",
+        "doesn't exist, please install udisks2",
     'The whiptail binary is not available in this system, please install',
     'The udisks2 service is not running, please enable the service',
     'All dependencies is ok!',
@@ -58,22 +58,22 @@ void initLang() {
     'Mount',
     'Unmount',
     'Power-off',
-    'Exit'
+    'Exit',
   ]);
   setDictDialogEng([
     'SUCCESS',
     'FAIL: Error unmounting /dev/* '
-      'please check or check if you have the right permissions',
+        'please check or check if you have the right permissions',
     'SUCCESS: Your device * was succesfully power-off',
     'FAIL: Power-off is not available on this device, '
-      'please check or check if you have permissions'
+        'please check or check if you have permissions'
   ]);
   setDictDialogEsp([
     'LISTO',
     'ERROR: Hubo un error desmontando /dev/* '
-      'por favor revisar o mira si tienes permisos',
+        'por favor revisar o mira si tienes permisos',
     'LISTO: Tu dispositivo * se ha apagado exitosamente',
     'ERROR: no está disponible el apagar este dispositivo, '
-      'por favor revisar o mira si tienes permisos'
+        'por favor revisar o mira si tienes permisos'
   ]);
 }

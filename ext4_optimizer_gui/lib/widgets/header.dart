@@ -6,24 +6,17 @@ import 'package:libadwaita/libadwaita.dart' show AdwHeaderButton;
 import 'package:ext4_optimizer_gui/providers/theme_provider.dart';
 import 'package:ext4_optimizer_gui/screens/optimize_controller.dart';
 
-List<Widget> header(
-  final WidgetRef ref,
-  final bool isDark
-) => [
-  AdwHeaderButton(
-    icon: Icon(
-      isDark
-        ? Icons.nightlight_round
-        : Icons.light_mode_rounded,
-      size: 15,
-    ),
-    onPressed: ref.read(themeProvider.notifier).toggle,
-  ),
-  AdwHeaderButton(
-    icon: const Icon(Icons.book, size: 15),
-    onPressed: () => ref
-      .read(optimizeController.notifier)
-      .isLang = !ref
-        .read(optimizeController.notifier).isLang
-  )
-];
+List<Widget> header(final WidgetRef ref, final bool isDark) => [
+      AdwHeaderButton(
+        icon: Icon(
+          isDark ? Icons.nightlight_round : Icons.light_mode_rounded,
+          size: 15,
+        ),
+        onPressed: ref.read(themeProvider.notifier).toggle,
+      ),
+      AdwHeaderButton(
+        icon: const Icon(Icons.book, size: 15),
+        onPressed: () => ref.read(optimizeController.notifier).isLang =
+            !ref.read(optimizeController.notifier).isLang,
+      ),
+    ];

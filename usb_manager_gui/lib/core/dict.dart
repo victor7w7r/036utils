@@ -39,9 +39,5 @@ const _dictEng = [
   'Power-off',
 ];
 
-String dict(
-  final int index,
-  final bool isEng
-) => isEng
-  ? _dictEsp[index]
-  : _dictEng[index];
+String dict(final int index, final bool isEng) =>
+    isEng ? _dictEsp[index] : _dictEng[index];

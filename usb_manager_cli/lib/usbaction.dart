@@ -13,31 +13,25 @@ void _err(final bool op) {
 Future<void> usbAction(
   final String part,
   final bool isMount,
-  final void Function() call
+  final void Function() call,
 ) async {
-
   clear();
   final spinAction = spin();
 
-  final [code, out] = await codeout(
-    "udisksctl ${isMount ? 'mount' : 'unmount'} -b $part"
-  );
+  final [code, out] =
+      await codeout("udisksctl ${isMount ? 'mount' : 'unmount'} -b $part");
 
-  final notAuth =
-    RegExp('NotAuthorized*').hasMatch(out) ||
+  final notAuth = RegExp('NotAuthorized*').hasMatch(out) ||
       RegExp('NotAuthorizedDismissed*').hasMatch(out);
 
   spinAction.cancel();
 
-  if(code == '0') {
-    await dialog(
-      lang(19),
-      '${lang(19)}$out', '8', '80'
-    );
+  if (code == '0') {
+    await dialog(lang(19), '${lang(19)}$out', '8', '80');
     clear();
     call();
   } else {
-    if(notAuth) {
+    if (notAuth) {
       _err(true);
       call();
     } else {
