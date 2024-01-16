@@ -13,6 +13,7 @@ import 'package:fpdart/fpdart.dart' show Task;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import 'package:xterm/xterm.dart';
+import 'package:zerothreesix_dart/zerothreesix_dart.dart' show success, sys;
 
 import 'package:rsyncer_gui/core/core.dart';
 
@@ -158,6 +159,8 @@ final class SyncerController extends ChangeNotifier {
 }
 
 final syncerController = ChangeNotifierProvider<SyncerController>(
-  (final ref) =>
-      SyncerController(ref.watch(sharedPrefs), ref.watch(prefsModule))..init(),
+  (final ref) => SyncerController(
+    ref.watch(sharedPrefs),
+    ref.watch(prefsModule),
+  )..init(),
 );

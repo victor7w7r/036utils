@@ -1,8 +1,7 @@
 import 'dart:async' show unawaited;
-import 'dart:io' show exit, stdin;
+import 'dart:io';
 
 import 'package:console/console.dart' show readInput;
-import 'package:dcli/dcli.dart' show exists;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:rsyncer_cli/rsyncer_cli.dart';
@@ -10,7 +9,16 @@ import 'package:rsyncer_cli/rsyncer_cli.dart';
 var _source = '';
 var _dest = '';
 
-// ignore: require_trailing_commas
+bool _directoryCheck(final String data) {
+  try {
+    return Directory(data).existsSync();
+  } on FileSystemException catch (_) {
+    clear();
+    lang(11, PrintQuery.error);
+    exit(0);
+  }
+}
+
 void _action(final bool isSource) => unawaited(
       readInput(lang(isSource ? 8 : 9))
           .then((final val) => _validator(isSource ? 'source' : 'dest', val)),
@@ -25,10 +33,13 @@ void _interrupt(final bool isOp, final String data) {
   _action(isOp);
 }
 
-void _validator(final String typeData, final String data) {
+void _validator(
+  final String typeData,
+  final String data,
+) {
   if (typeData == 'source') {
     if (data.isNotEmpty) {
-      if (exists(data)) {
+      if (_directoryCheck(data)) {
         _source = data;
         clear();
         _action(false);
@@ -43,7 +54,7 @@ void _validator(final String typeData, final String data) {
     }
   } else if (typeData == 'dest') {
     if (data.isNotEmpty) {
-      if (exists(data)) {
+      if (_directoryCheck(data)) {
         _dest = data;
         clear();
         unawaited(_syncer());
@@ -64,7 +75,11 @@ void _validator(final String typeData, final String data) {
 String _match(final String sel) =>
     RegExp(r'.*\/$').hasMatch(sel) ? sel : '$sel/';
 
-Future<int> _syncCmd(final bool sudo, final String source, final String dest) =>
+Future<int> _syncCmd(
+  final bool sudo,
+  final String source,
+  final String dest,
+) =>
     coderes('${sudo ? 'sudo' : ''} rsync -axHAWXS '
         '--numeric-ids --info=progress2 $source $dest');
 

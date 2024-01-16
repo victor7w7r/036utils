@@ -20,7 +20,7 @@ dependencies:
   fpdart: ^1.1.0
   libadwaita: ^2.0.2
   libadwaita_bitsdojo: ^0.5.5
-  niku: ^2.4.2
+  niku: ^2.4.3
   path_provider: ^2.1.1
   shared_preferences: ^2.2.2
   xterm: ^3.5.0

@@ -15,6 +15,7 @@ void initLang() {
     'Por favor escriba su directorio de origen: ',
     'Por favor escriba su directorio de destino: ',
     'Presione Enter para continuar...',
+    'No tienes los suficientes permisos para ejecutar este programa, intenta con sudo...',
   ]);
   setDictEng([
     'Your Operating System is not GNU/Linux, exiting',
@@ -28,5 +29,6 @@ void initLang() {
     'Please write your source directory: ',
     'Please write your destination directory to copy: ',
     'Press Enter to continue...',
+    'You dont have enough permissions to run this program, try with sudo...',
   ]);
 }
