@@ -42,10 +42,12 @@ final class TogglerController extends ChangeNotifier {
         _isLoading = false,
         _checkEfiMountCmd = 'diskutil list '
             "| sed -ne '/EFI/p' "
-            r"| sed -ne 's/.*\(d.*\).*/\1/p'",
+            r"| sed -ne 's/.*\(d.*\).*/\1/p' "
+            "| sed -ne '1p'",
         _checkEfiPartCmd = r'EFIPART=$(diskutil list '
             "| sed -ne '/EFI/p' "
-            r"| sed -ne 's/.*\(d.*\).*/\1/p') "
+            r"| sed -ne 's/.*\(d.*\).*/\1/p' "
+            "| sed -ne '1p') "
             r'MOUNTROOT=$(df -h | sed -ne "/$EFIPART/p"); '
             r'echo $MOUNTROOT',
         efipart = '',
