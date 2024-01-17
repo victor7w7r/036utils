@@ -17,7 +17,10 @@ final class Syncer extends ConsumerWidget {
   const Syncer({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref,
+  ) {
     final ctl = ref.watch(syncerController);
     final isDark = ref.watch(isDarkProvider);
 

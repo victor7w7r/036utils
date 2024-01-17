@@ -114,7 +114,8 @@ final class SyncerController extends ChangeNotifier {
   Future<void> requestSync() async {
     final chk1 = await _checkPermission(_sourceDir);
     final chk2 = await _checkPermission(_destDir);
-    _initPty('${chk1 && chk2 ? 'sudo' : ''} '
+
+    _initPty('${!(chk1 || chk2) ? 'sudo' : ''} '
         'rsync -axHAWXS --numeric-ids '
         '--info=progress2 $sourceDir $destDir; exit');
     syncMode = true;
