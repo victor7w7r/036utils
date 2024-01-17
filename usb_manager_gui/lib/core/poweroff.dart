@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart' show BuildContext;
 
 import 'package:fpdart/fpdart.dart' show Task;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager_gui/core/core.dart';
 import 'package:usb_manager_gui/widgets/dialog.dart';

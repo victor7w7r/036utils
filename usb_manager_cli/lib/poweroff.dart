@@ -21,7 +21,10 @@ Future<String> _modelQuery(final String part) => _block(
       (final block) => sys('cat /sys/class/block/$block/device/model'),
     );
 
-Future<void> powerOff(final String part, final void Function() call) async {
+Future<void> powerOff(
+  final String part,
+  final void Function() call,
+) async {
   final mounts = <String>[];
 
   clear();

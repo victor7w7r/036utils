@@ -54,7 +54,7 @@ void initLang() {
     'Please mount a partition \n',
     'SUCCESS: ',
     'Please umount a partition \n',
-    'Please, choose for poweroff a device, unmounting all',
+    'Please, choose for poweroff a device, unmounting all\n',
     'Mount',
     'Unmount',
     'Power-off',

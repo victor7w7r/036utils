@@ -1,4 +1,4 @@
-import 'package:usb_manager_gui/core/storage.dart';
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 enum Action { mount, unmount, off }
 

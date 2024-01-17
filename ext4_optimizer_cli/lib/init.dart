@@ -7,11 +7,9 @@ import 'package:ext4_optimizer_cli/ext4_optimizer_cli.dart';
 Future<List<String>> init(final List<String> args) async {
   clear();
 
-  if (args.isEmpty) {
-    setLang();
-    initLang();
-  }
+  if (args.isEmpty) setLang();
 
+  initLang();
   clear();
   cover();
 

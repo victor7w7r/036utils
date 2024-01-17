@@ -2,7 +2,6 @@ import 'dart:async' show unawaited;
 import 'dart:io' show exit, stdin;
 
 import 'package:console/console.dart' show Chooser;
-import 'package:dcli/dcli.dart';
 import 'package:fpdart/fpdart.dart' show IO;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
@@ -31,7 +30,7 @@ bool _runner(final int code) {
 
 Future<void> _menu() async {
   _options.add(lang(16));
-  print(cyan(lang(14)));
+  cyan(lang(14));
   IO(Chooser<String>(_options, message: lang(13)).chooseSync).map((final sel) {
     if (sel == lang(16)) {
       clear();
@@ -63,14 +62,13 @@ Future<void> _defragction(final bool interactive, final String part) async {
     }
   }
 
-  "bash -c 'mkdir /tmp/optimize 2> /dev/null'".start(nothrow: true);
-  "bash -c 'mount $part /tmp/optimize'".run;
+  syncCall("bash -c 'mkdir /tmp/optimize 2> /dev/null'");
+  syncCall("bash -c 'mount $part /tmp/optimize'");
 
   lang(11, PrintQuery.normal);
   await coderes('e4defrag -v $part');
 
-  print('');
-  "bash -c 'umount $part'".run;
+  syncCall("bash -c 'umount $part'");
 
   lang(9, PrintQuery.normal);
   _continue();

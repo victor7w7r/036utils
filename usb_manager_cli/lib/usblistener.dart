@@ -1,7 +1,6 @@
 import 'dart:io' show stdin;
 
 import 'package:console/console.dart' show Chooser;
-import 'package:dcli/dcli.dart' show cyan;
 import 'package:fpdart/fpdart.dart' show IO;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
@@ -87,11 +86,11 @@ Future<void> usblistener(
   action == Action.off ? argspoweroff.add(lang(25)) : args.add(lang(25));
 
   if (action == Action.mount) {
-    print(cyan(lang(18)));
+    cyan(lang(18));
   } else if (action == Action.unmount) {
-    print(cyan(lang(20)));
+    cyan(lang(20));
   } else {
-    print(cyan(lang(21)));
+    cyan(lang(21));
   }
 
   spinAction.cancel();
