@@ -138,34 +138,34 @@ jobs:
         with:
           name: bin-usb_manager_gui-amd64
           path: usb_manager_gui/build/linux/x64/release/bundle/zip
-  armlinuxcompile:
-    needs: linuxcompile
-    name: Compile for arm64
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: docker/setup-qemu-action@v2
-      - run: |
-          docker run --rm \
-            --platform linux/arm64 \
-            --volume "$PWD:$PWD" \
-            --workdir "$PWD" \
-            docker.io/library/dart:latest \
-            /bin/sh -c "chmod +x arm64build && ./arm64build"
-      - uses: actions/upload-artifact@v2
-        with:
-          name: bin-rsyncer_cli-arm64
-          path: rsyncer_cli/dist
-      - uses: actions/upload-artifact@v2
-        with:
-          name: bin-ext4_optimizer_cli-arm64
-          path: ext4_optimizer_cli/dist
-      - uses: actions/upload-artifact@v2
-        with:
-          name: bin-usb_manager_cli-arm64
-          path: usb_manager_cli/dist
+  #armlinuxcompile:
+    # needs: linuxcompile
+    #name: Compile for arm64
+    #runs-on: ubuntu-18.04
+    #steps:
+      #- uses: actions/checkout@v2
+      #- uses: docker/setup-qemu-action@v2
+      #- run: |
+          #docker run --rm \
+            #--platform linux/arm64 \
+            #--volume "$PWD:$PWD" \
+            # --workdir "$PWD" \
+            # docker.io/library/dart:latest \
+            #/bin/sh -c "chmod +x arm64build && ./arm64build"
+      #- uses: actions/upload-artifact@v2
+        #with:
+          #name: bin-rsyncer_cli-arm64
+          #path: rsyncer_cli/dist
+      #- uses: actions/upload-artifact@v2
+        #with:
+          #name: bin-ext4_optimizer_cli-arm64
+          #path: ext4_optimizer_cli/dist
+      #- uses: actions/upload-artifact@v2
+        #with:
+          #name: bin-usb_manager_cli-arm64
+          #path: usb_manager_cli/dist
   release:
-    needs: armlinuxcompile
+    needs: linuxcompile #armlinuxcompile
     name: Release to Repository
     runs-on: ubuntu-latest
     steps:
@@ -201,18 +201,18 @@ jobs:
         with:
           name: bin-usb_manager_gui-amd64
           path: bin-usbguiamd64
-      - uses: actions/download-artifact@v2
-        with:
-          name: bin-rsyncer_cli-arm64
-          path: bin-rsycliarm64
-      - uses: actions/download-artifact@v2
-        with:
-          name: bin-ext4_optimizer_cli-arm64
-          path: bin-extcliarm64
-      - uses: actions/download-artifact@v2
-        with:
-          name: bin-usb_manager_cli-arm64
-          path: bin-usbcliarm64
+      #- uses: actions/download-artifact@v2
+        #with:
+          #name: bin-rsyncer_cli-arm64
+          #path: bin-rsycliarm64
+      #- uses: actions/download-artifact@v2
+        #with:
+          #name: bin-ext4_optimizer_cli-arm64
+          #path: bin-extcliarm64
+      #- uses: actions/download-artifact@v2
+        #with:
+          #name: bin-usb_manager_cli-arm64
+          #path: bin-usbcliarm64
       - uses: softprops/action-gh-release@v1
         with:
           draft: true
