@@ -6,7 +6,11 @@ import 'package:libadwaita/libadwaita.dart' show AdwHeaderButton;
 import 'package:rsyncer_gui/providers/theme_provider.dart';
 import 'package:rsyncer_gui/screens/syncer_controller.dart';
 
-List<Widget> header(final WidgetRef ref, final bool isDark) => [
+List<Widget> header(
+  final WidgetRef ref,
+  final bool isDark,
+) =>
+    [
       AdwHeaderButton(
         icon: Icon(
           isDark ? Icons.nightlight_round : Icons.light_mode_rounded,

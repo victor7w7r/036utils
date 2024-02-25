@@ -35,6 +35,7 @@ final class SudoDialog extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
                 onConfirm(true, ctl.text);
+                ctl.dispose();
               },
               child: Text(dict(8, lang)),
             ),
@@ -44,6 +45,7 @@ final class SudoDialog extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
                 onConfirm(false, '');
+                ctl.dispose();
               },
               child: Text(dict(9, lang)),
             ),

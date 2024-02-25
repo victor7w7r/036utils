@@ -15,7 +15,10 @@ final class Optimize extends ConsumerWidget {
   const Optimize({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref,
+  ) {
     final ctl = ref.watch(optimizeController);
     final isDark = ref.watch(isDarkProvider);
 

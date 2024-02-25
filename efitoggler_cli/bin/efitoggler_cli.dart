@@ -2,7 +2,6 @@ import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:efitoggler_cli/efitoggler_cli.dart';
 
-
 void main() async {
   init();
 

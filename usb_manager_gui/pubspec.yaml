@@ -6,7 +6,7 @@ publish_to: 'none'
 version: 1.0.0
 
 environment:
-  sdk: '>=3.2.4 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   adwaita: ^1.1.0
@@ -15,13 +15,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_platform_alert: ^0.5.1
-  flutter_riverpod: ^2.4.9
+  flutter_riverpod: ^2.4.10
   fpdart: ^1.1.0
   libadwaita: ^2.0.2
   libadwaita_bitsdojo: ^0.5.5
   niku: ^2.4.3
   shared_preferences: ^2.2.2
-  zerothreesix_dart: ^0.0.6+11
+  zerothreesix_dart: ^0.1.2
 
 dependency_overrides:
   win32: ^5.2.0

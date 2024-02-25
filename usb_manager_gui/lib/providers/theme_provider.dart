@@ -16,8 +16,10 @@ final class ThemeNotifier extends Notifier<ThemeMode> {
   }
 }
 
-final themeProvider =
-    NotifierProvider<ThemeNotifier, ThemeMode>(ThemeNotifier.new);
+final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(
+  ThemeNotifier.new,
+);
 
-final isDarkProvider =
-    Provider<bool>((final ref) => ref.watch(themeProvider) == ThemeMode.dark);
+final isDarkProvider = Provider<bool>(
+  (final ref) => ref.watch(themeProvider) == ThemeMode.dark,
+);

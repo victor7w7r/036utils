@@ -22,8 +22,9 @@ Future<bool> _checkPermission(final String dir) => Task(
           ' else echo "n"; fi'),
     ).map((final res) => res == 'y').run();
 
-Future<String?> dirPick() =>
-    FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+Future<String?> dirPick() => FilePicker.platform.getDirectoryPath(
+      lockParentWindow: true,
+    );
 
 final class SyncerController extends ChangeNotifier {
   SyncerController(this._prefs, this._prefsMod)

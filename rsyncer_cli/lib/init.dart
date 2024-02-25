@@ -13,9 +13,9 @@ Future<void> init() async {
 
   if (!Platform.isLinux) error(0);
 
-  await success('rsync').then((final val) {
-    if (!val) error(1);
-  });
+  await success('rsync').then(
+    (final val) => onlyIf(!val, () => error(1)),
+  );
 
   lang(2, PrintQuery.normal);
 }

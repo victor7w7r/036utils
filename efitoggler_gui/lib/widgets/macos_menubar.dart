@@ -15,7 +15,10 @@ final class MacosMenubar extends ConsumerWidget {
   final bool lang;
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) =>
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref,
+  ) =>
       PlatformMenuBar(
         menus: [
           PlatformMenu(

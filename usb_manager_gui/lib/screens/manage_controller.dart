@@ -17,7 +17,10 @@ import 'package:usb_manager_gui/widgets/dialog.dart';
 CancelableOperation<dynamic> _cancellable =
     CancelableOperation.fromFuture(Future.value([]));
 
-Future<List<String>> _usbAction(final String part, final bool isMount) =>
+Future<List<String>> _usbAction(
+  final String part,
+  final bool isMount,
+) =>
     codeout("udisksctl ${isMount ? 'mount' : 'unmount'} -b $part");
 
 final class ManageController extends ChangeNotifier {
@@ -180,7 +183,10 @@ final class ManageController extends ChangeNotifier {
     }
   }
 
-  void requestManage(final BuildContext context, final String el) {
+  void requestManage(
+    final BuildContext context,
+    final String el,
+  ) {
     if (radioGroup == 1) {
       isEnabledRadio = false;
       isLoading = true;
@@ -250,6 +256,10 @@ final class ManageController extends ChangeNotifier {
 }
 
 final manageController = ChangeNotifierProvider<ManageController>(
-  (final ref) =>
-      ManageController(ref.watch(sharedPrefs), ref.watch(prefsModule))..init(),
+  (final ref) => ManageController(
+    ref.watch(sharedPrefs),
+    ref.watch(
+      prefsModule,
+    ),
+  )..init(),
 );

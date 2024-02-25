@@ -15,7 +15,10 @@ import 'package:efitoggler_gui/widgets/widgets.dart';
 Future<int> _checkSudo(final String pass) =>
     call('echo $pass | sudo -S cat /dev/null');
 
-Future<String> _mountChain(final String efipart, final String pass) =>
+Future<String> _mountChain(
+  final String efipart,
+  final String pass,
+) =>
     Task(() => sys('echo $pass | sudo -S mkdir /Volumes/EFI'))
         .flatMap(
           (final _) => Task(
@@ -26,7 +29,10 @@ Future<String> _mountChain(final String efipart, final String pass) =>
         .flatMap((final _) => Task(() => sys('open /Volumes/EFI')))
         .run();
 
-Future<String> _umountChain(final String efipart, final String pass) =>
+Future<String> _umountChain(
+  final String efipart,
+  final String pass,
+) =>
     Task(() => sys('echo $pass | sudo -S diskutil unmount $efipart'))
         .flatMap(
           (final _) => Task(
@@ -54,11 +60,11 @@ final class TogglerController extends ChangeNotifier {
         efi = '',
         isEfi = false;
 
+  final String _checkEfiMountCmd;
+  final String _checkEfiPartCmd;
   final SharedPreferences _prefs;
   // ignore: unused_field
   final PrefsModule _prefsMod;
-  final String _checkEfiMountCmd;
-  final String _checkEfiPartCmd;
   bool _isLoading;
   bool _isLang;
 
@@ -124,6 +130,8 @@ final class TogglerController extends ChangeNotifier {
 }
 
 final togglerController = ChangeNotifierProvider<TogglerController>(
-  (final ref) =>
-      TogglerController(ref.watch(sharedPrefs), ref.watch(prefsModule))..init(),
+  (final ref) => TogglerController(
+    ref.watch(sharedPrefs),
+    ref.watch(prefsModule),
+  )..init(),
 );

@@ -14,19 +14,19 @@ Future<void> init() async {
 
   final spinAction = spin();
 
-  if (!Platform.isLinux) error(0);
+  onlyIf(!Platform.isLinux, () => error(0));
 
-  await checkUid().then((final val) {
-    if (!val) error(1);
-  });
+  await checkUid().then(
+    (final val) => onlyIf(!val, () => error(1)),
+  );
 
-  await success('udisksctl').then((final val) {
-    if (!val) error(2);
-  });
+  await success('udisksctl').then(
+    (final val) => onlyIf(!val, () => error(2)),
+  );
 
-  await success('whiptail').then((final val) {
-    if (!val) error(3);
-  });
+  await success('whiptail').then(
+    (final val) => onlyIf(!val, () => error(3)),
+  );
 
   await Task(
     () => Process.run(
@@ -34,14 +34,13 @@ Future<void> init() async {
       ['-c', 'systemctl is-active udisks2'],
       runInShell: true,
     ),
-  ).map((final srvu) => (srvu.stdout as String).trim()).run().then((final srv) {
-    if (srv == 'inactive') error(4);
-  });
+  ).map((final srvu) => (srvu.stdout as String).trim()).run().then(
+        (final srv) => onlyIf(srv == 'inactive', () => error(4)),
+      );
 
-  await checkUsbDevices().then((final val) {
-    print(val);
-    if (val) error(6);
-  });
+  await checkUsbDevices().then(
+    (final val) => onlyIf(val, () => error(6)),
+  );
 
   spinAction.cancel();
 

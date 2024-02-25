@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_pty/flutter_pty.dart' show Pty;
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     show ChangeNotifierProvider;
-import 'package:fpdart/fpdart.dart' show Task;
+import 'package:fpdart/fpdart.dart' show Task, TaskEither;
 import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
@@ -29,14 +29,15 @@ Future<bool> _download(
   final String url,
   final String savePath,
   final CancelToken cancel,
-) async {
-  try {
-    await Dio().download(url, savePath, cancelToken: cancel);
-    return true;
-  } on DioException catch (_) {
-    return false;
-  }
-}
+) =>
+    TaskEither.tryCatch(
+      () => Dio().download(
+        url,
+        savePath,
+        cancelToken: cancel,
+      ),
+      (final e, final _) => null,
+    ).map((final _) => true).getOrElse((final _) => false).run();
 
 final class OptimizeController extends ChangeNotifier {
   OptimizeController(this._prefs, this._prefsMod)
@@ -61,9 +62,9 @@ final class OptimizeController extends ChangeNotifier {
   bool _isLoading;
   bool _isReady;
 
+  final List<String> parts;
   final Terminal terminal;
   final TerminalController terminalCtrl;
-  final List<String> parts;
 
   void init() => unawaited(
         success('e4defrag').then(
@@ -115,7 +116,10 @@ final class OptimizeController extends ChangeNotifier {
         ),
       );
 
-  void requestOptimize(final String part) => unawaited(
+  void requestOptimize(
+    final String part,
+  ) =>
+      unawaited(
         yesNo(
           title: dict(6, _isLang),
           text: '${dict(7, _isLang)} $part ?',
@@ -242,7 +246,8 @@ final class OptimizeController extends ChangeNotifier {
 }
 
 final optimizeController = ChangeNotifierProvider<OptimizeController>(
-  (final ref) =>
-      OptimizeController(ref.watch(sharedPrefs), ref.watch(prefsModule))
-        ..init(),
+  (final ref) => OptimizeController(
+    ref.watch(sharedPrefs),
+    ref.watch(prefsModule),
+  )..init(),
 );

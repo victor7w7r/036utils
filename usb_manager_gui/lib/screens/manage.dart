@@ -15,7 +15,10 @@ final class Manage extends ConsumerWidget {
   const Manage({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref,
+  ) {
     final ctl = ref.watch(manageController);
     final isDark = ref.watch(isDarkProvider);
 

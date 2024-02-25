@@ -16,19 +16,19 @@ Future<List<String>> init(final List<String> args) async {
   if (args.isEmpty) {
     final spinAction = spin();
 
-    if (!Platform.isLinux) error(0);
+    onlyIf(!Platform.isLinux, () => error(0));
 
-    await checkUid().then((final val) {
-      if (!val) error(1);
-    });
+    await checkUid().then(
+      (final val) => onlyIf(!val, () => error(1)),
+    );
 
-    await success('e4defrag').then((final val) {
-      if (!val) error(2);
-    });
+    await success('e4defrag').then(
+      (final val) => onlyIf(!val, () => error(2)),
+    );
 
-    await success('fsck.ext4').then((final val) {
-      if (!val) error(3);
-    });
+    await success('fsck.ext4').then(
+      (final val) => onlyIf(!val, () => error(3)),
+    );
 
     lang(4, PrintQuery.normal);
     final parts = await ext4listener(false);

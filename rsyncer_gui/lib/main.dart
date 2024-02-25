@@ -37,7 +37,11 @@ final class Rsyncer extends ConsumerWidget {
   const Rsyncer({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) => MaterialApp(
+  Widget build(
+    final BuildContext context,
+    final WidgetRef ref,
+  ) =>
+      MaterialApp(
         theme: AdwaitaThemeData.light(),
         darkTheme: AdwaitaThemeData.dark(),
         debugShowCheckedModeBanner: false,

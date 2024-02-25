@@ -31,7 +31,12 @@ bool _runner(final int code) {
 Future<void> _menu() async {
   _options.add(lang(16));
   cyan(lang(14));
-  IO(Chooser<String>(_options, message: lang(13)).chooseSync).map((final sel) {
+  IO(
+    Chooser<String>(
+      _options,
+      message: lang(13),
+    ).chooseSync,
+  ).map((final sel) {
     if (sel == lang(16)) {
       clear();
       exit(0);
@@ -41,7 +46,10 @@ Future<void> _menu() async {
   }).run();
 }
 
-Future<void> _defragction(final bool interactive, final String part) async {
+Future<void> _defragction(
+  final bool interactive,
+  final String part,
+) async {
   clear();
   lang(7, PrintQuery.normal);
 

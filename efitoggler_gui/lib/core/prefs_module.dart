@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 final class PrefsModule {
   PrefsModule(this._prefs)
@@ -19,22 +20,23 @@ final class PrefsModule {
   ThemeMode theme;
   bool isEng;
 
-  void init() {
-    final darkValue = _prefs.getBool(_darkKey);
-    final langValue = _prefs.getBool(_langKey);
-
-    darkValue == null
-        ? unawaited(_prefs.setBool(_darkKey, false))
-        : theme = darkValue ? ThemeMode.dark : ThemeMode.light;
-
-    langValue == null
-        ? unawaited(_prefs.setBool(_langKey, true))
-        : isEng = langValue;
-  }
+  void init() => chain(
+        () => _prefs.getBool(_darkKey).letWithElseCall(
+              (final darkValue) =>
+                  theme = darkValue ? ThemeMode.dark : ThemeMode.light,
+              () => unawaited(_prefs.setBool(_darkKey, true)),
+            ),
+        () => _prefs.getBool(_langKey).letWithElseCall(
+              (final langValue) => isEng = langValue,
+              () => unawaited(_prefs.setBool(_langKey, true)),
+            ),
+      );
 }
 
-final sharedPrefs =
-    Provider<SharedPreferences>((final _) => throw UnimplementedError());
+final sharedPrefs = Provider<SharedPreferences>(
+  (final _) => throw UnimplementedError(),
+);
 
-final prefsModule =
-    Provider((final ref) => PrefsModule(ref.watch(sharedPrefs))..init());
+final prefsModule = Provider(
+  (final ref) => PrefsModule(ref.watch(sharedPrefs))..init(),
+);

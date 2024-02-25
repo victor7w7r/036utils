@@ -36,9 +36,9 @@ Future<void> usblistener(
 
   final spinAction = spin();
 
-  await checkUsbDevices().then((final val) {
-    if (val) error(6);
-  });
+  await checkUsbDevices().then(
+    (final val) => onlyIf(val, () => error(6)),
+  );
 
   for (final dev in await usbDevices()) {
     dirtyDevs.add(await dirtyDev(dev));
