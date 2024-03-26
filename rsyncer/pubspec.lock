@@ -9,6 +9,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  cli_menu:
+    dependency: transitive
+    description:
+      name: cli_menu
+      sha256: "8e2ad533d6fa657bf944d943b948862f2c0cfcf1fa6568be9b65eef5573394bf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0+1"
+  cli_util:
+    dependency: transitive
+    description:
+      name: cli_util
+      sha256: c05b7406fdabc7a49a3929d4af76bcaccbbffcbcdcf185b082e1ae07da323d19
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1"
   clock:
     dependency: transitive
     description:
@@ -101,9 +117,9 @@ packages:
     dependency: "direct main"
     description:
       name: zerothreesix_dart
-      sha256: c154268032d40a6878072a1d7973b384263a0df055deb85c13260e3dec549b91
+      sha256: ddae7a029b544c9a747ea42ebd50d18660ed728a9b7f91415aad1b7bcb9c5ffd
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.2"
+    version: "0.1.3"
 sdks:
   dart: ">=3.3.2 <4.0.0"
