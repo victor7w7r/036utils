@@ -7,7 +7,7 @@ permissions:
   contents: write
 jobs:
   maccompile:
-    name: Compile EfiToggler for macOS Intel 64
+    name: Compile EfiToggler for macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,36 +16,15 @@ jobs:
           channel: 'stable'
       - name: Compile CLI
         run: |
-          cd efitoggler_cli
+          cd efitoggler
           mkdir dist
           dart pub get
-          dart compile exe bin/efitoggler_cli.dart -o efitoggler_cli
-          mv efitoggler_cli dist
-      - name: Compile and ZIP GUI
-        run: |
-          cd efitoggler_gui
-          flutter pub get
-          flutter config --enable-macos-desktop
-          flutter build macos --release
-          mkdir build/macos/Build/Products/Release/app
-          mv 'build/macos/Build/Products/Release/Efi Toggler.app' build/macos/Build/Products/Release/app
-      - uses: thedoctor0/zip-release@master
-        with:
-          type: 'zip'
-          filename: efitoggler_gui.zip
-          directory: efitoggler_gui/build/macos/Build/Products/Release/app
-      - run: |
-          cd efitoggler_gui
-          mkdir build/macos/Build/Products/Release/app/zip
-          mv build/macos/Build/Products/Release/app/efitoggler_gui.zip build/macos/Build/Products/Release/app/zip
+          dart compile exe bin/efitoggler.dart -o efitoggler
+          mv efitoggler dist
       - uses: actions/upload-artifact@v4
         with:
-          name: bin-efitoggler_cli
-          path: efitoggler_cli/dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-efitoggler_gui
-          path: efitoggler_gui/build/macos/Build/Products/Release/app/zip
+          name: bin-efitoggler
+          path: efitoggler/dist
   linuxcompile:
     needs: maccompile
     name: Compile all linux utilites
@@ -55,164 +34,56 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - name: Compile CLI
+      - name: Compile Apps
         run: |
-          mkdir rsyncer_cli/dist
-          mkdir ext4_optimizer_cli/dist
-          mkdir usb_manager_cli/dist
-          cd rsyncer_cli
+          mkdir rsyncer/dist
+          mkdir ext4_optimizer/dist
+          mkdir usb_manager/dist
+          cd rsyncer
           dart pub get
-          dart compile exe bin/rsyncer_cli.dart -o rsyncer_cli-amd64
-          mv rsyncer_cli-amd64 dist
-          cd ../ext4_optimizer_cli
+          dart compile exe bin/rsyncer.dart -o rsyncer
+          mv rsyncer dist
+          cd ../ext4_optimizer
           dart pub get
-          dart compile exe bin/ext4_optimizer_cli.dart -o ext4_optimizer_cli-amd64
-          mv ext4_optimizer_cli-amd64 dist
-          cd ../usb_manager_cli
+          dart compile exe bin/ext4_optimizer.dart -o ext4_optimizer
+          mv ext4_optimizer dist
+          cd ../usb_manager
           dart pub get
-          dart compile exe bin/usb_manager_cli.dart -o usb_manager_cli-amd64
-          mv usb_manager_cli-amd64 dist
-      - name: Compile GUI
-        run: |
-          sudo apt update -y
-          sudo apt install -y clang ninja-build libgtk-3-dev
-          flutter doctor
-          flutter config --enable-linux-desktop
-          cd rsyncer_gui
-          flutter pub get
-          flutter build linux --release
-          cd ../ext4_optimizer_gui
-          flutter pub get
-          flutter build linux --release
-          cd ../usb_manager_gui
-          flutter pub get
-          flutter build linux --release
-      - uses: thedoctor0/zip-release@master
-        with:
-          type: 'zip'
-          filename: rsyncer_gui-amd64.zip
-          directory: rsyncer_gui/build/linux/x64/release/bundle
-      - run: |
-          cd rsyncer_gui
-          mkdir build/linux/x64/release/bundle/zip
-          mv build/linux/x64/release/bundle/rsyncer_gui-amd64.zip build/linux/x64/release/bundle/zip
-      - uses: thedoctor0/zip-release@master
-        with:
-          type: 'zip'
-          filename: ext4_optimizer_gui-amd64.zip
-          directory: ext4_optimizer_gui/build/linux/x64/release/bundle
-      - run: |
-          cd ext4_optimizer_gui
-          mkdir build/linux/x64/release/bundle/zip
-          mv build/linux/x64/release/bundle/ext4_optimizer_gui-amd64.zip build/linux/x64/release/bundle/zip
-      - uses: thedoctor0/zip-release@master
-        with:
-          type: 'zip'
-          filename: usb_manager_gui-amd64.zip
-          directory: usb_manager_gui/build/linux/x64/release/bundle
-      - run: |
-          cd usb_manager_gui
-          mkdir build/linux/x64/release/bundle/zip
-          mv build/linux/x64/release/bundle/usb_manager_gui-amd64.zip build/linux/x64/release/bundle/zip
+          dart compile exe bin/usb_manager.dart -o usb_manager
+          mv usb_manager dist
       - uses: actions/upload-artifact@v4
         with:
-          name: bin-rsyncer_cli-amd64
-          path: rsyncer_cli/dist
+          name: bin-rsyncer
+          path: rsyncer/dist
       - uses: actions/upload-artifact@v4
         with:
-          name: bin-ext4_optimizer_cli-amd64
-          path: ext4_optimizer_cli/dist
+          name: bin-ext4_optimizer
+          path: ext4_optimizer/dist
       - uses: actions/upload-artifact@v4
         with:
-          name: bin-usb_manager_cli-amd64
-          path: usb_manager_cli/dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-rsyncer_gui-amd64
-          path: rsyncer_gui/build/linux/x64/release/bundle/zip
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-ext4_optimizer_gui-amd64
-          path: ext4_optimizer_gui/build/linux/x64/release/bundle/zip
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-usb_manager_gui-amd64
-          path: usb_manager_gui/build/linux/x64/release/bundle/zip
-  armlinuxcompile:
-    needs: linuxcompile
-    name: Compile for arm64
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - run: |
-          docker run --rm \
-            --platform linux/arm64 \
-            --volume "$PWD:$PWD" \
-            --workdir "$PWD" \
-            docker.io/library/dart:latest \
-            /bin/sh -c "chmod +x arm64build && ./arm64build"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-rsyncer_cli-arm64
-          path: rsyncer_cli/dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-ext4_optimizer_cli-arm64
-          path: ext4_optimizer_cli/dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bin-usb_manager_cli-arm64
-          path: usb_manager_cli/dist
+          name: bin-usb_manager
+          path: usb_manager/dist
   release:
-    needs: armlinuxcompile
+    needs: linuxcompile
     name: Release to Repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: bin-efitoggler_cli
-          path: bin-efcli
+          name: bin-efitoggler
+          path: bin-ef
       - uses: actions/download-artifact@v4
         with:
-          name: bin-efitoggler_gui
-          path: bin-efgui
+          name: bin-rsyncer
+          path: bin-rsy
       - uses: actions/download-artifact@v4
         with:
-          name: bin-rsyncer_cli-amd64
-          path: bin-rsycliamd64
+          name: bin-ext4_optimizer
+          path: bin-ext
       - uses: actions/download-artifact@v4
         with:
-          name: bin-ext4_optimizer_cli-amd64
-          path: bin-extcliamd64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-usb_manager_cli-amd64
-          path: bin-usbcliamd64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-rsyncer_gui-amd64
-          path: bin-rsyguiamd64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-ext4_optimizer_gui-amd64
-          path: bin-extguiamd64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-usb_manager_gui-amd64
-          path: bin-usbguiamd64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-rsyncer_cli-arm64
-          path: bin-rsycliarm64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-ext4_optimizer_cli-arm64
-          path: bin-extcliarm64
-      - uses: actions/download-artifact@v4
-        with:
-          name: bin-usb_manager_cli-arm64
-          path: bin-usbcliarm64
+          name: bin-usb_manager
+          path: bin-usb
       - uses: softprops/action-gh-release@v1
         with:
           draft: true

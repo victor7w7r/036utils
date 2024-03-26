@@ -19,19 +19,13 @@ Utilites for GNU/Linux and macOS
 - rsyncer: Dialog-based simple application that copy all contents from a source directory to a destination directory, it's recommended to copy root filesystems (Only runs in GNU/Linux).
   - You need the next binaries `rsync`
 
-## Architecture
-
-Flutter apps was made with the 036 Architecture for Flutter
-
-![Alt text](flutterarch.png?raw=true "Title")
-
 ## Debug and Compile
 
 - Install your sdks
 
 ```bash
-$ yay -S flutter  #Archlinux with yay (AUR)
-$ brew install --cask flutter  #macOS
+$ yay -S dart  #Archlinux with yay (AUR)
+$ brew install --cask dart-sdk  #macOS
 ```
 
 - Clone this repository
@@ -40,37 +34,22 @@ $ brew install --cask flutter  #macOS
 - Choose your flavour lang and initialize the packages
 
 ```bash
-# Dart
-$ cd 036utils/efitoggler_cli
+$ cd 036utils/efitoggler
 $ dart pub get
-
-# Flutter
-$ cd 036utils/efitoggler_cli
-$ flutter pub get
 ```
 
 - Run your favourite app
 
 ```bash
-# Dart
-$ cd 036utils/efitoggler_cli/bin
-$ dart efitoggler_cli.dart
-
-# Flutter
-$ cd 036utils/efitoggler_gui
-$ flutter run
+$ cd 036utils/efitoggler/bin
+$ dart efitoggler.dart
 ```
 
 - And compile your app
 
 ```bash
-# Dart
-$ cd 036utils/efitoggler_cli/bin
-$ dart compile exe efitoggler_cli.dart -o efitoggler_cli
-
-# Flutter
-$ cd 036utils/efitoggler_gui
-$ flutter build
+$ cd 036utils/efitoggler/bin
+$ dart compile exe efitoggler.dart -o efitoggler
 ```
 
 ## Development Suite
