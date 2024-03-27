@@ -6,7 +6,7 @@ environment:
   sdk: '>=3.3.2 <4.0.0'
 
 dependencies:
-  console: ^4.1.0
+  cli_menu: ^0.4.0+1
   fpdart: ^1.1.0
   zerothreesix_dart: ^0.1.3
 

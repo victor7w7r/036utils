@@ -1,7 +1,7 @@
 import 'dart:async' show unawaited;
 import 'dart:io' show exit, stdin;
 
-import 'package:console/console.dart' show Chooser;
+import 'package:cli_menu/cli_menu.dart' show Menu;
 import 'package:fpdart/fpdart.dart' show IO;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
@@ -32,18 +32,15 @@ Future<void> _menu() async {
   _options.add(lang(16));
   cyan(lang(14));
   IO(
-    Chooser<String>(
-      _options,
-      message: lang(13),
-    ).chooseSync,
+    Menu(_options).choose,
   ).map((final sel) {
-    if (sel == lang(16)) {
+    if (sel.value == lang(16)) {
       clear();
       exit(0);
     } else {
       _defragction(true, sel);
     }
-  }).run();
+  });
 }
 
 Future<void> _defragction(
