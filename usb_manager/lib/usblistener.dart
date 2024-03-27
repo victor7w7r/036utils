@@ -1,6 +1,6 @@
 import 'dart:io' show stdin;
 
-import 'package:console/console.dart' show Chooser;
+import 'package:cli_menu/cli_menu.dart' show Menu;
 import 'package:fpdart/fpdart.dart' show IO;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
@@ -96,12 +96,9 @@ Future<void> usblistener(
   spinAction.cancel();
 
   IO(
-    Chooser<String>(
-      action == Action.off ? argspoweroff : args,
-      message: lang(12),
-    ).chooseSync,
-  ).map((final sel) {
-    if (sel == lang(25)) {
+    Menu(action == Action.off ? argspoweroff : args).choose,
+  ).map((final op) {
+    if (op.value == lang(25)) {
       clear();
       call();
       return;
@@ -109,11 +106,11 @@ Future<void> usblistener(
       clear();
       switch (action) {
         case Action.mount:
-          usbAction(sel, true, call);
+          usbAction(op.value, true, call);
         case Action.unmount:
-          usbAction(sel, false, call);
+          usbAction(op.value, false, call);
         case Action.off:
-          powerOff(sel, call);
+          powerOff(op.value, call);
       }
     }
   }).run();
