@@ -40,7 +40,7 @@ Future<void> _menu() async {
     } else {
       _defragction(true, sel.value);
     }
-  });
+  }).run();
 }
 
 Future<void> _defragction(
