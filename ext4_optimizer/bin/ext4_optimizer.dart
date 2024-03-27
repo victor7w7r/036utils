@@ -38,7 +38,7 @@ Future<void> _menu() async {
       clear();
       exit(0);
     } else {
-      _defragction(true, sel);
+      _defragction(true, sel.value);
     }
   });
 }
