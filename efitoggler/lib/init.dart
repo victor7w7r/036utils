@@ -1,17 +1,26 @@
 import 'dart:io' show Platform;
 
+import 'package:efitoggler/lang.dart';
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
-import 'package:efitoggler/lang.dart';
+@injectable
+class Init {
+  const Init(this._initLang, this._io, this._lang);
 
-void init() {
-  clear();
-  setLang();
-  initLang();
-  clear();
-  cover();
+  final InitLang _initLang;
+  final InputOutput _io;
+  final Lang _lang;
 
-  if (!Platform.isMacOS) error(0);
+  void init() {
+    _io.clear();
+    _initLang.init();
+    _lang.assignLang();
+    _io.clear();
+    cover();
 
-  lang(1, PrintQuery.normal);
+    if (!Platform.isMacOS) _lang.error(0);
+
+    _lang.write(1, PrintQuery.normal);
+  }
 }

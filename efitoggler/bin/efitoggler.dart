@@ -1,22 +1,11 @@
-import 'package:zerothreesix_dart/zerothreesix_dart.dart';
-
 import 'package:efitoggler/efitoggler.dart';
 
-void main() async {
-  init();
+import 'package:get_it/get_it.dart' show GetIt;
+import 'package:zerothreesix_dart/zerothreesix_dart.dart' show setupDartUtils;
 
-  if (await efiCheck() != '') {
-    lang(2, PrintQuery.normal);
-    checkEfiPart((final efipart) {
-      syncCall('sudo diskutil unmount $efipart');
-      syncCall('sudo rm -rf /Volumes/EFI');
-    });
-  } else {
-    lang(3, PrintQuery.normal);
-    checkEfiPart((final efipart) {
-      syncCall('sudo mkdir /Volumes/EFI');
-      syncCall('sudo mount -t msdos /dev/$efipart /Volumes/EFI');
-      syncCall('open /Volumes/EFI');
-    });
-  }
+void main() async {
+  setupDartUtils();
+  configInjection();
+  GetIt.I<Init>().init();
+  await GetIt.I<App>().app();
 }
