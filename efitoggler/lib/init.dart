@@ -1,8 +1,9 @@
 import 'dart:io' show Platform;
 
-import 'package:efitoggler/lang.dart';
 import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
+
+import 'package:efitoggler/lang.dart';
 
 @injectable
 class Init {
@@ -12,9 +13,9 @@ class Init {
   final InputOutput _io;
   final Lang _lang;
 
-  void init() {
+  void call() {
     _io.clear();
-    _initLang.init();
+    _initLang();
     _lang.assignLang();
     _io.clear();
     cover();

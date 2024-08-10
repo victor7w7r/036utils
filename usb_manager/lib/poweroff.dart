@@ -1,70 +1,87 @@
 import 'package:fpdart/fpdart.dart' show Task;
-
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
-Future<T> _block<T>(
-  final String part,
-  final Future<T> Function(String) query,
-) =>
-    Task(() => sys("echo $part | cut -d '/' -f3"))
-        .flatMap((final block) => Task(() => query(block)))
-        .run();
+class PowerOff {
+  const PowerOff(
+    this._io,
+    this._lang,
+    this._storage,
+    this._tui,
+  );
 
-Future<List<String>> _partsQuery(final String part) => _block(
-      part,
-      (final block) => syssplit('find /dev -name "$block[[:digit:]]" '
-          r"| sort -n | sed 's/^\/dev\///'"),
-    );
+  final InputOutput _io;
+  final Lang _lang;
+  final Storage _storage;
+  final Tui _tui;
 
-Future<String> _modelQuery(final String part) => _block(
-      part,
-      (final block) => sys('cat /sys/class/block/$block/device/model'),
-    );
+  Future<T> _block<T>(
+    final String part,
+    final Future<T> Function(String) query,
+  ) =>
+      Task(() => _io.sys("echo $part | cut -d '/' -f3"))
+          .flatMap((final block) => Task(() => query(block)))
+          .run();
 
-Future<void> powerOff(
-  final String part,
-  final void Function() call,
-) async {
-  final mounts = <String>[];
+  Future<String> _modelQuery(final String part) => _block(
+        part,
+        (final block) => _io.sys('cat /sys/class/block/$block/device/model'),
+      );
 
-  clear();
-  final spinAction = spin();
+  Future<List<String>> _partsQuery(final String part) => _block(
+        part,
+        (final block) => _io.syssplit('find /dev -name "$block[[:digit:]]" '
+            r"| sort -n | sed 's/^\/dev\///'"),
+      );
 
-  final partitionsQuery = await _partsQuery(part);
+  Future<void> call(final String part) async {
+    final mounts = <String>[];
 
-  partitionsQuery.removeWhere((final item) => item == '');
+    _io.clear();
+    final spinAction = _tui.spin();
 
-  for (final parts in partitionsQuery) {
-    if (await mountUsbCheck(parts) != '') mounts.add(parts);
-  }
+    final partitionsQuery = await _partsQuery(part);
 
-  if (mounts.isNotEmpty) {
-    for (final partition in mounts) {
-      if (await coderes('udisksctl unmount -b /dev/$partition &> /dev/null') ==
-          0) {
-        print('');
-      } else {
-        spinAction.cancel();
-        await dialog('ERROR', dialogLang(1, partition), '8', '80');
-        clear();
-        call();
-        return;
+    partitionsQuery.removeWhere((final item) => item == '');
+
+    for (final parts in partitionsQuery) {
+      if (await _storage.mountUsbCheck(parts) != '') mounts.add(parts);
+    }
+
+    if (mounts.isNotEmpty) {
+      for (final partition in mounts) {
+        if (await _io.coderes(
+              'udisksctl unmount -b /dev/$partition &> /dev/null',
+            ) ==
+            0) {
+          print('');
+        } else {
+          spinAction.cancel();
+          await _tui.dialog('ERROR', _lang.dialogLang(1, partition), '8', '80');
+          _io.clear();
+
+          return;
+        }
       }
     }
-  }
 
-  final model = await _modelQuery(part);
+    final model = await _modelQuery(part);
 
-  spinAction.cancel();
-  if (await coderes('udisksctl power-off -b $part') == 0) {
-    await dialog(dialogLang(0), dialogLang(2, model), '8', '80');
-    clear();
-    call();
-    return;
-  } else {
-    await dialog('ERROR', dialogLang(3, model), '8', '80');
-    clear();
-    call();
-    return;
+    spinAction.cancel();
+    if (await _io.coderes('udisksctl power-off -b $part') == 0) {
+      await _tui.dialog(
+        _lang.dialogLang(0),
+        _lang.dialogLang(2, model),
+        '8',
+        '80',
+      );
+      _io.clear();
+
+      return;
+    } else {
+      await _tui.dialog('ERROR', _lang.dialogLang(3, model), '8', '80');
+      _io.clear();
+
+      return;
+    }
   }
 }

@@ -1,48 +1,68 @@
 import 'dart:io' show Platform, Process;
 
 import 'package:fpdart/fpdart.dart' show Task;
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager/usb_manager.dart';
 
-Future<void> init() async {
-  clear();
-  setLang();
-  initLang();
-  clear();
-  cover();
-
-  final spinAction = spin();
-
-  onlyIf(!Platform.isLinux, () => error(0));
-
-  await checkUid().then(
-    (final val) => onlyIf(!val, () => error(1)),
+@injectable
+class Init {
+  const Init(
+    this._initLang,
+    this._io,
+    this._lang,
+    this._storage,
+    this._tui,
   );
 
-  await success('udisksctl').then(
-    (final val) => onlyIf(!val, () => error(2)),
-  );
+  final InitLang _initLang;
+  final InputOutput _io;
+  final Lang _lang;
+  final Storage _storage;
+  final Tui _tui;
 
-  await success('whiptail').then(
-    (final val) => onlyIf(!val, () => error(3)),
-  );
+  Future<void> call() async {
+    _io.clear();
+    _initLang();
+    _lang.assignLang();
+    _io.clear();
+    cover();
 
-  await Task(
-    () => Process.run(
-      'bash',
-      ['-c', 'systemctl is-active udisks2'],
-      runInShell: true,
-    ),
-  ).map((final srvu) => (srvu.stdout as String).trim()).run().then(
-        (final srv) => onlyIf(srv == 'inactive', () => error(4)),
-      );
+    final spinAction = _tui.spin();
 
-  await checkUsbDevices().then(
-    (final val) => onlyIf(val, () => error(6)),
-  );
+    onlyIf(!Platform.isLinux, () => _lang.error(0));
 
-  spinAction.cancel();
+    await _io.checkUid().then(
+          (final val) => onlyIf(!val, () => _lang.error(1)),
+        );
 
-  lang(5, PrintQuery.normal);
+    await _io.success('udisksctl').then(
+          (final val) => onlyIf(!val, () => _lang.error(2)),
+        );
+
+    await _io.success('whiptail').then(
+          (final val) => onlyIf(!val, () => _lang.error(3)),
+        );
+
+    await Task(
+      () => Process.run(
+        'bash',
+        ['-c', 'systemctl is-active udisks2'],
+        runInShell: true,
+      ),
+    ).map((final srvu) => (srvu.stdout as String).trim()).run().then(
+          (final srv) => onlyIf(srv == 'inactive', () => _lang.error(4)),
+        );
+
+    await _storage.checkUsbDevices().then(
+          (final val) => onlyIf(val, () => _lang.error(6)),
+        );
+
+    spinAction.cancel();
+
+    _lang.write(5, PrintQuery.normal);
+
+    _io.clear();
+  }
 }

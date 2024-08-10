@@ -1,6 +1,7 @@
-import 'package:efitoggler/efitoggler.dart';
 import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
+
+import 'package:efitoggler/efitoggler.dart';
 
 @injectable
 class App {
@@ -10,22 +11,22 @@ class App {
   final Lang _lang;
   final MacosEfi _macosEfi;
 
-  Future<void> app() async {
+  Future<void> call() async {
     if (await _macosEfi.efiCheck() != '') {
       _lang.write(2, PrintQuery.normal);
-      _macosEfi.checkEfiPart((final efipart) {
-        _io
-          ..syncCall('sudo diskutil unmount $efipart')
-          ..syncCall('sudo rm -rf /Volumes/EFI');
-      });
+      _io
+        ..syncCall('sudo diskutil unmount ${await _macosEfi.checkEfiPart()}')
+        ..syncCall('sudo rm -rf /Volumes/EFI');
+      _lang.ok(4);
     } else {
       _lang.write(3, PrintQuery.normal);
-      _macosEfi.checkEfiPart((final efipart) {
-        _io
-          ..syncCall('sudo mkdir /Volumes/EFI')
-          ..syncCall('sudo mount -t msdos /dev/$efipart /Volumes/EFI')
-          ..syncCall('open /Volumes/EFI');
-      });
+      _io
+        ..syncCall('sudo mkdir /Volumes/EFI')
+        ..syncCall(
+          'sudo mount -t msdos /dev/${await _macosEfi.checkEfiPart()} /Volumes/EFI',
+        )
+        ..syncCall('open /Volumes/EFI');
+      _lang.ok(4);
     }
   }
 }

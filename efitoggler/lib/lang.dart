@@ -1,5 +1,4 @@
 import 'package:injectable/injectable.dart' show injectable;
-
 import 'package:zerothreesix_dart/zerothreesix_dart.dart' show Lang;
 
 @injectable
@@ -8,7 +7,7 @@ class InitLang {
 
   final Lang _lang;
 
-  void init() {
+  void call() {
     _lang.dictEng.addAll([
       'Your Operating System is not macOS, exiting',
       'All dependencies is ok!',
