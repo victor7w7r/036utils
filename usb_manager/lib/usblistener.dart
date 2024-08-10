@@ -1,12 +1,14 @@
 import 'dart:io' show stdin;
 
 import 'package:cli_menu/cli_menu.dart' show Menu;
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager/usb_manager.dart';
 
 enum Action { mount, unmount, off }
 
+@injectable
 class UsbListener {
   const UsbListener(
     this._colorize,

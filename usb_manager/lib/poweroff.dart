@@ -1,6 +1,8 @@
 import 'package:fpdart/fpdart.dart' show Task;
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
+@injectable
 class PowerOff {
   const PowerOff(
     this._io,

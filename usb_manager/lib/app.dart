@@ -2,10 +2,12 @@ import 'dart:async' show unawaited;
 import 'dart:io' show exit;
 
 import 'package:cli_menu/cli_menu.dart' show Menu;
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 import 'package:usb_manager/usb_manager.dart';
 
+@injectable
 class App {
   const App(
     this._colorize,

@@ -1,7 +1,9 @@
 import 'dart:io' show stdin;
 
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
+@injectable
 class UsbAction {
   const UsbAction(this._io, this._lang, this._tui);
 
