@@ -1,6 +1,3 @@
-import 'dart:io' show stdin;
-
-import 'package:cli_menu/cli_menu.dart' show Menu;
 import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
@@ -11,6 +8,7 @@ enum Action { mount, unmount, off }
 @injectable
 class UsbListener {
   const UsbListener(
+    this._attach,
     this._colorize,
     this._io,
     this._lang,
@@ -20,6 +18,7 @@ class UsbListener {
     this._usbAction,
   );
 
+  final Attach _attach;
   final Colorize _colorize;
   final InputOutput _io;
   final Lang _lang;
@@ -32,7 +31,7 @@ class UsbListener {
     _io.clear();
     _lang.write(op ? 7 : 8, PrintQuery.error);
     print(_lang.write(17));
-    stdin.readLineSync();
+    _attach.readSync();
     _io.clear();
   }
 
@@ -114,9 +113,9 @@ class UsbListener {
 
     spinAction.cancel();
 
-    final op = Menu(action == Action.off ? argspoweroff : args).choose();
+    final op = _attach.chooser(action == Action.off ? argspoweroff : args);
 
-    if (op.value == _lang.write(25)) {
+    if (op == _lang.write(25)) {
       _io.clear();
 
       return;
@@ -124,11 +123,11 @@ class UsbListener {
       _io.clear();
       switch (action) {
         case Action.mount:
-          await _usbAction(op.value, true);
+          await _usbAction(op, true);
         case Action.unmount:
-          await _usbAction(op.value, false);
+          await _usbAction(op, false);
         case Action.off:
-          await _powerOff(op.value);
+          await _powerOff(op);
       }
     }
   }

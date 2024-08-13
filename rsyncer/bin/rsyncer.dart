@@ -7,5 +7,5 @@ void main() async {
   setupDartUtils();
   configInjection();
   await GetIt.I<Init>()();
-  GetIt.I<App>()();
+  await GetIt.I<App>()();
 }

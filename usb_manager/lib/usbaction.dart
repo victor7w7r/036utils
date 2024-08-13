@@ -1,12 +1,12 @@
-import 'dart:io' show stdin;
-
 import 'package:injectable/injectable.dart' show injectable;
+import 'package:usb_manager/attach.dart';
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
 
 @injectable
 class UsbAction {
-  const UsbAction(this._io, this._lang, this._tui);
+  const UsbAction(this._attach, this._io, this._lang, this._tui);
 
+  final Attach _attach;
   final InputOutput _io;
   final Lang _lang;
   final Tui _tui;
@@ -15,7 +15,7 @@ class UsbAction {
     _io.clear();
     _lang.write(op ? 8 : 9, PrintQuery.error);
     print(_lang.write(17));
-    stdin.readLineSync();
+    _attach.readSync();
     _io.clear();
   }
 

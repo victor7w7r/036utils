@@ -303,7 +303,7 @@ packages:
     source: hosted
     version: "1.1.0"
   fpdart:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: fpdart
       sha256: "7413acc5a6569a3fe8277928fc7487f3198530f0c4e635d0baef199ea36e8ee9"
@@ -866,9 +866,9 @@ packages:
     dependency: "direct main"
     description:
       name: zerothreesix_dart
-      sha256: "3363b69c407f2cc362cbc0997d7cd71066235c6e80f57d2411ad597c234da1b7"
+      sha256: b9939ef05f54cbbb160a7ab228bc672c326b5652c9b3fb5613b4fa29675caf2a
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.5"
+    version: "0.1.6"
 sdks:
   dart: ">=3.5.0 <4.0.0"

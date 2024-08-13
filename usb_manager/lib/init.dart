@@ -1,5 +1,3 @@
-import 'dart:io' show Platform, Process;
-
 import 'package:fpdart/fpdart.dart' show Task;
 import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart';
@@ -9,6 +7,7 @@ import 'package:usb_manager/usb_manager.dart';
 @injectable
 class Init {
   const Init(
+    this._attach,
     this._initLang,
     this._io,
     this._lang,
@@ -16,6 +15,7 @@ class Init {
     this._tui,
   );
 
+  final Attach _attach;
   final InitLang _initLang;
   final InputOutput _io;
   final Lang _lang;
@@ -31,7 +31,7 @@ class Init {
 
     final spinAction = _tui.spin();
 
-    onlyIf(!Platform.isLinux, () => _lang.error(0));
+    onlyIf(!_attach.isLinux, () => _lang.error(0));
 
     await _io.checkUid().then(
           (final val) => onlyIf(!val, () => _lang.error(1)),
@@ -45,13 +45,10 @@ class Init {
           (final val) => onlyIf(!val, () => _lang.error(3)),
         );
 
-    await Task(
-      () => Process.run(
-        'bash',
-        ['-c', 'systemctl is-active udisks2'],
-        runInShell: true,
-      ),
-    ).map((final srvu) => (srvu.stdout as String).trim()).run().then(
+    await Task(_attach.udisks2)
+        .map((final srvu) => (srvu.stdout as String).trim())
+        .run()
+        .then(
           (final srv) => onlyIf(srv == 'inactive', () => _lang.error(4)),
         );
 

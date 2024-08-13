@@ -39,11 +39,14 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i717.Tui>(),
         ));
     gh.factory<_i254.UsbAction>(() => _i254.UsbAction(
+          gh<_i855.Attach>(),
           gh<_i717.InputOutput>(),
           gh<_i717.Lang>(),
           gh<_i717.Tui>(),
         ));
+    gh.factory<_i835.InitLang>(() => _i835.InitLang(gh<_i717.Lang>()));
     gh.factory<_i755.UsbListener>(() => _i755.UsbListener(
+          gh<_i883.Attach>(),
           gh<_i717.Colorize>(),
           gh<_i717.InputOutput>(),
           gh<_i717.Lang>(),
@@ -52,14 +55,15 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i717.Tui>(),
           gh<_i883.UsbAction>(),
         ));
-    gh.factory<_i835.InitLang>(() => _i835.InitLang(gh<_i717.Lang>()));
     gh.factory<_i565.App>(() => _i565.App(
+          gh<_i883.Attach>(),
           gh<_i717.Colorize>(),
           gh<_i717.InputOutput>(),
           gh<_i717.Lang>(),
           gh<_i883.UsbListener>(),
         ));
     gh.factory<_i597.Init>(() => _i597.Init(
+          gh<_i883.Attach>(),
           gh<_i883.InitLang>(),
           gh<_i717.InputOutput>(),
           gh<_i717.Lang>(),

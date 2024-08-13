@@ -1,6 +1,6 @@
 // ignore_for_file: lines_longer_than_80_chars
-import 'package:injectable/injectable.dart' show injectable;
 
+import 'package:injectable/injectable.dart' show injectable;
 import 'package:zerothreesix_dart/zerothreesix_dart.dart' show Lang;
 
 @injectable
