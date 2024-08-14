@@ -8,7 +8,7 @@ environment:
 dependencies:
   get_it: ^7.7.0
   injectable: ^2.4.4
-  zerothreesix_dart: ^0.1.6
+  zerothreesix_dart: ^0.1.8
 
 dependency_overrides:
   win32: 5.5.3
